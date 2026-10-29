@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import Aquarium from './scene/Aquarium';
 import HUD from './ui/HUD';
 import FishLabels from './ui/FishLabels';
+import { AsmaCard } from './ui/Asma';
 import FishCard from './ui/FishCard';
 import { FactPanel, SettingsPanel, MemoriesPanel, EmptyTank, WelcomeHint, Toasts } from './ui/Panels';
 import { useStore, tickStats, save, announceLosses } from './state/store';
@@ -41,6 +42,7 @@ export default function App() {
       <Aquarium />
       <FishLabels />
       <HUD />
+      <AsmaCard />
       <FishCard />
       {panel === 'facts' && <FactPanel />}
       {panel === 'settings' && <SettingsPanel />}

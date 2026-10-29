@@ -36,6 +36,8 @@ export function createRuntime(fish) {
     fullNotice: 0,
     emote: null,
     seeking: null,
+    // Each fish circles Asma on its own little orbit.
+    orbit: { angle: Math.random() * Math.PI * 2, radius: rand(1.3, 2.3), dir: Math.random() < 0.5 ? -1 : 1, seed: rand(0, 10) },
   };
 }
 
@@ -120,13 +122,21 @@ export function updateFish(fish, rt, dt, mates) {
     }
   }
 
+  const asma = world.asma;
+  const withAsma = asma.phase === 'playing' && fish.health >= 0.3;
+  if (withAsma) rt.sleeping = 0; // nobody naps when Asma visits
   const seeking = wantsFood && food && rt.sleeping <= 0 ? food.pellet : null;
   rt.seeking = seeking;
+  // After she leaves, fish take turns asking for her at the glass.
+  const missing = asma.missing && Math.sin(world.time * 0.35 + rt.orbit.seed) > 0.3;
 
   let mood = 'happy';
   if (rt.sleeping > 0) mood = 'sleepy';
   else if (fish.health < 0.5 && !seeking) mood = 'weak';
-  else if (seeking || fish.hunger > 0.65) mood = 'hungry';
+  else if (seeking) mood = 'hungry';
+  else if (withAsma) mood = 'playing';
+  else if (fish.hunger > 0.65) mood = 'hungry';
+  else if (missing) mood = 'missing';
   else if (rt.curious > 0) mood = 'curious';
   if (rt.happyTimer > 0) mood = 'happy';
   if (fish.mood !== mood) {
@@ -147,7 +157,17 @@ export function updateFish(fish, rt, dt, mates) {
 
   // --- choose where to go ---
   rt.retarget -= dt;
-  if (!seeking && (rt.retarget <= 0 || (mood === 'happy' && rt.pos.distanceTo(rt.target) < 0.8))) {
+  if (withAsma && !seeking) {
+    // Circle around Asma at chest height.
+    const o = rt.orbit;
+    o.angle += dt * 0.55 * o.dir;
+    rt.target.set(
+      asma.pos.x + Math.cos(o.angle) * o.radius,
+      asma.pos.y + 0.7 + Math.sin(o.angle * 0.8 + o.seed) * 0.5,
+      asma.pos.z + Math.sin(o.angle) * o.radius * 0.7,
+    );
+    rt.retarget = 1;
+  } else if (!seeking && (rt.retarget <= 0 || (mood === 'happy' && rt.pos.distanceTo(rt.target) < 0.8))) {
     pickWanderTarget(rt, fish, mood);
   }
   const goal = seeking ? seeking.pos : rt.target;
@@ -157,12 +177,13 @@ export function updateFish(fish, rt, dt, mates) {
   else if (seeking) speed = 2.1 * Math.min(1.2, persona.speed);
   else if (mood === 'hungry') speed = 1.25;
   else if (mood === 'weak') speed = 0.5;
+  else if (mood === 'playing') speed = 1.5;
   if (rt.happyTimer > 0) speed *= 1.3;
   speed *= 0.55 + 0.45 * Math.min(1, fish.health * 2); // starving fish run out of energy
 
   desired.subVectors(goal, rt.pos);
   const distToGoal = desired.length();
-  const atGlass = !seeking && (mood === 'hungry' || mood === 'curious' || mood === 'weak') && distToGoal < 1;
+  const atGlass = !seeking && (mood === 'hungry' || mood === 'curious' || mood === 'weak' || mood === 'missing') && distToGoal < 1;
   if (atGlass) {
     // Hover facing the viewer.
     desired.set(Math.sin(world.time * 0.7 + rt.tailPhase) * 0.15, 0, 0.25);
@@ -232,6 +253,8 @@ export function updateFish(fish, rt, dt, mates) {
   else if (mood === 'weak') rt.emote = 'weak';
   else if (mood === 'hungry' && !seeking) rt.emote = 'hungry';
   else if (mood === 'curious' && atGlass) rt.emote = 'curious';
+  else if (mood === 'missing' && atGlass) rt.emote = 'miss';
+  else if (mood === 'playing' && Math.sin(world.time * 0.7 + rt.orbit.seed) > 0.75) rt.emote = 'playing';
   else rt.emote = null;
 
   return ate;

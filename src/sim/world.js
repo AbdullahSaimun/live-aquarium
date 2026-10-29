@@ -22,6 +22,18 @@ export const world = {
     ping: 0,
     spin: Math.random() * Math.PI,
   })),
+  // Asma, the girl who dives in to visit. `breath` runs from 1 down to 0 while she is underwater.
+  asma: {
+    phase: 'idle', // idle | diving | playing | surfacing
+    pos: new THREE.Vector3(0, 20, 1),
+    target: new THREE.Vector3(),
+    breath: 1,
+    timer: 0,
+    nextSnack: 0,
+    nextBubble: 0,
+    twirl: 0,
+    missing: false, // set after she leaves: fish ask for her to come back
+  },
   // Queued particle bursts, drained each frame by the matching effect component.
   effects: { hearts: [], bubbles: [] },
 };

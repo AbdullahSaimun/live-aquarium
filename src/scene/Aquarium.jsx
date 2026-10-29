@@ -10,6 +10,7 @@ import Bubbles from './Bubbles';
 import School from './School';
 import FoodPellets from './FoodPellets';
 import Hearts from './Hearts';
+import AsmaDiver from './AsmaDiver';
 import WaterTap from './WaterTap';
 import TreasureChest from './TreasureChest';
 
@@ -75,6 +76,7 @@ export default function Aquarium() {
       <School />
       <FoodPellets />
       <Hearts />
+      <AsmaDiver />
     </Canvas>
   );
 }

@@ -31,13 +31,20 @@ Built with React, Vite, Three.js, React Three Fiber and drei. Everything runs in
 - Lost fish are kept in **🌈 Memories** with their name, how long they lived and how many snacks they ate.
 - If the tank becomes empty, the child can adopt new fish.
 
+**👧 Asma, the fish's best friend**
+- Asma is a kind, cheerful girl who dives into the tank holding her breath, with puffed cheeks, goggles and yellow flippers.
+- The fish swim in circles around her while she says sweet things and shares snacks with them.
+- She stays as long as her breath lasts (shown as a 🫧 breath meter), then swims up for air.
+- Afterwards the fish ask "Bring Asma back!" and the 👧 button glows. Tap it to call her again once she has caught her breath.
+- Tap Asma for a twirl and hearts. She also visits on her own every few minutes (this can be turned off in Settings).
+
 **Learning and fun**
 - **💡 Facts**: ocean, habitat and fish-care facts in Bangla (default) or English.
 - **🪙 Treasure chest**: tap it for coins, sparkles and a surprise fact.
 - Bubbly sound effects, synthesized in the browser with no audio files.
 
 **Settings**
-- Name tags, sounds and calm mode (less motion) can be turned on or off.
+- Name tags, sounds, Asma's surprise visits and calm mode (less motion) can be turned on or off.
 - You can reset the aquarium. Memories are kept.
 
 Progress (fish, growth, love, health, memories, settings) is saved in the browser's `localStorage` and survives refreshes.
@@ -67,6 +74,7 @@ The `dist/` folder is a static site, so it can be hosted anywhere (GitHub Pages,
 3. Feed about 3–4 pellets per fish. They will tell you when they are full.
 4. Come back regularly. Hungry fish get weak, and very hungry fish can die.
 5. Grow your fish to unlock colors and babies, and tap the treasure chest for surprises.
+6. Tap **👧 Asma** to invite her for a swim with your fish.
 
 ## Game timing
 
@@ -78,6 +86,8 @@ All timings live at the top of `src/state/store.js` and are easy to tune:
 | Starving while the app is open, until death | ~10 minutes |
 | Fish get fully hungry (app closed) | ~30 minutes |
 | Starving while the app is closed, until death | ~12 hours |
+| Asma's breath underwater | ~32 seconds |
+| Asma's rest before she can dive again | 20 seconds |
 | Pellets to fill a tummy | ~3 |
 | Pellets to grow from baby to adult | ~20 |
 
@@ -92,13 +102,14 @@ src/
 │   └── factsBn.js       Bangla facts and fact-panel text
 ├── sim/
 │   ├── world.js         Per-frame simulation state: pellets, bounds, effect queues
-│   └── fishBrain.js     Steering, moods, food seeking and eating
+│   ├── fishBrain.js     Steering, moods, food seeking, circling Asma
+│   └── asmaBrain.js     Asma's dive, breath, snacks and surfacing
 ├── state/
 │   ├── store.js         Game state and actions (feed, eat, grow, starve, memories…)
 │   ├── persistence.js   localStorage save/load
 │   └── labels.js        DOM label registry for fish name tags
 ├── scene/               3D: fish model, seabed, coral, plants, bubbles, hearts,
-│                        food pellets, treasure chest, tap-to-feed backdrop
+│                        food pellets, treasure chest, Asma, tap-to-feed backdrop
 └── ui/                  HUD, fish card, panels (facts, memories, settings), labels
 ```
 

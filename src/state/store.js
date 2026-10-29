@@ -4,6 +4,7 @@ import { loadSave, writeSave, clearSave } from './persistence';
 import { world, spawnPellet, activePellets, clearPellets, queueEffect } from '../sim/world';
 import { playSound } from '../audio/sounds';
 import { allFacts } from '../data/factsBn';
+import { startVisit, snackSpot } from '../sim/asmaBrain';
 
 export const MAX_FISH = 10;
 export const HUNGER_RATE = 1 / 200; // per second, before personality appetite
@@ -106,7 +107,8 @@ function initialState() {
     selectedId: null,
     panel: null,
     toasts: [],
-    settings: { showNames: true, calmMode: false, factLang: 'bn', sound: true },
+    settings: { showNames: true, calmMode: false, factLang: 'bn', sound: true, asmaVisits: true },
+    asma: { visible: false, phase: 'idle', line: '', restUntil: 0, missUntil: 0 },
     stats: { pellets: 0, births: 0 },
     hintDismissed: false,
     version: 0,
@@ -410,6 +412,103 @@ export function resetAquarium() {
   toast('A fresh new aquarium!', '🌊');
 }
 
+// ---------- Asma, the kind girl who dives in to visit ----------
+const ASMA_REST = 20; // seconds she needs to catch her breath before diving again
+const ASMA_MISSED = 90; // how long the fish keep asking for her after she leaves
+const HELLO_LINES = ['Here I come! 🏊‍♀️', 'Hello, little fishies! 💕', 'Splash! Can I play with you? 🌊'];
+const ARRIVE_LINES = ['Hi friends! I missed you! 💖', 'Look at you, so colorful! 🌈', 'Come here, my little fishies! 🥰'];
+const SNACK_LINES = ['Here is a yummy snack! 🍤', 'Snack time, sweeties! 😋', 'One for you, and one for you! 🍤'];
+const ADORE_LINES = ['You are so cute! 🥰', 'I love your shiny fins! ✨', 'You swim so beautifully! 💖', 'Best fish friends forever! 🐠'];
+const TAP_LINES = ['Hehe, that tickles! 😊', 'Wheee! 💫', 'Hi there! 👋'];
+const nowSec = () => performance.now() / 1000;
+let nextAsmaIn = 45; // her first surprise visit comes soon; later ones every few minutes
+
+function asmaSays(lines) {
+  state.asma = { ...state.asma, line: pick(lines) };
+}
+
+export function inviteAsma() {
+  if (!state.fish.length) {
+    toast('Adopt some fish first, then Asma can visit!', '👧');
+    return;
+  }
+  if (state.asma.phase !== 'idle') {
+    toast('Asma is already swimming with the fish! 🏊‍♀️', '💕');
+    return;
+  }
+  const wait = Math.ceil(state.asma.restUntil - nowSec());
+  if (wait > 0) {
+    toast(`Asma is catching her breath. Ready in ${wait}s! 😮‍💨`, '👧');
+    return;
+  }
+  startVisit();
+  state.asma = { ...state.asma, visible: true, phase: 'diving', missUntil: 0 };
+  asmaSays(HELLO_LINES);
+  state.stats.asmaVisits = (state.stats.asmaVisits || 0) + 1;
+  nextAsmaIn = 180 + Math.random() * 120;
+  sfx('splash');
+  emit();
+}
+
+function asmaGiveSnack() {
+  const someoneHungry = state.fish.some((f) => f.fullness < 0.95);
+  if (someoneHungry && activePellets().length < 6) {
+    const p = spawnPellet(0, 0, 0);
+    if (p) {
+      snackSpot(p.pos);
+      p.ping = world.time;
+      sfx('plop');
+    }
+    asmaSays(SNACK_LINES);
+  } else {
+    asmaSays(ADORE_LINES);
+  }
+  // Her love rubs off on the fish.
+  for (const f of state.fish) f.affection = Math.min(1, f.affection + 0.01);
+  queueEffect('hearts', world.asma.pos.clone().setY(world.asma.pos.y + 1.4), 2);
+}
+
+// Events from Asma's swim (see sim/asmaBrain.js).
+export function asmaEvent(event) {
+  if (event === 'arrived') {
+    state.asma = { ...state.asma, phase: 'playing' };
+    asmaSays(ARRIVE_LINES);
+    sfx('giggle');
+  } else if (event === 'snack') {
+    asmaGiveSnack();
+  } else if (event === 'surfacing') {
+    state.asma = { ...state.asma, phase: 'surfacing', line: "I need air! I'll come back soon! 💨" };
+    sfx('gasp');
+  } else if (event === 'left') {
+    const now = nowSec();
+    state.asma = { visible: false, phase: 'idle', line: '', restUntil: now + ASMA_REST, missUntil: now + ASMA_MISSED };
+    world.asma.missing = true;
+    toast('The fish miss Asma already! Tap 👧 Asma to call her back.', '🥺', 5000);
+    save();
+  }
+  emit();
+}
+
+export function petAsma() {
+  world.asma.twirl = 0.9;
+  queueEffect('hearts', world.asma.pos.clone().setY(world.asma.pos.y + 1.6), 4);
+  asmaSays(TAP_LINES);
+  sfx('giggle');
+  emit();
+}
+
+function tickAsma(dt) {
+  const a = state.asma;
+  if (a.missUntil && nowSec() > a.missUntil) {
+    state.asma = { ...a, missUntil: 0 };
+    world.asma.missing = false;
+  }
+  if (state.settings.asmaVisits && state.hintDismissed && state.fish.length && a.phase === 'idle') {
+    nextAsmaIn -= dt;
+    if (nextAsmaIn <= 0 && nowSec() > a.restUntil) inviteAsma();
+  }
+}
+
 // Slow stat changes, run once per second (cheap, and keeps UI meters fresh).
 export function tickStats(dt) {
   const weakened = [];
@@ -429,6 +528,7 @@ export function tickStats(dt) {
       weakened.push(f.name);
     }
   }
+  tickAsma(dt);
   if (weakened.length === 1) toast(`${weakened[0]} is very weak from hunger! Please feed soon.`, '🥺', 4500);
   else if (weakened.length > 1) toast(`${weakened.length} fish are very weak from hunger! Please feed them soon.`, '🥺', 4500);
   emit();

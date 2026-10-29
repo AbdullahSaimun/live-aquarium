@@ -1,6 +1,7 @@
 import { useStore } from '../state/store';
 import { labelEls, useLabelVersion } from '../state/labels';
 import { world } from '../sim/world';
+import { AsmaBubble } from './Asma';
 
 const EMOTES = {
   love: { icon: '💖', text: null },
@@ -9,6 +10,8 @@ const EMOTES = {
   curious: { icon: '👀', text: 'Hi there!' },
   full: { icon: '😋', text: "I'm full!" },
   weak: { icon: '🥺', text: 'So hungry...' },
+  playing: { icon: '🥰', text: 'Asma!' },
+  miss: { icon: '💭', text: 'Bring Asma back!' },
 };
 
 // Name tags and emote speech bubbles, drawn as plain DOM above the canvas.
@@ -20,6 +23,7 @@ export default function FishLabels() {
 
   return (
     <div className="fish-labels" aria-hidden="true">
+      <AsmaBubble />
       {fish.map((f) => {
         const emote = world.runtime.get(f.id)?.emote;
         const e = emote && EMOTES[emote];

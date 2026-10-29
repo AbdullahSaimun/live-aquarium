@@ -24,6 +24,8 @@ const MOOD_LINES = {
   curious: 'wants to see who is watching!',
   sleepy: 'is taking a little nap.',
   weak: 'is weak from hunger. Please feed it now!',
+  playing: 'is swimming around Asma. They are best friends!',
+  missing: 'misses Asma. Tap 👧 Asma to call her back!',
 };
 
 export default function FishCard() {

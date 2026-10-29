@@ -91,6 +91,12 @@ export function SettingsPanel() {
         onChange={(v) => setSetting('sound', v)}
       />
       <Toggle
+        label="Asma visits"
+        desc="Asma dives in by herself now and then to play"
+        checked={settings.asmaVisits}
+        onChange={(v) => setSetting('asmaVisits', v)}
+      />
+      <Toggle
         label="Calm mode"
         desc="Fewer bubbles and less movement"
         checked={settings.calmMode}
@@ -112,6 +118,10 @@ export function SettingsPanel() {
         <div>
           <strong>{stats.treasures || 0}</strong>
           <small>treasures</small>
+        </div>
+        <div>
+          <strong>{stats.asmaVisits || 0}</strong>
+          <small>Asma visits</small>
         </div>
       </div>
       {confirm ? (
@@ -164,6 +174,9 @@ export function WelcomeHint() {
           </li>
           <li>
             <span>🪙</span> Tap the treasure chest for a surprise fact.
+          </li>
+          <li>
+            <span>👧</span> Call <b>Asma</b>: she dives in, plays with the fish and shares snacks!
           </li>
           <li>
             <span>⏰</span> Feed them on time: very hungry fish get weak and can die.

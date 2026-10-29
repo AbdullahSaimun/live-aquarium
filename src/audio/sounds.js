@@ -47,6 +47,16 @@ const SOUNDS = {
   treasure: (ac) => {
     [660, 830, 990, 1320].forEach((f, i) => tone(ac, { type: 'triangle', from: f, to: f, start: i * 0.08, dur: 0.22, vol: 0.09 }));
   },
+  giggle: (ac) => {
+    [880, 1046, 932, 1175].forEach((f, i) => tone(ac, { type: 'triangle', from: f, to: f * 1.1, start: i * 0.09, dur: 0.08, vol: 0.06 }));
+  },
+  splash: (ac) => {
+    for (let i = 0; i < 8; i++) {
+      const f = 900 - i * 80 + Math.random() * 120;
+      tone(ac, { from: f, to: f * 0.4, start: i * 0.03, dur: 0.12, vol: 0.06 });
+    }
+  },
+  gasp: (ac) => tone(ac, { from: 260, to: 900, dur: 0.25, vol: 0.07 }),
   sad: (ac) => {
     tone(ac, { type: 'triangle', from: 520, to: 440, dur: 0.35, vol: 0.08 });
     tone(ac, { type: 'triangle', from: 440, to: 330, start: 0.3, dur: 0.5, vol: 0.07 });

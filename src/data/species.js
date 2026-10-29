@@ -114,6 +114,8 @@ export const MOODS = {
   curious: { label: 'Curious', emoji: '👀' },
   sleepy: { label: 'Sleepy', emoji: '💤' },
   weak: { label: 'Weak', emoji: '🥺' },
+  playing: { label: 'Playing with Asma', emoji: '🥰' },
+  missing: { label: 'Misses Asma', emoji: '💭' },
 };
 
 export const GENERAL_FACTS = [
