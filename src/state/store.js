@@ -5,6 +5,8 @@ import { world, spawnPellet, activePellets, clearPellets, queueEffect } from '..
 import { playSound } from '../audio/sounds';
 import { allFacts } from '../data/factsBn';
 import { startVisit, snackSpot } from '../sim/asmaBrain';
+import { startShark, sendSharkAway, SHARK_HITS } from '../sim/sharkBrain';
+import { CRITTERS } from '../data/critters';
 
 export const MAX_FISH = 10;
 export const HUNGER_RATE = 1 / 200; // per second, before personality appetite
@@ -59,7 +61,7 @@ export function createFish(fish, species, overrides = {}) {
 // `remembered` holds lost fish, so new fish don't reuse their names.
 function starterFish(remembered = []) {
   const fish = [];
-  const starters = ['clownfish', 'blueTang', 'yellowTang', 'angelfish', 'betta'];
+  const starters = ['clownfish', 'blueTang', 'yellowTang', 'angelfish', 'betta', 'batfish'];
   for (const s of starters) fish.push(createFish([...fish, ...remembered], s));
   return fish;
 }
@@ -107,9 +109,10 @@ function initialState() {
     selectedId: null,
     panel: null,
     toasts: [],
-    settings: { showNames: true, calmMode: false, factLang: 'bn', sound: true, asmaVisits: true },
+    settings: { showNames: true, calmMode: false, factLang: 'bn', sound: true, asmaVisits: true, sharkVisits: true },
     asma: { visible: false, phase: 'idle', line: '', restUntil: 0, missUntil: 0 },
-    stats: { pellets: 0, births: 0 },
+    shark: { visible: false, hitsLeft: 0 },
+    stats: { pellets: 0, births: 0, batfishArrived: true },
     hintDismissed: false,
     version: 0,
   };
@@ -136,13 +139,21 @@ function initialState() {
     }
   }
   const neverPlayed = !alive.length && !memorial.length;
+  const stats = { ...base.stats, ...(save.stats || {}) };
+  // Tanks saved before batfish existed get one as a new neighbour, once.
+  let newcomer = null;
+  if (alive.length && alive.length < MAX_FISH && !save.stats?.batfishArrived && !alive.some((f) => f.species === 'batfish')) {
+    newcomer = createFish([...alive, ...memorial], 'batfish');
+    alive.push(newcomer);
+  }
   return {
     ...base,
     fish: neverPlayed ? starterFish() : alive,
     memorial,
     lostWhileAway: lost,
+    newcomer: newcomer?.name || null,
     settings: { ...base.settings, ...(save.settings || {}) },
-    stats: { ...base.stats, ...(save.stats || {}) },
+    stats,
     hintDismissed: !!save.hintDismissed,
   };
 }
@@ -179,7 +190,7 @@ export function save() {
 // ---------- toasts ----------
 let toastId = 0;
 const CAN_BUZZ = typeof navigator !== 'undefined' && 'vibrate' in navigator && matchMedia('(pointer: coarse)').matches;
-const BUZZ = { plop: 8, squeak: 12, pop: 6, treasure: [15, 40, 15], chime: 10, splash: 20 };
+const BUZZ = { plop: 8, squeak: 12, pop: 6, treasure: [15, 40, 15], chime: 10, splash: 20, bonk: 18, chomp: [20, 40, 20] };
 
 export function sfx(name) {
   if (!state.settings.sound) return;
@@ -230,6 +241,7 @@ export function dismissHint() {
 
 export function setSetting(key, value) {
   state.settings = { ...state.settings, [key]: value };
+  if (key === 'sharkVisits' && !value) sendSharkAway(true);
   emit();
   save();
 }
@@ -383,6 +395,10 @@ export function cycleColor(fish) {
 
 // Tells the child, once, about fish lost while the app was closed.
 export function announceLosses() {
+  if (state.newcomer) {
+    toast(`A batfish named ${state.newcomer} moved into your tank! Say hello!`, '🦇', 5000);
+    state.newcomer = null;
+  }
   const lost = state.lostWhileAway;
   if (!lost.length) return;
   state.lostWhileAway = [];
@@ -418,7 +434,7 @@ export function resetAquarium() {
   state.fish = starterFish(state.memorial);
   state.selectedId = null;
   state.panel = null;
-  state.stats = { pellets: 0, births: 0 };
+  state.stats = { pellets: 0, births: 0, batfishArrived: true };
   emit();
   save();
   toast('A fresh new aquarium!', '🌊');
@@ -456,6 +472,12 @@ export function inviteAsma() {
   startVisit();
   state.asma = { ...state.asma, visible: true, phase: 'diving', missUntil: 0 };
   asmaSays(HELLO_LINES);
+  if (world.shark.phase !== 'idle' && world.shark.phase !== 'leaving') {
+    sendSharkAway(true);
+    state.shark = { ...state.shark, hitsLeft: 0 };
+    asmaSays(['Shoo, shark! Leave my fishies alone! 💪']);
+    toast('Asma chased the shark away! 💪', '👧', 4000);
+  }
   state.stats.asmaVisits = (state.stats.asmaVisits || 0) + 1;
   nextAsmaIn = 180 + Math.random() * 120;
   sfx('splash');
@@ -484,7 +506,7 @@ function asmaGiveSnack() {
 export function asmaEvent(event) {
   if (event === 'arrived') {
     state.asma = { ...state.asma, phase: 'playing' };
-    asmaSays(ARRIVE_LINES);
+    asmaSays(nowSec() < loveUntil ? loveLines : ARRIVE_LINES);
     sfx('giggle');
   } else if (event === 'snack') {
     asmaGiveSnack();
@@ -509,6 +531,39 @@ export function petAsma() {
   emit();
 }
 
+let loveLines = [];
+let loveUntil = 0;
+
+// Anniversary surprise: hearts from every fish, the shark is sent off, and Asma dives in to celebrate.
+// `line` is what Asma says right away; `lines` are what she picks from when she arrives.
+export function celebrateAnniversary(line, lines) {
+  for (const f of state.fish) {
+    f.affection = Math.min(1, f.affection + 0.02);
+    const rt = world.runtime.get(f.id);
+    if (rt) {
+      rt.scared = 0;
+      rt.happyTimer = 4;
+      rt.flip = FLIP_TIME;
+      queueEffect('hearts', rt.pos, 5);
+    }
+  }
+  sendSharkAway(true);
+  if (state.shark.visible) state.shark = { ...state.shark, hitsLeft: 0 };
+  const a = state.asma;
+  if (state.fish.length && a.phase === 'idle') {
+    startVisit();
+    state.asma = { ...a, visible: true, phase: 'diving', missUntil: 0 };
+    state.stats.asmaVisits = (state.stats.asmaVisits || 0) + 1;
+    sfx('splash');
+  }
+  loveUntil = nowSec() + 40;
+  loveLines = lines;
+  state.asma = { ...state.asma, line };
+  world.asma.twirl = 0.9;
+  sfx('treasure');
+  emit();
+}
+
 function tickAsma(dt) {
   const a = state.asma;
   if (a.missUntil && nowSec() > a.missUntil) {
@@ -519,6 +574,103 @@ function tickAsma(dt) {
     nextAsmaIn -= dt;
     if (nextAsmaIn <= 0 && nowSec() > a.restUntil) inviteAsma();
   }
+}
+
+// ---------- the shark: a bit of excitement, never actually dangerous ----------
+let nextSharkIn = 75; // first visit a little while after play starts, later ones every few minutes
+let lastFaintToast = -Infinity;
+
+export function summonShark() {
+  if (!state.fish.length) {
+    toast('There are no fish for the shark to chase!', '🦈');
+    return;
+  }
+  if (world.shark.phase !== 'idle') {
+    toast('The shark is already here! Tap it to chase it away!', '🦈');
+    return;
+  }
+  if (state.asma.phase !== 'idle') {
+    toast('The shark is too scared of Asma to come in!', '👧');
+    return;
+  }
+  startShark();
+  state.shark = { visible: true, hitsLeft: SHARK_HITS };
+  state.panel = null;
+  nextSharkIn = 150 + Math.random() * 90;
+  toast(`Uh oh, a shark! Tap it ${SHARK_HITS} times to chase it away!`, '🦈', 5000);
+  sfx('shark');
+  emit();
+}
+
+// Every tap bonks the shark on the nose; enough taps send it fleeing.
+export function shooShark() {
+  const s = world.shark;
+  if (s.phase === 'idle' || s.phase === 'leaving') return;
+  s.hits++;
+  s.hurt = 0.7;
+  queueEffect('bubbles', s.pos, 8);
+  sfx('bonk');
+  if (s.hits >= SHARK_HITS) {
+    sendSharkAway(true);
+    state.stats.sharksShooed = (state.stats.sharksShooed || 0) + 1;
+    for (const f of state.fish) {
+      f.affection = Math.min(1, f.affection + 0.02);
+      const rt = world.runtime.get(f.id);
+      if (rt) {
+        rt.scared = 0;
+        rt.happyTimer = 2;
+        queueEffect('hearts', rt.pos, 2);
+      }
+    }
+    toast('Hooray! You chased the shark away. The fish love you! 🦸', '🎉', 4500);
+    sfx('chime');
+    save();
+  }
+  state.shark = { ...state.shark, hitsLeft: Math.max(0, SHARK_HITS - s.hits) };
+  emit();
+}
+
+// Events from the shark's swim (see sim/sharkBrain.js).
+export function sharkEvent(event) {
+  if (event.type === 'caught') {
+    const fish = findFish(event.id);
+    const rt = world.runtime.get(event.id);
+    if (!fish || !rt) return;
+    rt.fainted = 3.5;
+    rt.scared = 0;
+    // A fright costs a little health, but the shark can never finish a fish off.
+    if (fish.health > 0.2) fish.health = Math.max(0.2, fish.health - 0.06);
+    queueEffect('bubbles', rt.pos, 10);
+    sfx('chomp');
+    const now = nowSec();
+    if (now - lastFaintToast > 8) {
+      lastFaintToast = now;
+      toast(`${fish.name} fainted from fright! Tap the shark to chase it away!`, '😵', 3500);
+    }
+  } else if (event.type === 'bored') {
+    state.shark = { ...state.shark, hitsLeft: 0 };
+    toast('The shark got bored and swam away. Phew!', '🦈', 3500);
+  } else if (event.type === 'left') {
+    state.shark = { visible: false, hitsLeft: 0 };
+  } else return;
+  emit();
+}
+
+function tickShark(dt) {
+  if (!state.settings.sharkVisits || !state.hintDismissed || !state.fish.length) return;
+  if (world.shark.phase !== 'idle' || state.asma.phase !== 'idle') return;
+  nextSharkIn -= dt;
+  if (nextSharkIn <= 0) summonShark();
+}
+
+// ---------- tank neighbours: tap one to hear about it ----------
+const critterTurn = {};
+export function critterFact(kind) {
+  const c = CRITTERS[kind];
+  const lang = state.settings.factLang;
+  const side = lang === 'bn' ? c.bn : c.en;
+  const i = (critterTurn[kind] = ((critterTurn[kind] ?? -1) + 1) % side.facts.length);
+  toast(`${side.label}: ${side.facts[i]}`, c.emoji, 6500, lang === 'bn' ? 'bn' : '');
 }
 
 // Slow stat changes, run once per second (cheap, and keeps UI meters fresh).
@@ -541,6 +693,7 @@ export function tickStats(dt) {
     }
   }
   tickAsma(dt);
+  tickShark(dt);
   if (weakened.length === 1) toast(`${weakened[0]} is very weak from hunger! Please feed soon.`, '🥺', 4500);
   else if (weakened.length > 1) toast(`${weakened.length} fish are very weak from hunger! Please feed them soon.`, '🥺', 4500);
   emit();

@@ -66,6 +66,13 @@ export const DORSALS = {
     s.quadraticCurveTo(0.5, 0.35, 0.45, -0.05);
     s.lineTo(-0.2, -0.05);
   }),
+  // Batfish: a very tall fin sweeping up and back, mirrored underneath as the belly fin.
+  bat: finGeometry((s) => {
+    s.moveTo(-0.3, 0);
+    s.quadraticCurveTo(-0.1, 0.95, 0.6, 1.15);
+    s.quadraticCurveTo(0.62, 0.5, 0.55, -0.05);
+    s.lineTo(-0.3, -0.05);
+  }),
   flowy: finGeometry((s) => {
     s.moveTo(-0.15, 0);
     s.quadraticCurveTo(0.3, 0.65, 0.85, 0.4);

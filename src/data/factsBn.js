@@ -1,4 +1,5 @@
 import { SPECIES, GENERAL_FACTS } from './species';
+import { CRITTERS } from './critters';
 
 // Bangla (বাংলা) versions of every fact, index-aligned with the English lists in species.js.
 export const SPECIES_BN = {
@@ -40,6 +41,14 @@ export const SPECIES_BN = {
       'বেটা মাছ একটি বিশেষ অঙ্গের সাহায্যে পানির ওপর থেকে বাতাস নিয়েও শ্বাস নিতে পারে।',
       'বেটা মাছ পানির ওপরে বুদবুদ দিয়ে বাসা বানায়।',
       'বেটা মাছের দরকার উষ্ণ পানি আর ফিল্টার, ছোট্ট বাটি নয়।',
+    ],
+  },
+  batfish: {
+    label: 'ব্যাটফিশ',
+    facts: [
+      'ছোট ব্যাটফিশ কমলা-কালো রঙের হয়, আর মরা পাতার মতো দেখাতে একপাশে কাত হয়ে ভাসে!',
+      'ব্যাটফিশের পাখনা অনেক লম্বা, তাই পানির নিচে ওদের উড়ন্ত বাদুড়ের মতো দেখায়।',
+      'ব্যাটফিশ বাড়তি সামুদ্রিক শৈবাল খেয়ে প্রবাল প্রাচীরকে বাঁচতে সাহায্য করে।',
     ],
   },
 };
@@ -91,6 +100,10 @@ export function allFacts(lang) {
     ...Object.keys(SPECIES).flatMap((id) => {
       const label = lang === 'bn' ? SPECIES_BN[id].label : SPECIES[id].label;
       return speciesFacts(id, lang).map((text) => ({ text, topic: label }));
+    }),
+    ...Object.values(CRITTERS).flatMap((c) => {
+      const side = lang === 'bn' ? c.bn : c.en;
+      return side.facts.map((text) => ({ text, topic: side.label }));
     }),
   ];
 }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useStore, openPanel, setSetting, resetAquarium, dismissHint, adoptFish } from '../state/store';
+import { useStore, openPanel, setSetting, resetAquarium, dismissHint, adoptFish, summonShark } from '../state/store';
 import { SPECIES } from '../data/species';
 import { allFacts, UI_TEXT } from '../data/factsBn';
 import FishIcon from './FishIcon';
@@ -118,6 +118,12 @@ export function SettingsPanel() {
         onChange={(v) => setSetting('asmaVisits', v)}
       />
       <Toggle
+        label="Shark visits"
+        desc="A cheeky shark sneaks in sometimes. Tap it to chase it away!"
+        checked={settings.sharkVisits}
+        onChange={(v) => setSetting('sharkVisits', v)}
+      />
+      <Toggle
         label="Calm mode"
         desc="Fewer bubbles and less movement"
         checked={settings.calmMode}
@@ -125,6 +131,11 @@ export function SettingsPanel() {
       />
       <div className="settings-row">
         <FullscreenButton />
+        {settings.sharkVisits && (
+          <button className="btn-small btn-soft" onClick={summonShark}>
+            🦈 Call the shark
+          </button>
+        )}
       </div>
       <div className="stats">
         <div>
@@ -146,6 +157,10 @@ export function SettingsPanel() {
         <div>
           <strong>{stats.asmaVisits || 0}</strong>
           <small>Asma visits</small>
+        </div>
+        <div>
+          <strong>{stats.sharksShooed || 0}</strong>
+          <small>sharks chased</small>
         </div>
       </div>
       {confirm ? (

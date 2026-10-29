@@ -90,6 +90,24 @@ export const SPECIES = {
       'Bettas need warm water and a filter, not a tiny bowl.',
     ],
   },
+  batfish: {
+    label: 'Batfish',
+    body: [0.22, 0.95, 0.72],
+    tail: 'fan',
+    dorsal: 'bat',
+    stripes: true,
+    size: 1.0,
+    colors: [
+      { body: '#dfe6ee', fin: '#9fb2c6', accent: '#3b4658' },
+      { body: '#ff9a3d', fin: '#2b2b3d', accent: '#2b2b3d' },
+      { body: '#ffe08a', fin: '#ffb84d', accent: '#8a5a1d' },
+    ],
+    facts: [
+      'Young batfish are orange and black, and they float on their side to look like a dead leaf!',
+      'Batfish have super tall fins, so underwater they look like a flying bat.',
+      'Batfish help coral reefs by eating extra seaweed that could cover the coral.',
+    ],
+  },
 };
 
 export const SPECIES_IDS = Object.keys(SPECIES);
@@ -116,6 +134,8 @@ export const MOODS = {
   weak: { label: 'Weak', emoji: '🥺' },
   playing: { label: 'Playing with Asma', emoji: '🥰' },
   missing: { label: 'Misses Asma', emoji: '💭' },
+  scared: { label: 'Scared of the shark!', emoji: '😱' },
+  fainted: { label: 'Fainted from fright', emoji: '😵' },
 };
 
 export const GENERAL_FACTS = [

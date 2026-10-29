@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { SPECIES, PERSONALITIES } from '../data/species';
 import { world } from './world';
+import { sharkActive } from './sharkBrain';
 
 const tmp = new THREE.Vector3();
 const desired = new THREE.Vector3();
@@ -36,6 +37,9 @@ export function createRuntime(fish) {
     fullNotice: 0,
     emote: null,
     seeking: null,
+    scared: 0, // seconds left fleeing from the shark
+    fainted: 0, // seconds left floating dazed after the shark reached it
+    faint: 0, // eased 0..1 used to turn the fish belly-up
     // Each fish circles Asma on its own little orbit.
     orbit: { angle: Math.random() * Math.PI * 2, radius: rand(1.3, 2.3), dir: Math.random() < 0.5 ? -1 : 1, seed: rand(0, 10) },
   };
@@ -122,10 +126,21 @@ export function updateFish(fish, rt, dt, mates) {
     }
   }
 
+  // The shark: fish near it, or the one it is chasing, flee in a panic.
+  const shark = world.shark;
+  rt.fainted = Math.max(0, rt.fainted - dt);
+  rt.scared = Math.max(0, rt.scared - dt);
+  if (sharkActive() && rt.fainted <= 0) {
+    const chased = shark.phase === 'chasing' && shark.targetId === fish.id;
+    if (chased || rt.pos.distanceTo(shark.pos) < 3.8) rt.scared = chased ? 2 : Math.max(rt.scared, 1.6);
+  }
+  const panicking = rt.scared > 0 || rt.fainted > 0;
+  if (panicking) rt.sleeping = 0;
+
   const asma = world.asma;
   const withAsma = asma.phase === 'playing' && fish.health >= 0.3;
   if (withAsma) rt.sleeping = 0; // nobody naps when Asma visits
-  const seeking = wantsFood && food && rt.sleeping <= 0 ? food.pellet : null;
+  const seeking = wantsFood && food && rt.sleeping <= 0 && !panicking ? food.pellet : null;
   rt.seeking = seeking;
   // After she leaves, fish take turns asking for her at the glass.
   const missing = asma.missing && Math.sin(world.time * 0.35 + rt.orbit.seed) > 0.3;
@@ -139,6 +154,8 @@ export function updateFish(fish, rt, dt, mates) {
   else if (missing) mood = 'missing';
   else if (rt.curious > 0) mood = 'curious';
   if (rt.happyTimer > 0) mood = 'happy';
+  if (rt.fainted > 0) mood = 'fainted';
+  else if (rt.scared > 0) mood = 'scared';
   if (fish.mood !== mood) {
     if (mood !== 'happy') rt.retarget = 0;
     fish.mood = mood;
@@ -167,6 +184,8 @@ export function updateFish(fish, rt, dt, mates) {
       asma.pos.z + Math.sin(o.angle) * o.radius * 0.7,
     );
     rt.retarget = 1;
+  } else if (panicking) {
+    rt.retarget = 0; // pick a fresh calm spot once the fright is over
   } else if (!seeking && (rt.retarget <= 0 || (mood === 'happy' && rt.pos.distanceTo(rt.target) < 0.8))) {
     pickWanderTarget(rt, fish, mood);
   }
@@ -184,7 +203,19 @@ export function updateFish(fish, rt, dt, mates) {
   desired.subVectors(goal, rt.pos);
   const distToGoal = desired.length();
   const atGlass = !seeking && (mood === 'hungry' || mood === 'curious' || mood === 'weak' || mood === 'missing') && distToGoal < 1;
-  if (atGlass) {
+  if (mood === 'fainted') {
+    // Dazed: drift slowly down, barely moving.
+    desired.set(Math.sin(world.time * 0.8 + rt.tailPhase) * 0.05, -0.3, 0);
+  } else if (mood === 'scared') {
+    // Dart away from the shark, curving sideways so fish don't get pinned against the glass.
+    desired.subVectors(rt.pos, shark.pos);
+    desired.y *= 0.5;
+    const side = rt.orbit.dir;
+    desired.normalize();
+    desired.x += -desired.z * 0.7 * side;
+    desired.z += desired.x * 0.7 * side - 0.2;
+    desired.normalize().multiplyScalar(2.9 * Math.min(1.15, persona.speed) * (0.6 + 0.4 * fish.health));
+  } else if (atGlass) {
     // Hover facing the viewer.
     desired.set(Math.sin(world.time * 0.7 + rt.tailPhase) * 0.15, 0, 0.25);
   } else {
@@ -213,13 +244,13 @@ export function updateFish(fish, rt, dt, mates) {
   // Gentle vertical bob makes paths feel organic.
   desired.y += Math.sin(world.time * 0.9 + rt.tailPhase * 0.3) * 0.12;
 
-  const turn = seeking ? 3 : mood === 'sleepy' ? 0.8 : 1.6;
+  const turn = mood === 'scared' ? 4 : seeking ? 3 : mood === 'sleepy' || mood === 'fainted' ? 0.8 : 1.6;
   rt.vel.lerp(desired, 1 - Math.exp(-dt * turn));
   rt.pos.addScaledVector(rt.vel, dt);
 
   // Soft walls.
   const b = world.bounds;
-  const floor = seeking ? world.floorY + 0.15 : b.minY;
+  const floor = seeking || mood === 'fainted' ? world.floorY + 0.25 : b.minY;
   rt.pos.x = THREE.MathUtils.clamp(rt.pos.x, b.minX - 0.3, b.maxX + 0.3);
   rt.pos.y = THREE.MathUtils.clamp(rt.pos.y, floor, b.maxY + 0.2);
   rt.pos.z = THREE.MathUtils.clamp(rt.pos.z, b.minZ - 0.3, b.maxZ + 0.4);
@@ -238,9 +269,10 @@ export function updateFish(fish, rt, dt, mates) {
   const swimSpeed = rt.vel.length();
   const tailRate = mood === 'sleepy' ? 2 : 4 + swimSpeed * 5;
   rt.tailPhase += dt * tailRate;
-  const wiggleTarget = (mood === 'hungry' && atGlass) || rt.happyTimer > 0 ? 1 : 0;
+  const wiggleTarget = (mood === 'hungry' && atGlass) || rt.happyTimer > 0 || mood === 'scared' ? 1 : 0;
   rt.wiggle += (wiggleTarget - rt.wiggle) * (1 - Math.exp(-dt * 4));
-  rt.squint += ((mood === 'sleepy' ? 1 : 0) - rt.squint) * (1 - Math.exp(-dt * 3));
+  rt.faint += ((mood === 'fainted' ? 1 : 0) - rt.faint) * (1 - Math.exp(-dt * 4));
+  rt.squint += ((mood === 'sleepy' || mood === 'fainted' ? 1 : 0) - rt.squint) * (1 - Math.exp(-dt * 3));
 
   // --- emote bubble ---
   if (rt.emoteOverride) {
@@ -248,6 +280,8 @@ export function updateFish(fish, rt, dt, mates) {
     if (rt.emoteOverride.time <= 0) rt.emoteOverride = null;
   }
   if (rt.emoteOverride) rt.emote = rt.emoteOverride.type;
+  else if (mood === 'fainted') rt.emote = 'fainted';
+  else if (mood === 'scared') rt.emote = 'scared';
   else if (rt.happyTimer > 0) rt.emote = 'love';
   else if (mood === 'sleepy') rt.emote = 'sleepy';
   else if (mood === 'weak') rt.emote = 'weak';

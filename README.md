@@ -7,9 +7,9 @@ Built with React, Vite, Three.js, React Three Fiber and drei. Everything runs in
 ## Features
 
 **Fish and the tank**
-- Cute fish built from simple shapes in code (clownfish, blue tang, yellow tang, angelfish, betta). No 3D model files are needed.
+- Cute fish built from simple shapes in code (clownfish, blue tang, yellow tang, angelfish, betta and a tall-finned batfish). No 3D model files are needed.
 - Smooth curved swimming, wagging tails, flapping fins and blinking, sleepy eyes.
-- Coral, kelp, anemones, starfish, rocks, light rays, rippling light on the sand and rising bubbles.
+- A colourful reef: branching, table, bubble, brain, tube and swaying finger corals, plus kelp, anemones, rocks, light rays, rippling light on the sand and rising bubbles.
 
 **Feeding**
 - **Feed** drops a handful of pellets. **Tap the water** to drop food exactly where you want it.
@@ -38,13 +38,25 @@ Built with React, Vite, Three.js, React Three Fiber and drei. Everything runs in
 - Afterwards the fish ask "Bring Asma back!" and the 👧 button glows. Tap it to call her again once she has caught her breath.
 - Tap Asma for a twirl and hearts. She also visits on her own every few minutes (this can be turned off in Settings).
 
+**🦈 The cheeky shark**
+- Every few minutes a goofy cartoon shark with grumpy eyebrows sneaks in and chases the fish.
+- Fish near it panic 😱 and dart away. If the shark reaches one, that fish faints from fright 😵, floats belly-up for a moment and loses a little health. The shark never eats anyone and can never finish a fish off.
+- **Tap the shark 3 times** to bonk it on the nose and chase it away. The fish reward you with hearts.
+- Asma isn't scared of it: when she dives in, the shark flees.
+- It can be turned off in Settings, and Settings also has a **🦈 Call the shark** button.
+
+**🐢🦀⭐ Tank neighbours** (tap them for a fact)
+- A gentle **sea turtle** glides slowly around the back of the tank and does a twirl when tapped.
+- A little red **crab** scuttles sideways along the sand, waves its claws and tidies up leftover food.
+- Smiling **starfish** hop and spin when tapped.
+
 **Learning and fun**
 - **💡 Facts**: ocean, habitat and fish-care facts in Bangla (default) or English.
 - **🪙 Treasure chest**: tap it for coins, sparkles and a surprise fact.
 - Bubbly sound effects, synthesized in the browser with no audio files.
 
 **Settings**
-- Name tags, sounds, Asma's surprise visits and calm mode (less motion) can be turned on or off.
+- Name tags, sounds, Asma's surprise visits, shark visits and calm mode (less motion) can be turned on or off.
 - You can reset the aquarium. Memories are kept.
 
 Progress (fish, growth, love, health, memories, settings) is saved in the browser's `localStorage` and survives refreshes.
@@ -90,6 +102,8 @@ The `dist/` folder is a static site, so it can be hosted anywhere (GitHub Pages,
 4. Come back regularly. Hungry fish get weak, and very hungry fish can die.
 5. Grow your fish to unlock colors and babies, and tap the treasure chest for surprises.
 6. Tap **👧 Asma** to invite her for a swim with your fish.
+7. When the shark comes, tap it 3 times to protect your fish!
+8. Tap the turtle, the crab and the starfish to learn about them.
 
 ## Game timing
 
@@ -103,6 +117,8 @@ All timings live at the top of `src/state/store.js` and are easy to tune:
 | Starving while the app is closed, until death | ~12 hours |
 | Asma's breath underwater | ~32 seconds |
 | Asma's rest before she can dive again | 20 seconds |
+| First shark visit / later visits | ~75 seconds / every 2.5–4 minutes |
+| Shark stays (unless chased away) | ~45 seconds |
 | Pellets to fill a tummy | ~3 |
 | Pellets to grow from baby to adult | ~20 |
 
@@ -114,17 +130,20 @@ src/
 ├── audio/sounds.js      Synthesized sound effects (Web Audio)
 ├── data/
 │   ├── species.js       Species, palettes, personalities, names, English facts
+│   ├── critters.js      Shark, turtle, crab and starfish facts (English and Bangla)
 │   └── factsBn.js       Bangla facts and fact-panel text
 ├── sim/
 │   ├── world.js         Per-frame simulation state: pellets, bounds, effect queues
-│   ├── fishBrain.js     Steering, moods, food seeking, circling Asma
-│   └── asmaBrain.js     Asma's dive, breath, snacks and surfacing
+│   ├── fishBrain.js     Steering, moods, food seeking, circling Asma, fleeing the shark
+│   ├── asmaBrain.js     Asma's dive, breath, snacks and surfacing
+│   └── sharkBrain.js    The shark's prowling, chasing and getting chased away
 ├── state/
 │   ├── store.js         Game state and actions (feed, eat, grow, starve, memories…)
 │   ├── persistence.js   localStorage save/load
 │   └── labels.js        DOM label registry for fish name tags
 ├── scene/               3D: fish model, seabed, coral, plants, bubbles, hearts,
-│                        food pellets, treasure chest, Asma, tap-to-feed backdrop
+│                        food pellets, treasure chest, Asma, shark, turtle, crab,
+│                        starfish, tap-to-feed backdrop
 └── ui/                  HUD, fish card, panels (facts, memories, settings), labels
 ```
 

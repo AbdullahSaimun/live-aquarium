@@ -13,6 +13,10 @@ import Hearts from './Hearts';
 import AsmaDiver from './AsmaDiver';
 import WaterTap from './WaterTap';
 import TreasureChest from './TreasureChest';
+import Shark from './Shark';
+import Turtle from './Turtle';
+import Crab from './Crab';
+import Starfish from './Starfish';
 
 const FOV = 45;
 const BASE_Z = 11;
@@ -70,14 +74,18 @@ export default function Aquarium() {
       <CameraRig calm={calm} />
       <WaterTap />
       <Seabed />
-      <Coral />
+      <Coral calm={calm} />
       <TreasureChest />
+      <Starfish />
+      <Crab />
+      <Turtle />
       <Plants calm={calm} />
       <Bubbles ambient={calm ? 18 : 45} />
       <School />
       <FoodPellets />
       <Hearts />
       <AsmaDiver />
+      <Shark />
     </Canvas>
   );
 }

@@ -4,6 +4,7 @@ import HUD from './ui/HUD';
 import FishLabels from './ui/FishLabels';
 import { AsmaCard } from './ui/Asma';
 import FishCard from './ui/FishCard';
+import AnniversaryButton from './ui/Anniversary';
 import { FactPanel, SettingsPanel, MemoriesPanel, EmptyTank, WelcomeHint, Toasts } from './ui/Panels';
 import { useStore, tickStats, save, announceLosses } from './state/store';
 
@@ -43,6 +44,7 @@ export default function App() {
       <FishLabels />
       <HUD />
       <AsmaCard />
+      <AnniversaryButton />
       <FishCard />
       {panel === 'facts' && <FactPanel />}
       {panel === 'settings' && <SettingsPanel />}

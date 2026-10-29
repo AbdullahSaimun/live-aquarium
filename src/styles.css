@@ -788,11 +788,11 @@ button:focus-visible,
   background: #ffe6ea;
 }
 
-.emote-weak {
+.emote.emote-weak {
   background: #ffe6ea;
 }
 
-.emote-weak::after {
+.emote.emote-weak::after {
   border-top-color: #ffe6ea;
 }
 
@@ -829,6 +829,368 @@ button:focus-visible,
   border: 8px solid transparent;
   border-top-color: #ffc2dc;
   border-bottom: 0;
+}
+
+/* ---------- anniversary surprise ---------- */
+.btn-anniversary {
+  position: absolute;
+  top: var(--top-space);
+  left: max(var(--gutter), env(safe-area-inset-left));
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 48px;
+  padding: 6px 16px 6px 8px;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ff7eb6, #ff4f8b 60%, #ffb36b);
+  color: #fff;
+  font: inherit;
+  font-weight: 800;
+  font-size: 16px;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(255, 79, 139, 0.45);
+  animation: love-glow 2s ease-in-out infinite;
+}
+
+.btn-anniversary:active {
+  transform: scale(0.95);
+}
+
+.btn-anniversary-icon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  font-size: 20px;
+  animation: bob 1.6s ease-in-out infinite;
+}
+
+@keyframes love-glow {
+  50% {
+    box-shadow: 0 8px 20px rgba(255, 79, 139, 0.45), 0 0 0 8px rgba(255, 126, 182, 0.25);
+  }
+}
+
+.love-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+  background: radial-gradient(ellipse at center, rgba(255, 126, 182, 0.55), rgba(90, 20, 70, 0.75));
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  overflow-y: auto;
+  animation: fade-in 0.4s ease;
+}
+
+.love-hearts {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.love-hearts span {
+  position: absolute;
+  bottom: -50px;
+  animation: love-rise linear infinite;
+  opacity: 0;
+}
+
+@keyframes love-rise {
+  10% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 0.9;
+  }
+  to {
+    transform: translate(30px, -110vh) rotate(25deg);
+    opacity: 0;
+  }
+}
+
+.love-card {
+  position: relative;
+  width: min(460px, 100%);
+  padding: 26px 24px 22px;
+  border-radius: 28px;
+  background: linear-gradient(180deg, #fff, #fff1f6);
+  border: 2px solid #ffc2dc;
+  box-shadow: 0 24px 60px rgba(90, 20, 70, 0.45);
+  text-align: center;
+  color: #5a2140;
+  animation: pop-in 0.5s cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+
+.love-ring {
+  font-size: 54px;
+  line-height: 1;
+  animation: bob 1.8s ease-in-out infinite;
+}
+
+.love-kicker {
+  margin: 8px 0 0;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #e2476d;
+}
+
+.love-title {
+  margin: 2px 0 4px;
+  font-size: clamp(24px, 6vw, 32px);
+  line-height: 1.15;
+  background: linear-gradient(90deg, #ff4f8b, #c2386f, #ff8a5c);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.love-date {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: #a0607f;
+}
+
+.love-count {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 16px 0;
+}
+
+.love-count div {
+  padding: 8px 4px;
+  border-radius: 16px;
+  background: #ffe3f0;
+}
+
+.love-count strong {
+  display: block;
+  font-size: 22px;
+  color: #c2386f;
+}
+
+.love-count small {
+  font-size: 11px;
+  font-weight: 700;
+  color: #a0607f;
+}
+
+.love-letter {
+  text-align: left;
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.love-letter p {
+  margin: 0 0 10px;
+  animation: fade-in 0.8s ease both;
+}
+
+.love-letter p:nth-child(2) { animation-delay: 0.3s; }
+.love-letter p:nth-child(3) { animation-delay: 0.6s; }
+.love-letter p:nth-child(4) { animation-delay: 0.9s; }
+.love-letter p:nth-child(5) { animation-delay: 1.2s; }
+.love-letter p:nth-child(6) { animation-delay: 1.5s; }
+
+.love-bn {
+  text-align: center;
+  font-family: 'Baloo Da 2', 'Nirmala UI', 'Vrinda', 'Noto Sans Bengali', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  color: #e2476d;
+}
+
+.love-sign {
+  text-align: right;
+  font-weight: 800;
+  color: #c2386f;
+}
+
+.btn-love {
+  margin-top: 6px;
+  min-height: 52px;
+  padding: 10px 28px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ff7eb6, #ff4f8b);
+  color: #fff;
+  font: inherit;
+  font-weight: 800;
+  font-size: 17px;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(255, 79, 139, 0.4);
+}
+
+.btn-love:active {
+  transform: scale(0.96);
+}
+
+.btn-anniversary-badge {
+  position: absolute;
+  top: -10px;
+  right: -8px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: #ffd23f;
+  color: #8a4b00;
+  font-size: 11px;
+  white-space: nowrap;
+  box-shadow: 0 3px 8px rgba(10, 40, 90, 0.25);
+  animation: bob 1.2s ease-in-out infinite;
+}
+
+/* Anniversary days: a golden, sparkling ring button. */
+.btn-anniversary.is-special {
+  background: linear-gradient(135deg, #ffb36b, #ff4f8b 55%, #a98bff);
+  animation: love-glow 1.2s ease-in-out infinite;
+}
+
+.love-card.is-year {
+  border-color: #ffd23f;
+  background: linear-gradient(180deg, #fffdf2, #fff1f6);
+}
+
+.love-lock {
+  width: min(380px, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.love-lock.is-wrong {
+  animation: love-shake 0.45s ease;
+}
+
+@keyframes love-shake {
+  20%,
+  60% {
+    transform: translateX(-10px);
+  }
+  40%,
+  80% {
+    transform: translateX(10px);
+  }
+}
+
+.love-input {
+  width: 100%;
+  margin: 14px 0 4px;
+  padding: 12px 16px;
+  border: 2px solid #ffc2dc;
+  border-radius: 16px;
+  background: #fff;
+  color: #5a2140;
+  font: inherit;
+  font-size: 18px; /* 16px+ stops phones from zooming in */
+  font-weight: 700;
+  text-align: center;
+  letter-spacing: 0.15em;
+  outline: none;
+}
+
+.love-input:focus {
+  border-color: #ff4f8b;
+  box-shadow: 0 0 0 4px rgba(255, 79, 139, 0.18);
+}
+
+.love-wrong {
+  margin: 2px 0 4px;
+  font-weight: 800;
+  font-size: 14px;
+  color: #e2476d;
+}
+
+.btn-love:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+@media (max-width: 600px) {
+  /* Asma's card sits top-left on phones, so the ring moves to the right. */
+  .btn-anniversary {
+    left: auto;
+    right: max(var(--gutter), env(safe-area-inset-right));
+    min-height: 44px;
+    font-size: 14px;
+    padding: 4px 12px 4px 5px;
+  }
+
+  .love-card {
+    padding: 22px 18px 18px;
+  }
+}
+
+/* ---------- shark ---------- */
+.shark-say {
+  transform: translate(-50%, -100%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: max-content;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: linear-gradient(160deg, #fff, #ffe9e3);
+  border: 2px solid #ff8a6b;
+  box-shadow: 0 6px 16px rgba(10, 40, 90, 0.25);
+  font-weight: 800;
+  font-size: 14px;
+  color: #c2402a;
+  animation: shark-nudge 0.9s ease-in-out infinite;
+}
+
+.shark-say.is-beaten {
+  border-color: #7ee0b5;
+  color: #1d7a55;
+  background: linear-gradient(160deg, #fff, #e3fff2);
+  animation: fade-in 0.3s ease;
+}
+
+.shark-pips {
+  display: flex;
+  gap: 4px;
+}
+
+.shark-pips i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(194, 64, 42, 0.18);
+}
+
+.shark-pips i.is-on {
+  background: #ff5a3c;
+  box-shadow: 0 0 0 2px rgba(255, 90, 60, 0.25);
+}
+
+@keyframes shark-nudge {
+  50% {
+    transform: translate(-50%, -100%) scale(1.07);
+  }
+}
+
+.emote.emote-scared {
+  background: #fff1d6;
+  animation: pop-in 0.3s cubic-bezier(0.2, 1.4, 0.4, 1), shiver 0.15s linear infinite;
+}
+
+.emote.emote-scared::after {
+  border-top-color: #fff1d6;
+}
+
+@keyframes shiver {
+  50% {
+    translate: 2px 0;
+  }
 }
 
 .asma-card {

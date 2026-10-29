@@ -17,25 +17,17 @@ function makeGeometries() {
   }
   brain.computeVertexNormals();
 
-  const star = new THREE.Shape();
-  for (let i = 0; i <= 10; i++) {
-    const a = (i / 10) * Math.PI * 2 + Math.PI / 2;
-    const r = i % 2 === 0 ? 1 : 0.45;
-    if (i === 0) star.moveTo(Math.cos(a) * r, Math.sin(a) * r);
-    else star.lineTo(Math.cos(a) * r, Math.sin(a) * r);
-  }
-  const starGeo = new THREE.ExtrudeGeometry(star, { depth: 0.12, bevelEnabled: true, bevelSize: 0.1, bevelThickness: 0.1, bevelSegments: 2 });
-  starGeo.rotateX(-Math.PI / 2);
-
   return {
     brain,
-    star: starGeo,
     branch: new THREE.CapsuleGeometry(0.11, 0.8, 4, 8),
     tube: new THREE.CylinderGeometry(0.14, 0.18, 1, 12, 1, true),
     rim: new THREE.TorusGeometry(0.14, 0.04, 6, 14),
     fan: new THREE.CircleGeometry(1, 28, 0, Math.PI),
     tentacle: new THREE.CapsuleGeometry(0.05, 0.5, 3, 6),
     blob: new THREE.SphereGeometry(1, 16, 12),
+    disc: new THREE.CylinderGeometry(1, 0.85, 0.1, 22),
+    stalk: new THREE.CylinderGeometry(0.12, 0.2, 1, 10),
+    finger: new THREE.CapsuleGeometry(0.09, 0.5, 4, 8),
   };
 }
 
@@ -51,8 +43,12 @@ function makeMaterials() {
     fan: std('#c06cff', { side: THREE.DoubleSide, transparent: true, opacity: 0.9 }),
     anemone: std('#ff9ed8', { emissive: '#ff4fa8', emissiveIntensity: 0.15 }),
     anemoneTip: std('#fff0fa'),
-    star: std('#ff7a59', { roughness: 0.6 }),
-    starYellow: std('#ffc94d', { roughness: 0.6 }),
+    yellow: std('#ffd23f'),
+    blue: std('#5cc8ff'),
+    table: std('#45c9b5'),
+    bubble: std('#c9f7a8', { roughness: 0.3, emissive: '#7fe07a', emissiveIntensity: 0.12 }),
+    finger: std('#ffb0d0', { roughness: 0.5 }),
+    fingerOrange: std('#ffb36b', { roughness: 0.5 }),
   };
 }
 
@@ -105,6 +101,73 @@ function Anemone({ geos, mats, position }) {
   );
 }
 
+// Table coral: flat plates stacked on a short stalk.
+function TableCoral({ geos, mats, position, scale = 1 }) {
+  return (
+    <group position={position} scale={scale}>
+      <mesh geometry={geos.stalk} material={mats.table} position={[0, 0.4, 0]} scale={[1, 0.8, 1]} />
+      <mesh geometry={geos.disc} material={mats.table} position={[0, 0.82, 0]} scale={[0.9, 1, 0.8]} />
+      <mesh geometry={geos.disc} material={mats.table} position={[0.35, 0.55, 0.1]} scale={[0.55, 1, 0.5]} />
+      <mesh geometry={geos.disc} material={mats.table} position={[-0.3, 0.42, -0.1]} scale={[0.45, 1, 0.4]} />
+    </group>
+  );
+}
+
+const BUBBLES = [
+  [0, 0.2, 0, 0.22],
+  [0.24, 0.14, 0.1, 0.17],
+  [-0.22, 0.13, 0.08, 0.18],
+  [0.1, 0.12, -0.22, 0.16],
+  [-0.12, 0.1, 0.24, 0.15],
+  [0.05, 0.38, 0.05, 0.15],
+  [0.3, 0.3, -0.1, 0.12],
+  [-0.28, 0.32, -0.08, 0.13],
+];
+
+// Bubble coral: a soft cluster of glowing green balls.
+function BubbleCoral({ geos, mats, position, scale = 1 }) {
+  return (
+    <group position={position} scale={scale}>
+      {BUBBLES.map(([x, y, z, r], i) => (
+        <mesh key={i} geometry={geos.blob} material={mats.bubble} position={[x, y, z]} scale={r} />
+      ))}
+    </group>
+  );
+}
+
+// Soft finger coral that sways in the current.
+function FingerCoral({ geos, mat, position, scale = 1, calm }) {
+  const fingers = useRef([]);
+  const items = useMemo(
+    () =>
+      Array.from({ length: 7 }, (_, i) => {
+        const a = (i / 7) * Math.PI * 2;
+        const r = i === 0 ? 0 : 0.18;
+        return { x: Math.cos(a) * r, z: Math.sin(a) * r, h: 0.8 + (i % 3) * 0.2, lean: i === 0 ? 0 : 0.35, a, phase: i * 0.9 };
+      }),
+    [],
+  );
+  useFrame(() => {
+    const t = world.time;
+    const amp = calm ? 0.04 : 0.12;
+    fingers.current.forEach((g, i) => {
+      if (!g) return;
+      const it = items[i];
+      g.rotation.x = Math.sin(it.a) * it.lean + Math.sin(t * 1.1 + it.phase) * amp;
+      g.rotation.z = -Math.cos(it.a) * it.lean + Math.cos(t * 0.9 + it.phase) * amp;
+    });
+  });
+  return (
+    <group position={position} scale={scale}>
+      {items.map((it, i) => (
+        <group key={i} position={[it.x, 0, it.z]} ref={(el) => (fingers.current[i] = el)}>
+          <mesh geometry={geos.finger} material={mat} position={[0, it.h * 0.45, 0]} scale={[1, it.h * 1.3, 1]} />
+        </group>
+      ))}
+    </group>
+  );
+}
+
 function TubeCluster({ geos, mats, position }) {
   const tubes = [
     [0, 1.2, 0],
@@ -125,7 +188,7 @@ function TubeCluster({ geos, mats, position }) {
   );
 }
 
-export default function Coral() {
+export default function Coral({ calm }) {
   const geos = useMemo(makeGeometries, []);
   const mats = useMemo(makeMaterials, []);
   useEffect(
@@ -160,8 +223,21 @@ export default function Coral() {
       <Anemone geos={geos} mats={mats} position={[-3.4, FLOOR, -0.8]} />
       <Anemone geos={geos} mats={mats} position={[6.4, FLOOR, 1.2]} />
 
-      <mesh geometry={geos.star} material={mats.star} position={[1.8, FLOOR + 0.02, 1.6]} rotation={[0, 0.4, 0]} scale={0.32} />
-      <mesh geometry={geos.star} material={mats.starYellow} position={[-5.2, FLOOR + 0.02, 1.8]} rotation={[0, 1.2, 0]} scale={0.26} />
+
+      {/* more reef: some near the middle so narrow phone screens see it too */}
+      <group position={[-2.6, FLOOR - 0.1, -5]} rotation={[0, 0.6, 0]}>
+        <Branch geo={geos.branch} mat={mats.yellow} depth={4} len={0.95} tilt={0.05} />
+      </group>
+      <group position={[2.4, FLOOR - 0.1, -4]} rotation={[0, -0.8, 0]} scale={0.85}>
+        <Branch geo={geos.branch} mat={mats.blue} depth={4} len={1.0} tilt={-0.08} />
+      </group>
+      <TableCoral geos={geos} mats={mats} position={[-0.6, FLOOR - 0.1, -4.6]} />
+      <TableCoral geos={geos} mats={mats} position={[6.8, FLOOR - 0.1, -3.4]} scale={0.8} />
+      <BubbleCoral geos={geos} mats={mats} position={[0.6, FLOOR - 0.05, -3.4]} />
+      <BubbleCoral geos={geos} mats={mats} position={[-7, FLOOR - 0.05, -2.8]} scale={1.2} />
+      <FingerCoral geos={geos} mat={mats.finger} position={[2.2, FLOOR - 0.1, -2.6]} calm={calm} />
+      <FingerCoral geos={geos} mat={mats.fingerOrange} position={[-5, FLOOR - 0.1, -3.2]} scale={1.2} calm={calm} />
+      <FingerCoral geos={geos} mat={mats.finger} position={[4.8, FLOOR - 0.1, 0.2]} scale={0.8} calm={calm} />
     </group>
   );
 }

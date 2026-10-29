@@ -57,6 +57,20 @@ const SOUNDS = {
     }
   },
   gasp: (ac) => tone(ac, { from: 260, to: 900, dur: 0.25, vol: 0.07 }),
+  // Low "dun-dun... dun-dun" when the shark sneaks in.
+  shark: (ac) => {
+    [0, 0.42, 0.95, 1.25].forEach((start, i) =>
+      tone(ac, { type: 'sawtooth', from: i % 2 ? 117 : 110, to: i % 2 ? 112 : 104, start, dur: 0.3, vol: 0.09 }),
+    );
+  },
+  bonk: (ac) => {
+    tone(ac, { type: 'square', from: 320, to: 120, dur: 0.12, vol: 0.07 });
+    tone(ac, { from: 1400, to: 1900, start: 0.04, dur: 0.08, vol: 0.05 });
+  },
+  chomp: (ac) => {
+    tone(ac, { type: 'square', from: 220, to: 70, dur: 0.1, vol: 0.06 });
+    tone(ac, { type: 'square', from: 200, to: 60, start: 0.13, dur: 0.1, vol: 0.06 });
+  },
   sad: (ac) => {
     tone(ac, { type: 'triangle', from: 520, to: 440, dur: 0.35, vol: 0.08 });
     tone(ac, { type: 'triangle', from: 440, to: 330, start: 0.3, dur: 0.5, vol: 0.07 });

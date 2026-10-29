@@ -34,7 +34,7 @@ const FishModel = forwardRef(function FishModel({ species, mats }, ref) {
   const finScale = bz * 1.05;
   const stripeZs = def.stripes ? (species === 'clownfish' ? [0.42, -0.2, -0.72] : [0.25, -0.15]) : [];
   const stripeDepth = species === 'clownfish' ? 0.09 : 0.05;
-  const hasBelly = def.dorsal === 'sail' || def.dorsal === 'tall' || def.dorsal === 'flowy';
+  const hasBelly = def.dorsal === 'sail' || def.dorsal === 'tall' || def.dorsal === 'flowy' || def.dorsal === 'bat';
 
   return (
     <group ref={body}>

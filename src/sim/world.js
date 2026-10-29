@@ -34,6 +34,24 @@ export const world = {
     twirl: 0,
     missing: false, // set after she leaves: fish ask for her to come back
   },
+  // The shark that sometimes sneaks in (see sharkBrain.js).
+  shark: {
+    phase: 'idle', // idle | prowling | chasing | leaving
+    pos: new THREE.Vector3(0, -40, 0),
+    vel: new THREE.Vector3(),
+    target: new THREE.Vector3(),
+    yaw: 0,
+    pitch: 0,
+    tailPhase: 0,
+    timer: 0,
+    nextLunge: 0,
+    chaseTime: 0,
+    targetId: null,
+    hits: 0,
+    hurt: 0,
+    chomp: 0,
+    fast: false,
+  },
   // Queued particle bursts, drained each frame by the matching effect component.
   effects: { hearts: [], bubbles: [] },
 };

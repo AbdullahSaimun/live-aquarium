@@ -57,6 +57,8 @@ export default function Fish({ fish }) {
       const k = 1 - rt.flip / FLIP_TIME;
       roll = (k < 0.5 ? 2 * k * k : 1 - (-2 * k + 2) ** 2 / 2) * Math.PI * 2;
     }
+    // A fainted fish rolls belly-up, wobbling a little, until it comes round.
+    roll += rt.faint * (Math.PI * 0.85 + Math.sin(t * 2 + rt.tailPhase) * 0.15);
     g.rotation.set(rt.pitch, rt.yaw, roll + Math.sin(t * 13 + rt.tailPhase) * 0.22 * rt.wiggle, 'YXZ');
     g.position.y = Math.abs(Math.sin(t * 7)) * 0.15 * rt.wiggle * (rt.happyTimer > 0 ? 1 : 0.3);
 
