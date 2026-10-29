@@ -1,6 +1,6 @@
-# 🐠 My Little Ocean
+# 🐠 Live Aquarium
 
-A cozy, interactive 3D aquarium for kids. Feed the fish, watch them grow, learn fun ocean facts in **বাংলা** or English, and learn to look after pets responsibly.
+**My Little Ocean** is a cozy, interactive 3D aquarium for kids. Feed the fish, watch them grow, learn fun ocean facts in **বাংলা** or English, and learn to look after pets responsibly.
 
 Built with React, Vite, Three.js, React Three Fiber and drei. Everything runs in the browser: no backend, no accounts, no downloads.
 
