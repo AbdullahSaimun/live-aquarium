@@ -38,11 +38,11 @@ export default function HUD() {
       </header>
 
       <nav className="actionbar" aria-label="Actions">
-        <button className={`btn btn-round${panel === 'facts' ? ' is-on' : ''}`} onClick={() => openPanel('facts')}>
+        <button className={`btn btn-round btn-facts${panel === 'facts' ? ' is-on' : ''}`} onClick={() => openPanel('facts')}>
           <span className="btn-emoji">💡</span>
           <span className="btn-label">Facts</span>
         </button>
-        <button className={`btn btn-round${panel === 'memories' ? ' is-on' : ''}`} onClick={() => openPanel('memories')}>
+        <button className={`btn btn-round btn-memories${panel === 'memories' ? ' is-on' : ''}`} onClick={() => openPanel('memories')}>
           <span className="btn-emoji">🌈</span>
           <span className="btn-label">Memories</span>
         </button>
@@ -51,7 +51,7 @@ export default function HUD() {
           <span className="btn-label">Feed</span>
         </button>
         <AsmaButton />
-        <button className={`btn btn-round${panel === 'settings' ? ' is-on' : ''}`} onClick={() => openPanel('settings')}>
+        <button className={`btn btn-round btn-settings${panel === 'settings' ? ' is-on' : ''}`} onClick={() => openPanel('settings')}>
           <span className="btn-emoji">⚙️</span>
           <span className="btn-label">Settings</span>
         </button>

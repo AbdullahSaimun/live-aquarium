@@ -17,19 +17,20 @@ import TreasureChest from './TreasureChest';
 const FOV = 45;
 const BASE_Z = 11;
 
-// Fits the tank to the screen (portrait phones pull the camera back and narrow the swim area)
-// and adds a gentle pointer parallax.
+// Fits the tank to the screen and adds a gentle pointer parallax. Portrait screens pull the
+// camera back a little, narrow the swim area and let fish use the extra height instead.
 function CameraRig({ calm }) {
   const { camera, size } = useThree();
   const aspect = size.width / size.height;
-  const camZ = aspect < 1 ? BASE_Z + (1 - aspect) * 7 : BASE_Z;
+  const camZ = aspect < 1 ? BASE_Z + (1 - aspect) * 5.5 : BASE_Z;
 
   useEffect(() => {
     const halfH = camZ * Math.tan((FOV / 2) * (Math.PI / 180));
     const halfW = halfH * aspect;
-    const maxX = Math.min(6.5, halfW - 0.8);
+    const maxX = Math.max(1.4, Math.min(6.5, halfW - 0.7));
     world.bounds.minX = -maxX;
     world.bounds.maxX = maxX;
+    world.bounds.maxY = aspect < 0.8 ? 2.3 : 1.6;
   }, [aspect, camZ]);
 
   useFrame((state, dt) => {

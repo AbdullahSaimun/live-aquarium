@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useStore, openPanel, setSetting, resetAquarium, dismissHint, adoptFish } from '../state/store';
 import { SPECIES } from '../data/species';
 import { allFacts, UI_TEXT } from '../data/factsBn';
@@ -64,6 +64,27 @@ function Toggle({ label, desc, checked, onChange }) {
   );
 }
 
+// Full screen hides the browser bars on phones and tablets so the whole screen is ocean.
+function FullscreenButton() {
+  const supported = typeof document !== 'undefined' && document.fullscreenEnabled;
+  const [on, setOn] = useState(() => !!document.fullscreenElement);
+  useEffect(() => {
+    const sync = () => setOn(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', sync);
+    return () => document.removeEventListener('fullscreenchange', sync);
+  }, []);
+  if (!supported) return null;
+  const toggle = () => {
+    const req = on ? document.exitFullscreen() : document.documentElement.requestFullscreen({ navigationUI: 'hide' });
+    req?.catch?.(() => {});
+  };
+  return (
+    <button className="btn-small btn-soft" onClick={toggle}>
+      {on ? '↙️ Exit full screen' : '⛶ Full screen'}
+    </button>
+  );
+}
+
 export function SettingsPanel() {
   const settings = useStore((s) => s.settings);
   const stats = useStore((s) => s.stats);
@@ -86,7 +107,7 @@ export function SettingsPanel() {
       />
       <Toggle
         label="Sounds"
-        desc="Bubbly plops, pops and chimes"
+        desc="Bubbly plops and chimes, plus a tiny buzz on phones"
         checked={settings.sound}
         onChange={(v) => setSetting('sound', v)}
       />
@@ -102,6 +123,9 @@ export function SettingsPanel() {
         checked={settings.calmMode}
         onChange={(v) => setSetting('calmMode', v)}
       />
+      <div className="settings-row">
+        <FullscreenButton />
+      </div>
       <div className="stats">
         <div>
           <strong>{count}</strong>

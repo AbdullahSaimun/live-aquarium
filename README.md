@@ -49,6 +49,21 @@ Built with React, Vite, Three.js, React Three Fiber and drei. Everything runs in
 
 Progress (fish, growth, love, health, memories, settings) is saved in the browser's `localStorage` and survives refreshes.
 
+## Plays great on every screen
+
+| Device | Layout |
+| ------ | ------ |
+| **Phone (portrait)** | One-row top bar, full-width dock at the bottom with a big round Feed button rising out of it, fish cards and panels slide up as bottom sheets, toasts appear right above the dock. |
+| **Phone (landscape)** | The dock moves to the right edge as a column; cards open as a side sheet on the left. |
+| **Tablet** | Floating frosted dock, side sheets, larger buttons. |
+| **Desktop** | Same layout with gentle hover effects and mouse parallax. |
+
+- Every tap target is at least 44px, and dock buttons are 56–66px.
+- Each dock button has its own colour (Facts yellow, Memories purple, Feed orange, Asma pink, Settings blue), so kids can find them before they can read.
+- Safe areas (notches, home bars) are respected, double-tap zoom is disabled, and floating bubbles show icons only on small screens to keep the ocean uncluttered.
+- On phones, feeding, tapping a fish and the treasure chest give a tiny haptic buzz.
+- **Full screen** button in Settings, and the app can be added to the home screen (web app manifest) to play like a real app.
+
 ## Getting started
 
 Requirements: [Node.js](https://nodejs.org/) **20.19+** (the project pins 22.23.4 in `.nvmrc`).

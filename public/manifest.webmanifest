@@ -1,0 +1,14 @@
+{
+  "name": "My Little Ocean",
+  "short_name": "Little Ocean",
+  "description": "A cozy 3D aquarium for kids: feed the fish, watch them grow and play with Asma.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "fullscreen",
+  "orientation": "any",
+  "background_color": "#2a86c4",
+  "theme_color": "#2fa4d6",
+  "icons": [
+    { "src": "/fish.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

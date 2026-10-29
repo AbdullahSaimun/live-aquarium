@@ -14,6 +14,15 @@
   --sun: #ffc94d;
   --radius: 22px;
   --shadow: 0 10px 30px rgba(10, 40, 90, 0.22);
+  /* Layout tokens, tuned per screen size in the responsive section at the end. */
+  --gutter: 16px;
+  --safe-top: max(12px, env(safe-area-inset-top));
+  --safe-bottom: max(12px, env(safe-area-inset-bottom));
+  --top-space: calc(var(--safe-top) + 62px); /* room taken by the top bar */
+  --btn: 66px; /* round dock buttons */
+  --feed: 100px; /* the big Feed button */
+  --dock-space: calc(var(--safe-bottom) + var(--feed) + 34px); /* room taken by the dock */
+  --sheet-w: 360px;
   font-family: 'Baloo 2', 'Nunito', 'Trebuchet MS', system-ui, sans-serif;
   color: var(--ink);
 }
@@ -31,9 +40,15 @@ body,
   overscroll-behavior: none;
 }
 
+html {
+  touch-action: manipulation;
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
   background: linear-gradient(180deg, #8ee3fb 0%, #49b4e2 38%, #2a86c4 70%, #1c5f9e 100%);
   -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
   user-select: none;
 }
 
@@ -98,8 +113,11 @@ button:focus-visible,
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  padding: max(12px, env(safe-area-inset-top)) 16px 0;
+  padding: var(--safe-top) var(--gutter) 0;
+  padding-left: max(var(--gutter), env(safe-area-inset-left));
+  padding-right: max(var(--gutter), env(safe-area-inset-right));
   pointer-events: none;
+  z-index: 4;
 }
 
 .brand {
@@ -107,6 +125,7 @@ button:focus-visible,
   display: flex;
   align-items: center;
   gap: 8px;
+  min-height: 46px;
   padding: 6px 16px 6px 10px;
   background: var(--card);
   border-radius: 999px;
@@ -138,6 +157,8 @@ button:focus-visible,
   scrollbar-width: none;
   padding: 2px 2px 8px;
   max-width: 70vw;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
 }
 
 .roster::-webkit-scrollbar {
@@ -148,16 +169,18 @@ button:focus-visible,
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 3px 10px 3px 4px;
+  min-height: 42px;
+  padding: 3px 12px 3px 6px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.75);
+  background: rgba(255, 255, 255, 0.78);
   box-shadow: 0 4px 12px rgba(10, 40, 90, 0.15);
   transition: transform 0.15s, background 0.15s;
   flex-shrink: 0;
+  scroll-snap-align: start;
 }
 
-.roster-chip:hover {
-  transform: translateY(-2px);
+.roster-chip:active {
+  transform: scale(0.94);
 }
 
 .roster-chip.is-active {
@@ -178,12 +201,12 @@ button:focus-visible,
 .actionbar {
   position: absolute;
   left: 50%;
-  bottom: max(14px, env(safe-area-inset-bottom));
+  bottom: var(--safe-bottom);
   transform: translateX(-50%);
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 12px;
+  padding: 8px 14px;
   border-radius: 34px;
   background: rgba(255, 255, 255, 0.32);
   border: 1px solid rgba(255, 255, 255, 0.6);
@@ -209,19 +232,42 @@ button:focus-visible,
 
 .btn-round {
   position: relative;
-  width: 66px;
-  height: 66px;
-  border-radius: 22px;
-  background: linear-gradient(180deg, #ffffff, #e6f6ff);
+  width: var(--btn);
+  height: var(--btn);
+  border-radius: calc(var(--btn) * 0.33);
+  background: linear-gradient(180deg, #ffffff, var(--tile, #e6f6ff));
   box-shadow: 0 4px 0 rgba(42, 106, 168, 0.25), 0 8px 16px rgba(10, 40, 90, 0.15);
 }
 
-.btn-round:hover {
-  transform: translateY(-3px);
+/* Each dock button has its own colour so kids can find it by colour alone. */
+.btn-facts {
+  --tile: #fff1c2;
+  --tile-ink: #a8740a;
+}
+
+.btn-memories {
+  --tile: #ece4ff;
+  --tile-ink: #6a4fd1;
+}
+
+.btn-asma {
+  --tile: #ffe3f0;
+  --tile-ink: #c2386f;
+}
+
+.btn-settings {
+  --tile: #dff3ff;
+  --tile-ink: #2a6aa8;
+}
+
+@media (hover: hover) {
+  .btn-round:hover {
+    transform: translateY(-3px);
+  }
 }
 
 .btn-round .btn-label {
-  color: #2a5f96;
+  color: var(--tile-ink, #2a5f96);
 }
 
 .btn-badge {
@@ -244,14 +290,14 @@ button:focus-visible,
 }
 
 .btn-round.is-on {
-  background: #fff4c7;
+  background: var(--tile, #fff4c7);
   box-shadow: 0 0 0 3px var(--sun), var(--shadow);
 }
 
 .btn-feed {
-  width: 104px;
-  height: 104px;
-  border-radius: 36px;
+  width: var(--feed);
+  height: var(--feed);
+  border-radius: calc(var(--feed) * 0.35);
   color: #fff;
   background: linear-gradient(160deg, #ffb35c, #ff6f61 60%, #ff5c9a);
   box-shadow: 0 10px 0 #d9485f, 0 18px 30px rgba(255, 92, 120, 0.45);
@@ -264,20 +310,21 @@ button:focus-visible,
 }
 
 .btn-emoji {
-  font-size: 30px;
+  font-size: calc(var(--btn) * 0.44);
   line-height: 1.1;
 }
 
 .btn-feed .btn-emoji {
-  font-size: 42px;
+  font-size: calc(var(--feed) * 0.4);
 }
 
 .btn-label {
   font-size: 14px;
+  line-height: 1.1;
 }
 
 .btn-feed .btn-label {
-  font-size: 20px;
+  font-size: calc(var(--feed) * 0.19);
   text-shadow: 0 2px 0 rgba(0, 0, 0, 0.12);
 }
 
@@ -317,21 +364,24 @@ button:focus-visible,
   position: absolute;
   top: 10px;
   right: 10px;
-  width: 34px;
-  height: 34px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   background: rgba(35, 54, 94, 0.07);
   font-size: 15px;
   color: var(--ink-soft);
 }
 
+/* Side sheet on tablets and desktops; becomes a bottom sheet on phones. */
 .fish-card,
 .panel {
-  left: 16px;
-  bottom: 140px;
-  width: min(340px, calc(100vw - 32px));
-  max-height: calc(100% - 220px);
+  left: max(var(--gutter), env(safe-area-inset-left));
+  bottom: var(--dock-space);
+  width: min(var(--sheet-w), calc(100vw - 2 * var(--gutter)));
+  max-height: calc(100dvh - var(--top-space) - var(--dock-space) - 8px);
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .fish-card-head {
@@ -449,9 +499,10 @@ button:focus-visible,
 
 .link-btn {
   font-weight: 700;
-  font-size: 14px;
+  font-size: 15px;
   color: #2a6aa8;
-  padding: 2px 0;
+  min-height: 36px;
+  padding: 4px 0;
 }
 
 .link-btn.danger {
@@ -468,7 +519,8 @@ button:focus-visible,
 }
 
 .btn-small {
-  padding: 8px 16px;
+  min-height: 44px;
+  padding: 8px 18px;
   border-radius: 999px;
   font-weight: 800;
   background: linear-gradient(160deg, #ffb35c, #ff6f61);
@@ -534,6 +586,7 @@ button:focus-visible,
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  min-height: 56px;
   padding: 10px 0;
   border-bottom: 1px solid var(--line);
   cursor: pointer;
@@ -605,6 +658,18 @@ button:focus-visible,
   font-size: 12px;
 }
 
+.settings-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0 4px;
+}
+
+.btn-soft {
+  background: linear-gradient(160deg, #8fd3ff, #3d9bff);
+  box-shadow: 0 4px 0 #2a6aa8;
+}
+
 .confirm p {
   margin: 12px 0 0;
   font-weight: 700;
@@ -629,7 +694,8 @@ button:focus-visible,
 }
 
 .lang-switch button {
-  padding: 2px 14px;
+  min-height: 36px;
+  padding: 2px 16px;
   border-radius: 999px;
   font-weight: 700;
   font-size: 14px;
@@ -767,8 +833,8 @@ button:focus-visible,
 
 .asma-card {
   position: absolute;
-  top: calc(max(12px, env(safe-area-inset-top)) + 58px);
-  left: 16px;
+  top: var(--top-space);
+  right: max(var(--gutter), env(safe-area-inset-right));
   z-index: 6;
   display: flex;
   align-items: center;
@@ -849,7 +915,9 @@ button:focus-visible,
 
 .welcome {
   position: relative;
-  max-width: 420px;
+  width: min(440px, 100%);
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
   text-align: center;
 }
 
@@ -886,7 +954,7 @@ button:focus-visible,
 /* ---------- toasts ---------- */
 .toasts {
   position: absolute;
-  top: 74px;
+  top: calc(var(--top-space) + 4px);
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -1069,79 +1137,252 @@ button:focus-visible,
   }
 }
 
-/* ---------- responsive ---------- */
-@media (max-width: 720px) {
-  .topbar {
-    flex-direction: column;
-    gap: 8px;
+/* ---------- responsive ----------
+   Desktop (default) > tablet (<= 1024px) > phone portrait (<= 600px) > phone landscape (short screens).
+   Only layout tokens and placement change; components size themselves from the tokens. */
+
+/* Tablet: slightly smaller dock, same side-sheet layout. */
+@media (max-width: 1024px) {
+  :root {
+    --btn: 64px;
+    --feed: 92px;
+    --sheet-w: 340px;
+  }
+}
+
+/* Phone portrait: one-row top bar, full-width dock, bottom sheets. */
+@media (max-width: 600px) {
+  :root {
+    --gutter: 10px;
+    --top-space: calc(var(--safe-top) + 58px);
+    --btn: 56px;
+    --feed: 76px;
+    --dock-space: calc(var(--safe-bottom) + 86px);
   }
 
-  .roster {
-    margin-left: 0;
-    max-width: 100%;
+  .brand {
+    padding: 6px 10px;
   }
 
   .brand-text {
-    font-size: 18px;
+    display: none;
   }
 
-  .toasts {
-    top: 112px;
+  .roster {
+    max-width: none;
+    flex: 1;
+    margin-left: 0;
   }
 
-  .fish-card,
-  .panel {
-    left: 50%;
-    transform: translateX(-50%);
-    bottom: 128px;
-    max-height: calc(100% - 250px);
-    animation: none;
+  .roster-name {
+    font-size: 13px;
   }
 
-  .btn-feed {
-    width: 80px;
-    height: 80px;
+  /* Full-width dock; the Feed button rises out of it like a bubble. */
+  .actionbar {
+    left: var(--gutter);
+    right: var(--gutter);
+    transform: none;
+    justify-content: space-between;
+    gap: 0;
+    padding: 6px 8px;
     border-radius: 28px;
   }
 
-  .btn-round {
-    width: 54px;
-    height: 54px;
-    border-radius: 18px;
-  }
-
-  .btn-round .btn-emoji {
-    font-size: 24px;
-  }
-
-  .actionbar {
-    gap: 5px;
-    padding: 6px 8px;
-  }
-
-  .asma-card {
-    top: 112px;
-  }
-
-  .breath-track {
-    width: 96px;
+  .btn-feed {
+    margin-top: -30px;
+    border-radius: 50%;
+    box-shadow: 0 6px 0 #d9485f, 0 12px 24px rgba(255, 92, 120, 0.45);
   }
 
   .btn-round .btn-label {
     font-size: 11px;
   }
-}
 
-@media (max-height: 560px) and (orientation: landscape) {
+  /* Cards become bottom sheets that slide up above the dock. */
   .fish-card,
   .panel {
-    bottom: 16px;
-    max-height: calc(100% - 90px);
+    left: var(--gutter);
+    right: var(--gutter);
+    width: auto;
+    bottom: calc(var(--dock-space) + 6px);
+    max-height: calc(100dvh - var(--top-space) - var(--dock-space) - 16px);
+    border-radius: 26px;
+    padding: 18px 14px 14px;
+    animation: sheet-up 0.32s cubic-bezier(0.2, 1.2, 0.4, 1);
+  }
+
+  .card h2 {
+    font-size: 22px;
+  }
+
+  .fish-avatar {
+    width: 54px;
+    height: 54px;
+  }
+
+  .big-fact {
+    font-size: 17px;
+  }
+
+  .big-fact.bn {
+    font-size: 18px;
+  }
+
+  /* Asma's card shrinks to a slim pill under the top bar. */
+  .asma-card {
+    right: auto;
+    left: var(--gutter);
+    padding: 5px 12px 5px 5px;
+    gap: 8px;
+  }
+
+  .asma-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 14px;
+  }
+
+  .asma-avatar svg {
+    width: 34px;
+    height: 34px;
+  }
+
+  .asma-name {
+    font-size: 15px;
+  }
+
+  .asma-status {
+    display: none;
+  }
+
+  .breath-track {
+    width: 90px;
+  }
+
+  /* Toasts sit just above the dock, where small hands already are. */
+  .toasts {
     top: auto;
+    bottom: calc(var(--dock-space) + 10px);
+    width: calc(100vw - 2 * var(--gutter));
+    flex-direction: column-reverse;
+  }
+
+  .toast {
+    font-size: 14px;
+    line-height: 1.25;
+    border-radius: 22px;
+  }
+
+  /* Keep floating labels light on small screens: icons only. */
+  .emote-text {
+    display: none;
+  }
+
+  .emote {
+    padding: 2px 6px;
+  }
+
+  .fish-name {
+    font-size: 11px;
+  }
+
+  .asma-say {
+    max-width: 170px;
+    font-size: 13px;
+    padding: 4px 10px;
+  }
+
+  .welcome h1 {
+    font-size: 23px;
+  }
+
+  .welcome li {
+    font-size: 15px;
+    padding: 4px 0;
+  }
+
+  .empty-tank {
+    width: calc(100vw - 2 * var(--gutter));
+  }
+}
+
+/* Phone landscape and other short screens: the dock moves to the right edge as a column. */
+@media (max-height: 520px) and (orientation: landscape) {
+  :root {
+    --top-space: calc(var(--safe-top) + 54px);
+    --btn: 48px;
+    --feed: 62px;
+    --dock-space: var(--safe-bottom);
+    --sheet-w: 340px;
+  }
+
+  .brand-text {
+    display: none;
+  }
+
+  .topbar {
+    padding-right: calc(var(--btn) + 40px);
+  }
+
+  .roster {
+    flex: 1;
+    max-width: none;
+    margin-left: 0;
+  }
+
+  .actionbar {
+    left: auto;
+    right: max(8px, env(safe-area-inset-right));
+    top: 50%;
+    bottom: auto;
+    transform: translateY(-50%);
+    flex-direction: column;
+    gap: 6px;
+    padding: 8px 6px;
   }
 
   .btn-feed {
-    width: 80px;
-    height: 80px;
+    margin: 0;
+    border-radius: 50%;
+  }
+
+  .btn-round .btn-label {
+    font-size: 10px;
+  }
+
+  .fish-card,
+  .panel {
+    top: var(--top-space);
+    bottom: var(--safe-bottom);
+    left: max(var(--gutter), env(safe-area-inset-left));
+    right: auto;
+    width: min(var(--sheet-w), 46vw);
+    max-height: none;
+  }
+
+  .toasts {
+    top: var(--top-space);
+    bottom: auto;
+    width: min(380px, 50vw);
+    flex-direction: column;
+  }
+
+  .asma-card {
+    top: auto;
+    bottom: var(--safe-bottom);
+    left: auto;
+    right: calc(var(--feed) + 30px);
+  }
+
+  .emote-text {
+    display: none;
+  }
+}
+
+@keyframes sheet-up {
+  from {
+    transform: translateY(40px);
+    opacity: 0;
   }
 }

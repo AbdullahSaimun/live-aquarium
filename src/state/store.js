@@ -178,8 +178,20 @@ export function save() {
 
 // ---------- toasts ----------
 let toastId = 0;
+const CAN_BUZZ = typeof navigator !== 'undefined' && 'vibrate' in navigator && matchMedia('(pointer: coarse)').matches;
+const BUZZ = { plop: 8, squeak: 12, pop: 6, treasure: [15, 40, 15], chime: 10, splash: 20 };
+
 export function sfx(name) {
-  if (state.settings.sound) playSound(name);
+  if (!state.settings.sound) return;
+  playSound(name);
+  // Buzz only on touch screens, and only once the child has tapped (browsers block it before).
+  if (BUZZ[name] && CAN_BUZZ && navigator.userActivation?.hasBeenActive) {
+    try {
+      navigator.vibrate(BUZZ[name]);
+    } catch {
+      // vibration is a bonus
+    }
+  }
 }
 
 export function toast(text, emoji = '🐠', ms = 3200, className = '') {
