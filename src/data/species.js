@@ -16,6 +16,8 @@ export const SPECIES = {
       'Clownfish live inside sea anemones. A slimy coat keeps them from getting stung!',
       'Every clownfish is born a boy. The biggest one in a group can become a girl.',
       'Clownfish talk to each other with little popping and clicking sounds.',
+      'A clownfish family lives together in one anemone and never strays far from home.',
+      'Clownfish keep their anemone clean, and the anemone keeps them safe. They are best friends!',
     ],
   },
   blueTang: {
@@ -34,6 +36,8 @@ export const SPECIES = {
       'Blue tangs have a tiny sharp spine near their tail to protect themselves.',
       'Blue tangs eat algae and help keep coral reefs clean.',
       'When blue tangs sleep, their bright blue color can turn paler.',
+      'Blue tangs swim in big groups called schools to stay safe.',
+      'Baby blue tangs are bright yellow before they turn blue!',
     ],
   },
   yellowTang: {
@@ -52,6 +56,8 @@ export const SPECIES = {
       'Yellow tangs live on reefs in the Pacific Ocean, near Hawaii.',
       'Yellow tangs nibble algae off rocks all day long, like tiny lawnmowers.',
       'A healthy yellow tang can live for more than 30 years!',
+      'At night a yellow tang gets a pale stripe on its side to hide in the dark.',
+      'Yellow tangs sometimes clean turtles by nibbling algae off their shells.',
     ],
   },
   angelfish: {
@@ -70,6 +76,8 @@ export const SPECIES = {
       'Freshwater angelfish come from the Amazon River in South America.',
       'Angelfish have tall, flat bodies that help them hide between plants.',
       'Angelfish parents take turns guarding their eggs.',
+      'Angelfish lay their eggs on a flat leaf and fan them with their fins to keep them fresh.',
+      'Ocean angelfish and river angelfish are different fish with the same name.',
     ],
   },
   betta: {
@@ -88,6 +96,8 @@ export const SPECIES = {
       'Bettas can breathe air from the water surface with a special organ.',
       'Betta fish build bubble nests at the top of the water.',
       'Bettas need warm water and a filter, not a tiny bowl.',
+      'Bettas can learn to know their owner and even follow a finger along the glass.',
+      'Wild bettas are dull brown. The bright colours come from careful breeders.',
     ],
   },
   batfish: {
@@ -106,6 +116,30 @@ export const SPECIES = {
       'Young batfish are orange and black, and they float on their side to look like a dead leaf!',
       'Batfish have super tall fins, so underwater they look like a flying bat.',
       'Batfish help coral reefs by eating extra seaweed that could cover the coral.',
+      'Batfish are very curious and often swim right up to divers to say hello.',
+      'As batfish grow up, their tall fins get shorter and their body turns silver.',
+    ],
+  },
+  pufferfish: {
+    label: 'Pufferfish',
+    body: [0.42, 0.42, 0.58],
+    tail: 'round',
+    dorsal: 'round',
+    stripes: false,
+    spots: true,
+    spikes: true,
+    size: 0.85,
+    colors: [
+      { body: '#ffe27a', fin: '#ffc14d', accent: '#8a6a2a' },
+      { body: '#b8e3ff', fin: '#7cc4ff', accent: '#2a5a8a' },
+      { body: '#ffc2d1', fin: '#ff8fb1', accent: '#8a2a4a' },
+    ],
+    facts: [
+      'When a pufferfish is scared, it gulps water and puffs up into a big spiky ball!',
+      'Pufferfish have beak-like teeth that keep growing, so they crunch shells to keep them short.',
+      'Pufferfish are slow swimmers, so puffing up is how they stay safe.',
+      'Some pufferfish draw beautiful circles in the sand to invite a mate.',
+      'Pufferfish can move their eyes on their own, one looking up and one looking down.',
     ],
   },
 };

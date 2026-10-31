@@ -40,6 +40,8 @@ export function createRuntime(fish) {
     scared: 0, // seconds left fleeing from the shark
     fainted: 0, // seconds left floating dazed after the shark reached it
     faint: 0, // eased 0..1 used to turn the fish belly-up
+    puff: 0, // pufferfish only: eased 0..1 from slim to spiky ball
+    puffUp: 0, // seconds left puffed after a tap
     // Each fish circles Asma on its own little orbit.
     orbit: { angle: Math.random() * Math.PI * 2, radius: rand(1.3, 2.3), dir: Math.random() < 0.5 ? -1 : 1, seed: rand(0, 10) },
   };
@@ -104,11 +106,12 @@ export function updateFish(fish, rt, dt, mates) {
     rt.sleeping -= dt;
     if (fish.hunger > 0.8 || (food && wantsFood && food.dist < 5)) rt.sleeping = 0;
   } else {
-    rt.nextSleep -= dt * persona.sleepiness;
+    // Night makes everyone drowsy: naps come about 2.5 times as often in the dark.
+    rt.nextSleep -= dt * persona.sleepiness * (1 + (1 - world.light) * 1.5);
     if (rt.nextSleep <= 0) {
       rt.nextSleep = rand(70, 140);
       if (fish.hunger < 0.6 && fish.health > 0.5 && !food) {
-        rt.sleeping = rand(10, 16);
+        rt.sleeping = rand(10, 16) * (1 + (1 - world.light) * 0.8);
         rt.retarget = 0;
       }
     }
@@ -272,6 +275,9 @@ export function updateFish(fish, rt, dt, mates) {
   const wiggleTarget = (mood === 'hungry' && atGlass) || rt.happyTimer > 0 || mood === 'scared' ? 1 : 0;
   rt.wiggle += (wiggleTarget - rt.wiggle) * (1 - Math.exp(-dt * 4));
   rt.faint += ((mood === 'fainted' ? 1 : 0) - rt.faint) * (1 - Math.exp(-dt * 4));
+  rt.puffUp = Math.max(0, rt.puffUp - dt);
+  const puffed = mood === 'scared' || mood === 'fainted' || rt.puffUp > 0 ? 1 : 0;
+  rt.puff += (puffed - rt.puff) * (1 - Math.exp(-dt * (puffed ? 7 : 1.5))); // fast to puff, slow to shrink
   rt.squint += ((mood === 'sleepy' || mood === 'fainted' ? 1 : 0) - rt.squint) * (1 - Math.exp(-dt * 3));
 
   // --- emote bubble ---

@@ -4,6 +4,8 @@ import HUD from './ui/HUD';
 import FishLabels from './ui/FishLabels';
 import { AsmaCard } from './ui/Asma';
 import FishCard from './ui/FishCard';
+import CreatureCard from './ui/CreatureCard';
+import StickerBook from './ui/StickerBook';
 import AnniversaryButton from './ui/Anniversary';
 import { FactPanel, SettingsPanel, MemoriesPanel, EmptyTank, WelcomeHint, Toasts } from './ui/Panels';
 import { useStore, tickStats, save, announceLosses } from './state/store';
@@ -38,14 +40,20 @@ function useGameLoop() {
 export default function App() {
   useGameLoop();
   const panel = useStore((s) => s.panel);
+  const daylight = useStore((s) => s.daylight);
   return (
-    <div className="app">
+    <div className="app" data-time={daylight}>
+      {/* Water colour layers behind the 3D scene, cross-faded for sunset and night. */}
+      <div className="sky sky-sunset" aria-hidden="true" />
+      <div className="sky sky-night" aria-hidden="true" />
       <Aquarium />
       <FishLabels />
       <HUD />
       <AsmaCard />
       <AnniversaryButton />
       <FishCard />
+      <CreatureCard />
+      {panel === 'stickers' && <StickerBook />}
       {panel === 'facts' && <FactPanel />}
       {panel === 'settings' && <SettingsPanel />}
       {panel === 'memories' && <MemoriesPanel />}

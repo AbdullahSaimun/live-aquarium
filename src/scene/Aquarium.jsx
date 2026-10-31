@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { PerformanceMonitor } from '@react-three/drei';
-import { useStore, selectFish } from '../state/store';
+import { useStore, selectFish, getState } from '../state/store';
 import { world } from '../sim/world';
 import Seabed from './Seabed';
 import Coral from './Coral';
@@ -17,6 +17,14 @@ import Shark from './Shark';
 import Turtle from './Turtle';
 import Crab from './Crab';
 import Starfish from './Starfish';
+import Octopus from './Octopus';
+import Jellyfish from './Jellyfish';
+import Seahorse from './Seahorse';
+import Shrimp from './Shrimp';
+import Lobster from './Lobster';
+import Visitors from './Visitors';
+import DayNight from './DayNight';
+import SeaSnow from './SeaSnow';
 
 const FOV = 45;
 const BASE_Z = 11;
@@ -39,8 +47,10 @@ function CameraRig({ calm }) {
 
   useFrame((state, dt) => {
     const k = 1 - Math.exp(-Math.min(dt, 0.1) * 2);
-    const px = calm ? 0 : state.pointer.x * 0.6;
-    const py = calm ? 0 : state.pointer.y * 0.3;
+    // Lean gently towards the fish whose card is open.
+    const sel = calm ? null : world.runtime.get(getState().selectedId);
+    const px = calm ? 0 : state.pointer.x * 0.6 + (sel ? sel.pos.x * 0.12 : 0);
+    const py = calm ? 0 : state.pointer.y * 0.3 + (sel ? sel.pos.y * 0.06 : 0);
     camera.position.x += (px - camera.position.x) * k;
     camera.position.y += (0.4 + py - camera.position.y) * k;
     camera.position.z += (camZ - camera.position.z) * k;
@@ -66,10 +76,7 @@ export default function Aquarium() {
         onDecline={() => setDpr(1)}
         onIncline={() => setDpr(Math.min(1.5, window.devicePixelRatio || 1))}
       />
-      <fog attach="fog" args={['#3a9bd0', 14, 32]} />
-      <hemisphereLight args={['#bff3ff', '#f2c98c', 1.4]} />
-      <directionalLight position={[3, 10, 6]} intensity={1.6} color="#fffaf0" />
-      <ambientLight intensity={0.35} />
+      <DayNight />
 
       <CameraRig calm={calm} />
       <WaterTap />
@@ -79,8 +86,15 @@ export default function Aquarium() {
       <Starfish />
       <Crab />
       <Turtle />
+      <Octopus calm={calm} />
+      <Lobster />
+      <Shrimp calm={calm} />
+      <Seahorse calm={calm} />
+      <Jellyfish calm={calm} />
+      <Visitors />
       <Plants calm={calm} />
       <Bubbles ambient={calm ? 18 : 45} />
+      {!calm && <SeaSnow />}
       <School />
       <FoodPellets />
       <Hearts />

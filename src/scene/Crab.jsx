@@ -2,8 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { useCursor } from '@react-three/drei';
-import { world, queueEffect, removePellet } from '../sim/world';
-import { critterFact, sfx } from '../state/store';
+import { world, queueEffect, removePellet, findCrumb } from '../sim/world';
+import { showCreature, sfx } from '../state/store';
 
 const Y = world.floorY + 0.12;
 const SPEED = 0.9;
@@ -25,15 +25,6 @@ function makeKit() {
     mouth: std('#7a1f1f'),
     hidden: new THREE.MeshBasicMaterial({ visible: false }),
   };
-}
-
-// Leftover food lying on the sand that the crab can tidy up.
-function findCrumb() {
-  let best = null;
-  for (const p of world.pellets) {
-    if (p.active && !p.dragging && p.resting > 1.5 && (!best || p.resting > best.resting)) best = p;
-  }
-  return best;
 }
 
 // A little red crab that scuttles sideways along the sand and tidies up leftover food.
@@ -125,7 +116,7 @@ export default function Crab() {
     c.snap = 1;
     c.hop = 0.5;
     sfx('pop');
-    critterFact('crab');
+    showCreature('crab');
   };
 
   return (

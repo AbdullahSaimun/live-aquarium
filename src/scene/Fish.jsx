@@ -70,6 +70,12 @@ export default function Fish({ fish }) {
       const flap = Math.sin(rt.tailPhase * 1.3) * 0.35;
       p.finL.current.rotation.set(0, 0.5 + flap * 0.5, flap);
       p.finR.current.rotation.set(0, -0.5 - flap * 0.5, -flap);
+      // Pufferfish: blow up into a round, spiky ball.
+      if (p.spikes.current) {
+        p.body.current.scale.setScalar(1 + rt.puff * 0.6);
+        p.spikes.current.visible = rt.puff > 0.04;
+        p.spikes.current.children.forEach((m) => m.scale.setScalar(Math.max(0.001, rt.puff)));
+      }
       const eyeY = 1 - rt.squint * 0.8;
       p.eyeL.current.scale.y = eyeY;
       p.eyeR.current.scale.y = eyeY;

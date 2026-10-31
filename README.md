@@ -7,7 +7,7 @@ Built with React, Vite, Three.js, React Three Fiber and drei. Everything runs in
 ## Features
 
 **Fish and the tank**
-- Cute fish built from simple shapes in code (clownfish, blue tang, yellow tang, angelfish, betta and a tall-finned batfish). No 3D model files are needed.
+- Cute fish built from simple shapes in code (clownfish, blue tang, yellow tang, angelfish, betta, a tall-finned batfish and a pufferfish that blows up into a spiky ball when tapped or scared). No 3D model files are needed.
 - Smooth curved swimming, wagging tails, flapping fins and blinking, sleepy eyes.
 - A colourful reef: branching, table, bubble, brain, tube and swaying finger corals, plus kelp, anemones, rocks, light rays, rippling light on the sand and rising bubbles.
 
@@ -20,7 +20,7 @@ Built with React, Vite, Three.js, React Three Fiber and drei. Everything runs in
 **Moods and personalities**
 - Each fish is playful, shy, sleepy or snacky.
 - Fish are happy 😊, hungry 🍤, curious 👀 (they come and say hi), sleepy 💤 or weak 🥺.
-- Tap a fish to see its card: tummy, growth, health and love meters, plus a species fact. Every tap makes it do a happy barrel roll.
+- Tap a fish to open its small card: four ring gauges (tummy, growth, health, love), quick-info chips (home, food, size, lifespan, super power) and a swipeable fact carousel. Every tap makes it do a happy barrel roll.
 
 **Growing up**
 - Feeding raises growth and love. Fish get bigger and unlock new colors at 50% and 100% growth.
@@ -45,21 +45,41 @@ Built with React, Vite, Three.js, React Three Fiber and drei. Everything runs in
 - Asma isn't scared of it: when she dives in, the shark flees.
 - It can be turned off in Settings, and Settings also has a **🦈 Call the shark** button.
 
-**🐢🦀⭐ Tank neighbours** (tap them for a fact)
+**🐢🦀🐙 Tank neighbours** (tap one to open its learning card)
 - A gentle **sea turtle** glides slowly around the back of the tank and does a twirl when tapped.
 - A little red **crab** scuttles sideways along the sand, waves its claws and tidies up leftover food.
 - Smiling **starfish** hop and spin when tapped.
+- An **octopus** by its den slowly changes colour, waves when tapped, and squirts ink (then turns pale) when the shark comes near.
+- Two **jellyfish** pulse and drift in the upper back corners and glow at night.
+- A **seahorse** bobs beside the kelp and turns to peek at you.
+- Two **cleaner shrimp** potter about the sand, nibble leftovers and backflip when tapped.
+- A shy **lobster** lives behind the treasure chest, peeks out, and zooms backwards with a tail flick.
+- Neighbours stay on the sand, at the edges or behind the fish, so the middle of the tank stays clear.
+
+**🐋 Big sea visitors**
+- Every few minutes a **manta ray**, **dolphin** or **blue whale** swims past far behind the reef, one at a time and never while the shark is in. The whale puffs a spout of bubbles.
+- Tap a visitor while it passes to learn about it. Turn visitors off, or call one, in Settings.
+
+**📖 Ocean sticker book**
+- Tapping a fish or creature for the first time earns its sticker (19 in all: pet fish, tank friends and ocean visitors).
+- The book shows progress, grey "?" spaces for animals not met yet, and opens each collected sticker's learning card again. Half and full books are celebrated.
+
+**🌗 Day and night**
+- The tank follows the real clock by default: day (6:00–17:00), sunset (17:00–19:00) and night.
+- At night the water darkens, moonbeams replace sunbeams, sea snow glows like plankton, jellyfish and some corals glow, fish nap more often, and the shark stays away.
+- Tap the ☀️/🌅/🌙 badge in the top bar to switch the look, or choose Clock, Day, Sunset or Night in Settings.
 
 **Learning and fun**
-- **💡 Facts**: ocean, habitat and fish-care facts in Bangla (default) or English.
+- **💡 Facts**: ocean, habitat and fish-care facts in Bangla (default) or English, now with 5 facts for every animal.
 - **🪙 Treasure chest**: tap it for coins, sparkles and a surprise fact.
 - Bubbly sound effects, synthesized in the browser with no audio files.
 
 **Settings**
-- Name tags, sounds, Asma's surprise visits, shark visits and calm mode (less motion) can be turned on or off.
+- Name tags, sounds, Asma's surprise visits, shark visits, big sea visitors and calm mode (less motion) can be turned on or off.
+- Tank time: Clock (default), Day, Sunset or Night.
 - You can reset the aquarium. Memories are kept.
 
-Progress (fish, growth, love, health, memories, settings) is saved in the browser's `localStorage` and survives refreshes.
+Progress (fish, growth, love, health, memories, stickers, settings) is saved in the browser's `localStorage` and survives refreshes.
 
 ## Plays great on every screen
 
@@ -70,8 +90,9 @@ Progress (fish, growth, love, health, memories, settings) is saved in the browse
 | **Tablet** | Floating frosted dock, side sheets, larger buttons. |
 | **Desktop** | Same layout with gentle hover effects and mouse parallax. |
 
-- Every tap target is at least 44px, and dock buttons are 56–66px.
-- Each dock button has its own colour (Facts yellow, Memories purple, Feed orange, Asma pink, Settings blue), so kids can find them before they can read.
+- Every tap target is at least 44px, and dock buttons are 46–66px.
+- Each dock button has its own colour (Facts yellow, Memories purple, Stickers green, Feed orange, Asma pink, Settings blue), so kids can find them before they can read.
+- Cards and panels spring in and fade out, toasts slide in, and dock icons float gently. Everything respects "reduce motion".
 - Safe areas (notches, home bars) are respected, double-tap zoom is disabled, and floating bubbles show icons only on small screens to keep the ocean uncluttered.
 - On phones, feeding, tapping a fish and the treasure chest give a tiny haptic buzz.
 - **Full screen** button in Settings, and the app can be added to the home screen (web app manifest) to play like a real app.
@@ -103,7 +124,8 @@ The `dist/` folder is a static site, so it can be hosted anywhere (GitHub Pages,
 5. Grow your fish to unlock colors and babies, and tap the treasure chest for surprises.
 6. Tap **👧 Asma** to invite her for a swim with your fish.
 7. When the shark comes, tap it 3 times to protect your fish!
-8. Tap the turtle, the crab and the starfish to learn about them.
+8. Tap the sea creatures to learn about them and fill your 📖 sticker book.
+9. Tap the ☀️/🌙 badge to see the tank at sunset or night.
 
 ## Game timing
 
@@ -119,6 +141,7 @@ All timings live at the top of `src/state/store.js` and are easy to tune:
 | Asma's rest before she can dive again | 20 seconds |
 | First shark visit / later visits | ~75 seconds / every 2.5–4 minutes |
 | Shark stays (unless chased away) | ~45 seconds |
+| First big visitor / later visitors | ~60 seconds / every 3–5 minutes |
 | Pellets to fill a tummy | ~3 |
 | Pellets to grow from baby to adult | ~20 |
 
@@ -130,21 +153,24 @@ src/
 ├── audio/sounds.js      Synthesized sound effects (Web Audio)
 ├── data/
 │   ├── species.js       Species, palettes, personalities, names, English facts
-│   ├── critters.js      Shark, turtle, crab and starfish facts (English and Bangla)
-│   └── factsBn.js       Bangla facts and fact-panel text
+│   ├── creatures.js     Learning cards for every animal: quick info and neighbour facts (English and Bangla)
+│   └── factsBn.js       Bangla facts, fact-panel text and the creatureInfo() helper
 ├── sim/
 │   ├── world.js         Per-frame simulation state: pellets, bounds, effect queues
 │   ├── fishBrain.js     Steering, moods, food seeking, circling Asma, fleeing the shark
 │   ├── asmaBrain.js     Asma's dive, breath, snacks and surfacing
-│   └── sharkBrain.js    The shark's prowling, chasing and getting chased away
+│   ├── sharkBrain.js    The shark's prowling, chasing and getting chased away
+│   └── visitors.js      Big visitors crossing behind the reef, one at a time
 ├── state/
 │   ├── store.js         Game state and actions (feed, eat, grow, starve, memories…)
 │   ├── persistence.js   localStorage save/load
+│   ├── daylight.js      Day / sunset / night from the clock or the setting
 │   └── labels.js        DOM label registry for fish name tags
 ├── scene/               3D: fish model, seabed, coral, plants, bubbles, hearts,
 │                        food pellets, treasure chest, Asma, shark, turtle, crab,
-│                        starfish, tap-to-feed backdrop
-└── ui/                  HUD, fish card, panels (facts, memories, settings), labels
+│                        starfish, octopus, jellyfish, seahorse, shrimp, lobster,
+│                        visitors, day/night lights, sea snow, tap-to-feed backdrop
+└── ui/                  HUD, fish and creature cards, sticker book, panels, labels
 ```
 
 ## Technical notes

@@ -24,6 +24,8 @@ const sandFragment = /* glsl */ `
   uniform float uTime;
   uniform vec3 uSandA;
   uniform vec3 uSandB;
+  uniform float uLight;
+  uniform float uDusk;
   varying float vShade;
   varying vec3 vNormalW;
   varying vec2 vXZ;
@@ -38,7 +40,10 @@ const sandFragment = /* glsl */ `
     vec3 base = mix(uSandA, uSandB, vShade);
     float light = 0.62 + 0.38 * max(dot(vNormalW, normalize(vec3(0.3, 1.0, 0.4))), 0.0);
     float c = caustic(vXZ * 0.9, uTime) * 0.6 + caustic(vXZ * 1.6 + 3.0, uTime * 1.3) * 0.35;
-    gl_FragColor = vec4(base * light + vec3(0.75, 0.95, 1.0) * c * 0.45, 1.0);
+    // Moonlit blue at night, a warm glow at sunset; ripples of light fade in the dark.
+    vec3 tint = mix(vec3(0.3, 0.38, 0.62), vec3(1.0), uLight) * mix(vec3(1.0), vec3(1.05, 0.82, 0.74), uDusk);
+    float glow = 0.2 + 0.8 * uLight;
+    gl_FragColor = vec4(base * light * tint + vec3(0.75, 0.95, 1.0) * c * 0.45 * glow, 1.0);
     #include <fog_fragment>
   }
 `;
@@ -54,12 +59,15 @@ const rayVertex = /* glsl */ `
 const rayFragment = /* glsl */ `
   uniform float uTime;
   uniform float uPhase;
+  uniform float uLight;
   varying vec2 vUv;
   void main() {
     float edge = smoothstep(0.0, 0.5, vUv.x) * smoothstep(1.0, 0.5, vUv.x);
     float fall = pow(vUv.y, 1.6);
     float flicker = 0.65 + 0.35 * sin(uTime * 0.6 + uPhase);
-    gl_FragColor = vec4(vec3(0.85, 0.97, 1.0), edge * fall * flicker * 0.22);
+    // Sunbeams by day, faint blue moonbeams at night.
+    vec3 tint = mix(vec3(0.55, 0.7, 1.0), vec3(0.85, 0.97, 1.0), uLight);
+    gl_FragColor = vec4(tint, edge * fall * flicker * 0.22 * (0.3 + 0.7 * uLight));
   }
 `;
 
@@ -113,6 +121,8 @@ export default function Seabed() {
           uTime: { value: 0 },
           uSandA: { value: new THREE.Color('#f1cf94') },
           uSandB: { value: new THREE.Color('#ffe7bd') },
+          uLight: { value: 1 },
+          uDusk: { value: 0 },
         },
       }),
     [],
@@ -125,7 +135,7 @@ export default function Seabed() {
           new THREE.ShaderMaterial({
             vertexShader: rayVertex,
             fragmentShader: rayFragment,
-            uniforms: { uTime: { value: 0 }, uPhase: { value: i * 1.7 } },
+            uniforms: { uTime: { value: 0 }, uPhase: { value: i * 1.7 }, uLight: { value: 1 } },
             transparent: true,
             depthWrite: false,
             blending: THREE.AdditiveBlending,
@@ -157,7 +167,12 @@ export default function Seabed() {
 
   useFrame(() => {
     sandMat.uniforms.uTime.value = world.time;
-    rayMats.forEach((m) => (m.uniforms.uTime.value = world.time));
+    sandMat.uniforms.uLight.value = world.light;
+    sandMat.uniforms.uDusk.value = world.dusk;
+    rayMats.forEach((m) => {
+      m.uniforms.uTime.value = world.time;
+      m.uniforms.uLight.value = world.light;
+    });
   });
 
   return (

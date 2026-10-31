@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useStore, openPanel, setSetting, resetAquarium, dismissHint, adoptFish, summonShark } from '../state/store';
+import { useStore, openPanel, setSetting, resetAquarium, dismissHint, adoptFish, summonShark, callVisitor, toast } from '../state/store';
+import { TANK_TIMES, PHASE_ICON } from '../state/daylight';
 import { SPECIES } from '../data/species';
 import { allFacts, UI_TEXT } from '../data/factsBn';
 import FishIcon from './FishIcon';
@@ -48,6 +49,26 @@ export function FactPanel() {
         {t.nextFact}
       </button>
     </aside>
+  );
+}
+
+const TIME_LABELS = { auto: '🕒 Clock', day: `${PHASE_ICON.day} Day`, sunset: `${PHASE_ICON.sunset} Sunset`, night: `${PHASE_ICON.night} Night` };
+
+// Day and night: follow the real clock, or pin the tank to one look.
+function TankTime() {
+  const value = useStore((s) => s.settings.tankTime);
+  return (
+    <div className="setting-block">
+      <strong>Tank time</strong>
+      <small>“Clock” follows the real time: day, sunset and night with glowing jellyfish.</small>
+      <div className="lang-switch time-switch" role="group" aria-label="Tank time">
+        {TANK_TIMES.map((t) => (
+          <button key={t} className={value === t ? 'is-on' : ''} onClick={() => setSetting('tankTime', t)}>
+            {TIME_LABELS[t]}
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -106,6 +127,12 @@ export function SettingsPanel() {
         onChange={(v) => setSetting('showNames', v)}
       />
       <Toggle
+        label="Info cards"
+        desc="Tapping a fish or sea creature opens its card. Turn off to just play with them"
+        checked={settings.infoCards}
+        onChange={(v) => setSetting('infoCards', v)}
+      />
+      <Toggle
         label="Sounds"
         desc="Bubbly plops and chimes, plus a tiny buzz on phones"
         checked={settings.sound}
@@ -124,6 +151,13 @@ export function SettingsPanel() {
         onChange={(v) => setSetting('sharkVisits', v)}
       />
       <Toggle
+        label="Big sea visitors"
+        desc="A manta ray, dolphin or whale swims by far behind the reef"
+        checked={settings.visitors}
+        onChange={(v) => setSetting('visitors', v)}
+      />
+      <TankTime />
+      <Toggle
         label="Calm mode"
         desc="Fewer bubbles and less movement"
         checked={settings.calmMode}
@@ -134,6 +168,11 @@ export function SettingsPanel() {
         {settings.sharkVisits && (
           <button className="btn-small btn-soft" onClick={summonShark}>
             🦈 Call the shark
+          </button>
+        )}
+        {settings.visitors && (
+          <button className="btn-small btn-soft" onClick={() => (callVisitor() ? openPanel(null) : toast('Someone is already swimming by. Wait a moment!', '🐋'))}>
+            🐋 Call a visitor
           </button>
         )}
       </div>
@@ -161,6 +200,10 @@ export function SettingsPanel() {
         <div>
           <strong>{stats.sharksShooed || 0}</strong>
           <small>sharks chased</small>
+        </div>
+        <div>
+          <strong>{Object.keys(stats.stickers || {}).length}</strong>
+          <small>stickers</small>
         </div>
       </div>
       {confirm ? (
@@ -213,6 +256,9 @@ export function WelcomeHint() {
           </li>
           <li>
             <span>🪙</span> Tap the treasure chest for a surprise fact.
+          </li>
+          <li>
+            <span>📖</span> Tap sea creatures to learn about them and collect stickers.
           </li>
           <li>
             <span>👧</span> Call <b>Asma</b>: she dives in, plays with the fish and shares snacks!

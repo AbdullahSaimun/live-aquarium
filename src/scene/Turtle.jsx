@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { useCursor } from '@react-three/drei';
 import { world, queueEffect } from '../sim/world';
-import { critterFact, sfx } from '../state/store';
+import { showCreature, sfx } from '../state/store';
 
 const SPIN_TIME = 1.4;
 const BACK_Z = -3.4; // glides behind the fish
@@ -77,7 +77,7 @@ export default function Turtle() {
     if (spin.current <= 0) spin.current = SPIN_TIME;
     queueEffect('bubbles', root.current.position, 8);
     sfx('bubbles');
-    critterFact('turtle');
+    showCreature('turtle');
   };
 
   const flipper = (i, at, scale, offset) => (

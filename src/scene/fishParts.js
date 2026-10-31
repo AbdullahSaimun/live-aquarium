@@ -81,6 +81,18 @@ export const DORSALS = {
   }),
 };
 
+// Pufferfish spikes: little cones pointing out from the body, spread evenly over a sphere.
+export const spikeGeo = new THREE.ConeGeometry(0.07, 0.22, 5);
+spikeGeo.translate(0, 0.11, 0);
+const UP = new THREE.Vector3(0, 1, 0);
+export const SPIKE_DIRS = Array.from({ length: 30 }, (_, i) => {
+  const y = 1 - ((i + 0.5) / 30) * 2;
+  const r = Math.sqrt(1 - y * y);
+  const a = i * 2.39996; // golden angle
+  const dir = new THREE.Vector3(Math.cos(a) * r, y, Math.sin(a) * r);
+  return { dir, quat: new THREE.Quaternion().setFromUnitVectors(UP, dir) };
+}).filter(({ dir }) => dir.z > -0.75); // none sticking out through the tail
+
 export const eyeWhiteMat = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.25 });
 export const pupilMat = new THREE.MeshBasicMaterial({ color: '#1d1b33' });
 export const shineMat = new THREE.MeshBasicMaterial({ color: '#ffffff' });

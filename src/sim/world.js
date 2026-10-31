@@ -52,6 +52,13 @@ export const world = {
     chomp: 0,
     fast: false,
   },
+  // A big animal passing far behind the reef now and then (see visitors.js).
+  visitor: { kind: null, t: 0, dur: 1, dir: 1, y: 0 },
+  // Daylight, eased by DayNight: `light` runs 0 (night) .. 1 (day), `dusk` 0 .. 1 for the sunset tint.
+  light: 1,
+  dusk: 0,
+  lightTarget: 1,
+  duskTarget: 0,
   // Queued particle bursts, drained each frame by the matching effect component.
   effects: { hearts: [], bubbles: [] },
 };
@@ -76,6 +83,18 @@ export function spawnPellet(x, z, y = world.dropY + Math.random() * 0.3) {
 export function removePellet(p) {
   p.active = false;
   p.dragging = false;
+}
+
+// Leftover food lying on the sand that the bottom dwellers can tidy up. `near` limits the search
+// to { x, z, radius } around a creature's home.
+export function findCrumb(near) {
+  let best = null;
+  for (const p of world.pellets) {
+    if (!p.active || p.dragging || p.resting <= 1.5) continue;
+    if (near && Math.hypot(p.pos.x - near.x, p.pos.z - near.z) > near.radius) continue;
+    if (!best || p.resting > best.resting) best = p;
+  }
+  return best;
 }
 
 export function clearPellets() {

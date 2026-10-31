@@ -1,19 +1,21 @@
-import { useEffect, useState } from 'react';
 import { useStore, selectFish, cycleColor, feed } from '../state/store';
 import { SPECIES, PERSONALITIES, MOODS } from '../data/species';
-import { speciesFacts, UI_TEXT } from '../data/factsBn';
 import FishIcon from './FishIcon';
+import LearnStrip from './LearnStrip';
+import usePresence from './usePresence';
 
-function Meter({ label, value, color, note }) {
+const RING = 2 * Math.PI * 15;
+
+// A small ring gauge: icon in the middle, label underneath.
+function Gauge({ icon, label, value, color, alert }) {
   return (
-    <div className="meter">
-      <div className="meter-head">
-        <span>{label}</span>
-        <span className="meter-note">{note}</span>
-      </div>
-      <div className="meter-track">
-        <div className="meter-fill" style={{ width: `${Math.round(value * 100)}%`, background: color }} />
-      </div>
+    <div className={`gauge${alert ? ' is-alert' : ''}`} title={`${label}: ${Math.round(value * 100)}%`}>
+      <svg viewBox="0 0 36 36" aria-hidden="true">
+        <circle className="gauge-track" cx="18" cy="18" r="15" />
+        <circle className="gauge-fill" cx="18" cy="18" r="15" stroke={color} strokeDasharray={`${Math.max(0.02, value) * RING} ${RING}`} />
+      </svg>
+      <span className="gauge-icon">{icon}</span>
+      <small>{label}</small>
     </div>
   );
 }
@@ -26,13 +28,26 @@ const MOOD_LINES = {
   weak: 'is weak from hunger. Please feed it now!',
   playing: 'is swimming around Asma. They are best friends!',
   missing: 'misses Asma. Tap 👧 Asma to call her back!',
+  scared: 'is scared of the shark! Tap the shark to chase it away.',
+  fainted: 'fainted from fright. It will wake up soon.',
+};
+
+const MOOD_SHORT = {
+  happy: 'Happy',
+  hungry: 'Hungry',
+  curious: 'Curious',
+  sleepy: 'Sleepy',
+  weak: 'Weak',
+  playing: 'Playing',
+  missing: 'Misses Asma',
+  scared: 'Scared!',
+  fainted: 'Fainted',
 };
 
 export default function FishCard() {
-  const fish = useStore((s) => s.fish.find((f) => f.id === s.selectedId));
+  const selected = useStore((s) => (s.settings.infoCards ? s.fish.find((f) => f.id === s.selectedId) : null));
   const lang = useStore((s) => s.settings.factLang);
-  const [factIdx, setFactIdx] = useState(0);
-  useEffect(() => setFactIdx(Math.floor(Math.random() * 3)), [fish?.id]);
+  const [fish, leaving] = usePresence(selected);
   if (!fish) return null;
 
   const def = SPECIES[fish.species];
@@ -40,62 +55,50 @@ export default function FishCard() {
   const tummy = Math.max(fish.fullness, 1 - fish.hunger);
   const stage = fish.growth >= 1 ? 'Grown up' : fish.growth < 0.25 ? 'Baby' : 'Growing';
   const full = fish.fullness >= 0.95;
-  const facts = speciesFacts(fish.species, lang);
-  const t = UI_TEXT[lang] || UI_TEXT.en;
-  const bn = lang === 'bn' ? ' bn' : '';
 
   return (
-    <aside className="card fish-card" aria-label={`${fish.name} the ${def.label}`}>
+    <aside className={`card fish-card${leaving ? ' is-leaving' : ''}`} aria-label={`${fish.name} the ${def.label}`}>
       <button className="card-close" onClick={() => selectFish(null)} aria-label="Close">
         ✕
       </button>
-      <div className="fish-card-head">
-        <div className="fish-avatar">
-          <FishIcon fish={fish} size={52} />
-        </div>
-        <div>
-          <h2>{fish.name}</h2>
-          <div className="tags">
-            <span className="tag">{def.label}</span>
-            <span className="tag tag-soft">{PERSONALITIES[fish.personality]?.label}</span>
-            <span className="tag tag-soft">{stage}</span>
+      <div key={fish.id} className="card-swap">
+        <div className="mini-head">
+          <div className="mini-avatar">
+            <FishIcon fish={fish} size={40} />
+          </div>
+          <div className="mini-title">
+            <h2>{fish.name}</h2>
+            <span className="mini-sub">
+              {def.label} · {stage} · {PERSONALITIES[fish.personality]?.label}
+            </span>
           </div>
         </div>
-      </div>
+        <p className={`mood-pill mood-${fish.mood}`} title={`${fish.name} ${MOOD_LINES[fish.mood] || ''}`}>
+          <span>{mood.emoji}</span> {MOOD_SHORT[fish.mood] || mood.label}
+        </p>
 
-      <p className={`mood-line mood-${fish.mood}`}>
-        <span className="mood-emoji">{mood.emoji}</span> {fish.name} {MOOD_LINES[fish.mood]}
-      </p>
+        <div className="gauges">
+          <Gauge icon="🍤" label="Tummy" value={tummy} color="#ff8a4c" alert={tummy < 0.35} />
+          <Gauge icon="🌱" label="Growth" value={fish.growth} color="#2fbf8f" />
+          <Gauge icon="💪" label="Health" value={fish.health} color={fish.health < 0.5 ? '#e2475d' : '#3d9bff'} alert={fish.health < 0.5} />
+          <Gauge icon="❤️" label="Love" value={fish.affection} color="#ff5c9a" />
+        </div>
 
-      <Meter label="Tummy" value={tummy} color="linear-gradient(90deg,#ffb347,#ff7a59)" note={full ? 'Full!' : tummy < 0.35 ? 'Empty' : ''} />
-      <Meter label="Growth" value={fish.growth} color="linear-gradient(90deg,#7ee0b5,#2fbf8f)" note={`${Math.round(fish.growth * 100)}%`} />
-      <Meter
-        label="Health"
-        value={fish.health}
-        color={fish.health < 0.5 ? 'linear-gradient(90deg,#ff8a8a,#e2475d)' : 'linear-gradient(90deg,#8fd3ff,#3d9bff)'}
-        note={fish.health < 0.5 ? 'Weak!' : fish.health >= 0.99 ? 'Strong' : ''}
-      />
-      <Meter label="Love" value={fish.affection} color="linear-gradient(90deg,#ffa8d8,#ff5c9a)" note={fish.affection >= 0.8 ? '💖' : ''} />
+        <LearnStrip key={`${fish.id}${lang}`} id={fish.species} lang={lang} />
 
-      <div className="fact-box">
-        <span className={`fact-title${bn}`}>{t.fishFact}</span>
-        <p className={bn.trim()}>{facts[factIdx % facts.length]}</p>
-        <button className={`link-btn${bn}`} onClick={() => setFactIdx((i) => i + 1)}>
-          {t.anotherFact}
-        </button>
-      </div>
-
-      <div className="card-actions">
-        <button className="btn-small" onClick={feed} disabled={full}>
-          {full ? '😋 Full tummy' : '🍤 Feed'}
-        </button>
-        {fish.unlocked > 1 ? (
-          <button className="btn-small btn-color" onClick={() => cycleColor(fish)}>
-            🎨 Color {fish.colorIdx + 1}/{fish.unlocked}
+        <div className="card-actions mini-actions">
+          <button className="btn-small" onClick={feed} disabled={full}>
+            {full ? '😋 Full' : '🍤 Feed'}
           </button>
-        ) : (
-          <span className="hint-small">Grow to 50% to unlock a new color</span>
-        )}
+          <button
+            className="btn-small btn-color"
+            onClick={() => cycleColor(fish)}
+            disabled={fish.unlocked < 2}
+            title={fish.unlocked < 2 ? 'Grow to 50% to unlock a new colour' : 'Change colour'}
+          >
+            🎨 {fish.unlocked < 2 ? '🔒' : `${fish.colorIdx + 1}/${fish.unlocked}`}
+          </button>
+        </div>
       </div>
     </aside>
   );

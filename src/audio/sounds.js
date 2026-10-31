@@ -71,6 +71,20 @@ const SOUNDS = {
     tone(ac, { type: 'square', from: 220, to: 70, dur: 0.1, vol: 0.06 });
     tone(ac, { type: 'square', from: 200, to: 60, start: 0.13, dur: 0.1, vol: 0.06 });
   },
+  // Pufferfish gulping water as it blows up.
+  puff: (ac) => {
+    tone(ac, { from: 180, to: 520, dur: 0.22, vol: 0.1 });
+    tone(ac, { type: 'triangle', from: 900, to: 1200, start: 0.2, dur: 0.06, vol: 0.05 });
+  },
+  // Octopus ink: a soft, low whoosh of bubbles.
+  ink: (ac) => {
+    for (let i = 0; i < 5; i++) tone(ac, { from: 300 - i * 30, to: 90, start: i * 0.04, dur: 0.18, vol: 0.05 });
+  },
+  // A distant whale song: two slow, low sweeps.
+  whale: (ac) => {
+    tone(ac, { type: 'sine', from: 160, to: 340, dur: 1.4, vol: 0.06 });
+    tone(ac, { type: 'sine', from: 330, to: 180, start: 1.3, dur: 1.6, vol: 0.05 });
+  },
   sad: (ac) => {
     tone(ac, { type: 'triangle', from: 520, to: 440, dur: 0.35, vol: 0.08 });
     tone(ac, { type: 'triangle', from: 440, to: 330, start: 0.3, dur: 0.5, vol: 0.07 });

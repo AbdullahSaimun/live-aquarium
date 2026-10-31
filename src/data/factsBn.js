@@ -1,5 +1,5 @@
 import { SPECIES, GENERAL_FACTS } from './species';
-import { CRITTERS } from './critters';
+import { CREATURES, INFO_ICONS, CARD_TEXT } from './creatures';
 
 // Bangla (বাংলা) versions of every fact, index-aligned with the English lists in species.js.
 export const SPECIES_BN = {
@@ -9,6 +9,8 @@ export const SPECIES_BN = {
       'ক্লাউনফিশ সামুদ্রিক অ্যানিমোনের ভেতরে থাকে। গায়ের পিচ্ছিল আবরণ ওদের হুলের খোঁচা থেকে বাঁচায়!',
       'সব ক্লাউনফিশ জন্মায় ছেলে হয়ে। দলের সবচেয়ে বড়টি পরে মেয়ে হয়ে যেতে পারে।',
       'ক্লাউনফিশ ছোট ছোট পপ আর ক্লিক শব্দ করে একে অপরের সাথে কথা বলে।',
+      'ক্লাউনফিশের পরিবার একটা অ্যানিমোনে একসাথে থাকে, বাড়ি ছেড়ে বেশি দূরে যায় না।',
+      'ক্লাউনফিশ অ্যানিমোন পরিষ্কার রাখে, আর অ্যানিমোন ওদের নিরাপদে রাখে। ওরা সেরা বন্ধু!',
     ],
   },
   blueTang: {
@@ -17,6 +19,8 @@ export const SPECIES_BN = {
       'ব্লু ট্যাংয়ের লেজের কাছে আত্মরক্ষার জন্য ছোট্ট একটা ধারালো কাঁটা থাকে।',
       'ব্লু ট্যাং শৈবাল খায় আর প্রবাল প্রাচীর পরিষ্কার রাখতে সাহায্য করে।',
       'ঘুমানোর সময় ব্লু ট্যাংয়ের উজ্জ্বল নীল রং কিছুটা ফিকে হয়ে যেতে পারে।',
+      'নিরাপদ থাকতে ব্লু ট্যাং বড় দলে সাঁতার কাটে, এই দলকে বলে ঝাঁক।',
+      'ছোট্ট ব্লু ট্যাং নীল হওয়ার আগে উজ্জ্বল হলুদ রঙের থাকে!',
     ],
   },
   yellowTang: {
@@ -25,6 +29,8 @@ export const SPECIES_BN = {
       'ইয়েলো ট্যাং থাকে প্রশান্ত মহাসাগরের প্রবাল প্রাচীরে, হাওয়াইয়ের কাছে।',
       'ইয়েলো ট্যাং সারাদিন পাথর থেকে শৈবাল খুঁটে খায়, যেন ছোট্ট ঘাস কাটার যন্ত্র!',
       'একটি সুস্থ ইয়েলো ট্যাং ৩০ বছরেরও বেশি বাঁচতে পারে!',
+      'রাতে অন্ধকারে লুকাতে ইয়েলো ট্যাংয়ের গায়ে একটা ফিকে দাগ দেখা দেয়।',
+      'ইয়েলো ট্যাং মাঝে মাঝে কচ্ছপের খোলস থেকে শৈবাল খুঁটে ওদের পরিষ্কার করে দেয়।',
     ],
   },
   angelfish: {
@@ -33,6 +39,8 @@ export const SPECIES_BN = {
       'মিঠা পানির অ্যাঞ্জেলফিশ এসেছে দক্ষিণ আমেরিকার আমাজন নদী থেকে।',
       'অ্যাঞ্জেলফিশের লম্বা, চ্যাপ্টা শরীর ওদের গাছপালার ফাঁকে লুকাতে সাহায্য করে।',
       'অ্যাঞ্জেলফিশের মা-বাবা পালা করে ডিম পাহারা দেয়।',
+      'অ্যাঞ্জেলফিশ চ্যাপ্টা পাতায় ডিম পাড়ে, আর পাখনা দিয়ে বাতাস করে ডিম তাজা রাখে।',
+      'সমুদ্রের অ্যাঞ্জেলফিশ আর নদীর অ্যাঞ্জেলফিশ আলাদা মাছ, শুধু নামটা এক।',
     ],
   },
   betta: {
@@ -41,6 +49,8 @@ export const SPECIES_BN = {
       'বেটা মাছ একটি বিশেষ অঙ্গের সাহায্যে পানির ওপর থেকে বাতাস নিয়েও শ্বাস নিতে পারে।',
       'বেটা মাছ পানির ওপরে বুদবুদ দিয়ে বাসা বানায়।',
       'বেটা মাছের দরকার উষ্ণ পানি আর ফিল্টার, ছোট্ট বাটি নয়।',
+      'বেটা মাছ নিজের মালিককে চিনতে শেখে, এমনকি কাচের ওপর আঙুলের পিছু পিছুও যায়।',
+      'বুনো বেটা মাছ ফ্যাকাশে বাদামি। উজ্জ্বল রংগুলো এসেছে যত্নশীল প্রজননকারীদের হাতে।',
     ],
   },
   batfish: {
@@ -49,6 +59,18 @@ export const SPECIES_BN = {
       'ছোট ব্যাটফিশ কমলা-কালো রঙের হয়, আর মরা পাতার মতো দেখাতে একপাশে কাত হয়ে ভাসে!',
       'ব্যাটফিশের পাখনা অনেক লম্বা, তাই পানির নিচে ওদের উড়ন্ত বাদুড়ের মতো দেখায়।',
       'ব্যাটফিশ বাড়তি সামুদ্রিক শৈবাল খেয়ে প্রবাল প্রাচীরকে বাঁচতে সাহায্য করে।',
+      'ব্যাটফিশ খুব কৌতূহলী, প্রায়ই ডুবুরিদের কাছে সাঁতরে এসে হ্যালো বলে।',
+      'ব্যাটফিশ বড় হলে ওর লম্বা পাখনা ছোট হয়ে যায় আর শরীর রুপালি হয়।',
+    ],
+  },
+  pufferfish: {
+    label: 'পাফারফিশ',
+    facts: [
+      'ভয় পেলে পাফারফিশ পানি গিলে ফুলে একটা বড় কাঁটাওয়ালা বল হয়ে যায়!',
+      'পাফারফিশের ঠোঁটের মতো দাঁত সবসময় বাড়তে থাকে, তাই ওরা ঝিনুক চিবিয়ে দাঁত ছোট রাখে।',
+      'পাফারফিশ ধীরে সাঁতার কাটে, তাই ফুলে ওঠাই ওদের নিরাপদ থাকার উপায়।',
+      'কিছু পাফারফিশ সঙ্গীকে ডাকতে বালিতে সুন্দর গোল নকশা আঁকে।',
+      'পাফারফিশ দুই চোখ আলাদা করে ঘোরাতে পারে, একটা ওপরে আর একটা নিচে তাকায়।',
     ],
   },
 };
@@ -92,18 +114,27 @@ export function speciesFacts(speciesId, lang) {
   return lang === 'bn' ? SPECIES_BN[speciesId].facts : SPECIES[speciesId].facts;
 }
 
+// Label, quick-info chips and facts for any creature, in the chosen language.
+export function creatureInfo(id, lang) {
+  const c = CREATURES[id];
+  const bn = lang === 'bn';
+  const side = bn ? c.bn : c.en;
+  const fish = c.kind === 'fish';
+  const label = fish ? (bn ? SPECIES_BN[id].label : SPECIES[id].label) : side.label;
+  const facts = fish ? speciesFacts(id, lang) : side.facts;
+  const t = CARD_TEXT[bn ? 'bn' : 'en'];
+  const chips = Object.keys(INFO_ICONS).map((key) => ({ key, icon: INFO_ICONS[key], title: t[key], text: side[key] }));
+  return { id, emoji: c.emoji, kind: c.kind, label, facts, chips };
+}
+
 export function allFacts(lang) {
   const t = UI_TEXT[lang] || UI_TEXT.en;
   const general = lang === 'bn' ? GENERAL_FACTS_BN : GENERAL_FACTS;
   return [
     ...general.map((text) => ({ text, topic: t.careTopic })),
-    ...Object.keys(SPECIES).flatMap((id) => {
-      const label = lang === 'bn' ? SPECIES_BN[id].label : SPECIES[id].label;
-      return speciesFacts(id, lang).map((text) => ({ text, topic: label }));
-    }),
-    ...Object.values(CRITTERS).flatMap((c) => {
-      const side = lang === 'bn' ? c.bn : c.en;
-      return side.facts.map((text) => ({ text, topic: side.label }));
+    ...Object.keys(CREATURES).flatMap((id) => {
+      const info = creatureInfo(id, lang);
+      return info.facts.map((text) => ({ text, topic: info.label }));
     }),
   ];
 }

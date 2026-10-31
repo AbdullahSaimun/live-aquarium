@@ -198,6 +198,12 @@ export default function Coral({ calm }) {
     },
     [geos, mats],
   );
+  // Some corals glow softly in the dark, like real fluorescent reef corals.
+  useFrame(() => {
+    const night = 1 - world.light;
+    mats.anemone.emissiveIntensity = 0.15 + night * 0.75;
+    mats.bubble.emissiveIntensity = 0.12 + night * 0.65;
+  });
 
   return (
     <group>

@@ -1,6 +1,9 @@
 import { forwardRef, useImperativeHandle, useRef } from 'react';
 import { SPECIES } from '../data/species';
-import { sphereGeo, smallSphereGeo, TAILS, DORSALS, eyeWhiteMat, pupilMat, shineMat, blushMat } from './fishParts';
+import { sphereGeo, smallSphereGeo, TAILS, DORSALS, eyeWhiteMat, pupilMat, shineMat, blushMat, spikeGeo, SPIKE_DIRS } from './fishParts';
+
+// Pufferfish spots: a sprinkle over its back and sides.
+const SPOTS = SPIKE_DIRS.filter((_, i) => i % 3 === 1).filter(({ dir }) => dir.y > -0.2 && dir.z < 0.75);
 
 // Ellipsoid cross-section factor at a given z, used to fit stripes onto the body.
 const sectionAt = (z, bz) => Math.sqrt(Math.max(0, 1 - (z / bz) ** 2));
@@ -28,8 +31,9 @@ const FishModel = forwardRef(function FishModel({ species, mats }, ref) {
   const body = useRef();
   const eyeL = useRef();
   const eyeR = useRef();
+  const spikes = useRef();
 
-  useImperativeHandle(ref, () => ({ tail, finL, finR, body, eyeL, eyeR }), []);
+  useImperativeHandle(ref, () => ({ tail, finL, finR, body, eyeL, eyeR, spikes }), []);
 
   const finScale = bz * 1.05;
   const stripeZs = def.stripes ? (species === 'clownfish' ? [0.42, -0.2, -0.72] : [0.25, -0.15]) : [];
@@ -52,6 +56,30 @@ const FishModel = forwardRef(function FishModel({ species, mats }, ref) {
           />
         );
       })}
+
+      {def.spots &&
+        SPOTS.map(({ dir }, i) => (
+          <mesh
+            key={i}
+            geometry={smallSphereGeo}
+            material={mats.accent}
+            position={[dir.x * bx * 0.97, dir.y * by * 0.97, dir.z * bz * 0.97]}
+            scale={0.045}
+          />
+        ))}
+      {def.spikes && (
+        <group ref={spikes} visible={false}>
+          {SPIKE_DIRS.map(({ dir, quat }, i) => (
+            <mesh
+              key={i}
+              geometry={spikeGeo}
+              material={mats.fin}
+              position={[dir.x * bx * 0.92, dir.y * by * 0.92, dir.z * bz * 0.92]}
+              quaternion={quat}
+            />
+          ))}
+        </group>
+      )}
 
       <mesh
         geometry={DORSALS[def.dorsal]}

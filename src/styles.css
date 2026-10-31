@@ -23,6 +23,10 @@
   --feed: 100px; /* the big Feed button */
   --dock-space: calc(var(--safe-bottom) + var(--feed) + 34px); /* room taken by the dock */
   --sheet-w: 360px;
+  --card-w: 310px; /* compact learning cards */
+  /* Motion: a soft spring for things arriving, a quick ease for things leaving. */
+  --spring: cubic-bezier(0.2, 1.3, 0.4, 1);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   font-family: 'Baloo 2', 'Nunito', 'Trebuchet MS', system-ui, sans-serif;
   color: var(--ink);
 }
@@ -384,31 +388,6 @@ button:focus-visible,
   -webkit-overflow-scrolling: touch;
 }
 
-.fish-card-head {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  margin-bottom: 8px;
-  padding-right: 30px;
-}
-
-.fish-avatar {
-  width: 64px;
-  height: 64px;
-  border-radius: 20px;
-  background: linear-gradient(160deg, #e2f7ff, #bfeaff);
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-}
-
-.tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  margin-top: 4px;
-}
-
 .tag {
   display: inline-block;
   font-size: 12px;
@@ -422,71 +401,6 @@ button:focus-visible,
 .tag-soft {
   background: #e3f4ff;
   color: #2a6aa8;
-}
-
-.mood-line {
-  margin: 6px 0 10px;
-  padding: 8px 12px;
-  border-radius: 14px;
-  font-weight: 600;
-  background: #f0faff;
-}
-
-.mood-hungry {
-  background: #fff1e0;
-}
-
-.mood-sleepy {
-  background: #eeeaff;
-}
-
-.mood-curious {
-  background: #e6fff4;
-}
-
-.mood-emoji {
-  font-size: 18px;
-}
-
-.meter {
-  margin: 6px 0;
-}
-
-.meter-head {
-  display: flex;
-  justify-content: space-between;
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.meter-note {
-  color: var(--ink-soft);
-}
-
-.meter-track {
-  height: 12px;
-  border-radius: 999px;
-  background: rgba(35, 54, 94, 0.08);
-  overflow: hidden;
-}
-
-.meter-fill {
-  height: 100%;
-  border-radius: 999px;
-  transition: width 0.6s ease;
-}
-
-.fact-box {
-  margin-top: 12px;
-  padding: 10px 12px;
-  border-radius: 16px;
-  background: linear-gradient(160deg, #fff8dc, #fff0c2);
-}
-
-.fact-box p {
-  margin: 2px 0 4px;
-  font-size: 15px;
-  line-height: 1.35;
 }
 
 .fact-title {
@@ -1338,7 +1252,7 @@ button:focus-visible,
   border-radius: 999px;
   box-shadow: var(--shadow);
   font-weight: 700;
-  animation: pop-in 0.3s cubic-bezier(0.2, 1.4, 0.4, 1);
+  animation: toast-in 0.42s var(--spring);
   text-align: center;
 }
 
@@ -1517,7 +1431,7 @@ button:focus-visible,
   :root {
     --gutter: 10px;
     --top-space: calc(var(--safe-top) + 58px);
-    --btn: 56px;
+    --btn: 52px;
     --feed: 76px;
     --dock-space: calc(var(--safe-bottom) + 86px);
   }
@@ -1576,11 +1490,6 @@ button:focus-visible,
 
   .card h2 {
     font-size: 22px;
-  }
-
-  .fish-avatar {
-    width: 54px;
-    height: 54px;
   }
 
   .big-fact {
@@ -1746,5 +1655,669 @@ button:focus-visible,
   from {
     transform: translateY(40px);
     opacity: 0;
+  }
+}
+
+/* ---------- sea life update: compact cards, stickers, day & night ---------- */
+
+/* Water colour layers behind the canvas, cross-faded by time of day. */
+.sky {
+  position: fixed;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 3s ease;
+}
+
+.sky-sunset {
+  background: linear-gradient(180deg, #ffc49a 0%, #f0959a 32%, #8a76c0 68%, #3c4f92 100%);
+}
+
+.sky-night {
+  background: linear-gradient(180deg, #1c3a74 0%, #12305e 38%, #0c2449 72%, #071630 100%);
+}
+
+.app[data-time='sunset'] .sky-sunset,
+.app[data-time='night'] .sky-night {
+  opacity: 1;
+}
+
+/* Sun / moon badge in the top bar. */
+.time-badge {
+  pointer-events: auto;
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--card);
+  box-shadow: var(--shadow);
+  font-size: 24px;
+  transition: transform 0.2s var(--spring), background 0.6s;
+}
+
+.time-badge span {
+  animation: spin-in 0.6s var(--spring);
+}
+
+.time-badge small {
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #fff;
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 13px;
+  color: var(--ink-soft);
+  box-shadow: 0 2px 6px rgba(10, 40, 90, 0.15);
+}
+
+.time-badge.time-night {
+  background: rgba(40, 60, 120, 0.85);
+}
+
+.time-badge.time-sunset {
+  background: rgba(255, 228, 205, 0.92);
+}
+
+.time-badge:active {
+  transform: scale(0.9);
+}
+
+/* Compact learning cards (fish and creatures). */
+.fish-card {
+  width: min(var(--card-w), calc(100vw - 2 * var(--gutter)));
+  padding: 14px 14px 12px;
+}
+
+.card.is-leaving {
+  animation: card-out 0.18s var(--ease-out) forwards;
+  pointer-events: none;
+}
+
+.card-swap {
+  animation: swap-in 0.3s var(--ease-out);
+}
+
+.mini-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-right: 40px;
+}
+
+.mini-avatar {
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  background: linear-gradient(160deg, #e2f7ff, #bfeaff);
+  box-shadow: inset 0 -3px 0 rgba(42, 106, 168, 0.12);
+}
+
+.mini-avatar svg,
+.mini-avatar .creature-emoji {
+  animation: bob 2.6s ease-in-out infinite;
+}
+
+.creature-emoji {
+  line-height: 1;
+}
+
+.mini-title {
+  min-width: 0;
+}
+
+.card .mini-title h2 {
+  font-size: 21px;
+}
+
+.mini-sub {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ink-soft);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mood-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin: 8px 0 2px;
+  padding: 2px 11px 2px 7px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 800;
+  background: #e8f8ef;
+  color: #1f7a55;
+}
+
+.mood-pill.mood-hungry,
+.mood-pill.mood-weak {
+  background: #fff1e0;
+  color: #b4560f;
+}
+
+.mood-pill.mood-sleepy {
+  background: #eeeaff;
+  color: #5b48b5;
+}
+
+.mood-pill.mood-curious,
+.mood-pill.mood-missing {
+  background: #e3f4ff;
+  color: #2a6aa8;
+}
+
+.mood-pill.mood-playing {
+  background: #ffe6f2;
+  color: #c2386f;
+}
+
+.mood-pill.mood-scared,
+.mood-pill.mood-fainted {
+  background: #ffe3e3;
+  color: #c0392b;
+}
+
+.gauges {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  margin: 6px 0 8px;
+}
+
+.gauge {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.gauge svg {
+  width: 46px;
+  height: 46px;
+  transform: rotate(-90deg);
+}
+
+.gauge circle {
+  fill: none;
+  stroke-width: 4;
+}
+
+.gauge-track {
+  stroke: rgba(35, 54, 94, 0.09);
+}
+
+.gauge-fill {
+  stroke-linecap: round;
+  transition: stroke-dasharray 0.7s var(--ease-out), stroke 0.4s;
+}
+
+.gauge-icon {
+  position: absolute;
+  top: 11px;
+  font-size: 18px;
+  line-height: 24px;
+}
+
+.gauge small {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--ink-soft);
+}
+
+.gauge.is-alert .gauge-icon {
+  animation: wiggle 0.8s ease-in-out infinite;
+}
+
+/* Quick-info chips: one swipeable row. */
+.chips {
+  display: flex;
+  gap: 5px;
+  margin: 0 -14px;
+  padding: 2px 14px 4px;
+  list-style: none;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x proximity;
+  /* Fade the right edge to hint that there is more to swipe. */
+  -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent);
+  mask-image: linear-gradient(90deg, #000 85%, transparent);
+}
+
+.chips::-webkit-scrollbar {
+  display: none;
+}
+
+.chips li {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px 3px 7px;
+  border-radius: 999px;
+  background: #eef8ff;
+  font-size: 12.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  scroll-snap-align: start;
+  animation: chip-in 0.4s var(--spring) backwards;
+}
+
+.chips li:nth-child(2) {
+  animation-delay: 0.04s;
+  background: #fff3e6;
+}
+
+.chips li:nth-child(3) {
+  animation-delay: 0.08s;
+  background: #effbe9;
+}
+
+.chips li:nth-child(4) {
+  animation-delay: 0.12s;
+  background: #f4efff;
+}
+
+.chips li:nth-child(5) {
+  animation-delay: 0.16s;
+  background: #fff0f6;
+}
+
+.chips.bn li {
+  font-family: 'Baloo Da 2', 'Nirmala UI', 'Vrinda', sans-serif;
+}
+
+.fact-bubble {
+  margin-top: 6px;
+  padding: 8px 12px 4px;
+  border-radius: 16px;
+  background: linear-gradient(160deg, #fff8dc, #fff0c2);
+}
+
+.fact-text {
+  margin: 2px 0 0;
+  min-height: 2.7em;
+  font-size: 14.5px;
+  line-height: 1.35;
+  animation: fact-in 0.35s var(--ease-out);
+}
+
+.fact-text.bn {
+  font-size: 15.5px;
+}
+
+.fact-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.fact-nav button {
+  width: 36px;
+  height: 32px;
+  border-radius: 999px;
+  font-size: 13px;
+  color: #a8740a;
+  transition: transform 0.15s var(--spring), background 0.15s;
+}
+
+.fact-nav button:active {
+  transform: scale(0.85);
+  background: rgba(255, 201, 77, 0.35);
+}
+
+.fact-dots {
+  display: flex;
+  gap: 5px;
+}
+
+.fact-dots i {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(168, 116, 10, 0.25);
+  transition: width 0.3s var(--ease-out), background 0.3s;
+}
+
+.fact-dots i.is-on {
+  width: 16px;
+  background: #e0a21a;
+}
+
+.mini-actions {
+  margin-top: 8px;
+}
+
+.mini-actions .btn-small {
+  flex: 1;
+  min-height: 40px;
+  padding: 6px 12px;
+}
+
+.btn-small:disabled {
+  opacity: 0.55;
+}
+
+/* Sticker book. */
+.btn-stickers {
+  --tile: #dcfbef;
+  --tile-ink: #1d8a5f;
+}
+
+.btn-stickers.is-new {
+  animation: sticker-pop 0.9s var(--spring);
+}
+
+.sticker-progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 4px 0 2px;
+}
+
+.sticker-bar {
+  flex: 1;
+  height: 12px;
+  border-radius: 999px;
+  background: rgba(35, 54, 94, 0.08);
+  overflow: hidden;
+}
+
+.sticker-bar div {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #7ee0b5, #2fbf8f, #5cc8ff);
+  transition: width 0.8s var(--ease-out);
+}
+
+.sticker-hint {
+  margin: 2px 0 8px;
+  font-size: 13.5px;
+  color: var(--ink-soft);
+}
+
+.sticker-section {
+  margin: 10px 0 6px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
+}
+
+.sticker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sticker {
+  width: 100%;
+  min-height: 86px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 6px 4px;
+  border-radius: 18px;
+  background: rgba(35, 54, 94, 0.05);
+  border: 2px dashed rgba(35, 54, 94, 0.14);
+  cursor: default;
+}
+
+.sticker:not(.is-have) .sticker-art {
+  filter: grayscale(1) brightness(0.4);
+  opacity: 0.35;
+}
+
+.sticker.is-have {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  border: 2px solid #fff;
+  background: linear-gradient(160deg, #ffffff, #e6f6ff);
+  box-shadow: 0 4px 0 rgba(42, 106, 168, 0.18), 0 6px 14px rgba(10, 40, 90, 0.12);
+  transition: transform 0.2s var(--spring);
+}
+
+/* A shine sweeps across collected stickers now and then. */
+.sticker.is-have::after {
+  content: '';
+  position: absolute;
+  inset: -40%;
+  background: linear-gradient(115deg, transparent 40%, rgba(255, 255, 255, 0.85) 50%, transparent 60%);
+  transform: translateX(-100%);
+  animation: shine 5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.sticker-grid li:nth-child(3n + 2) .sticker::after {
+  animation-delay: 1.4s;
+}
+
+.sticker-grid li:nth-child(3n) .sticker::after {
+  animation-delay: 2.8s;
+}
+
+.sticker.is-have:active {
+  transform: scale(0.94) rotate(-2deg);
+}
+
+.sticker-art {
+  display: grid;
+  place-items: center;
+  height: 42px;
+}
+
+.sticker-name {
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.1;
+  text-align: center;
+}
+
+.sticker-back {
+  margin: -6px 0 6px;
+}
+
+/* Settings: tank time segment. */
+.setting-block {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 0;
+}
+
+.setting-block small {
+  color: var(--ink-soft);
+  font-size: 13px;
+  line-height: 1.3;
+  margin-bottom: 6px;
+}
+
+.time-switch {
+  display: flex;
+  flex-wrap: wrap;
+  border-radius: 20px;
+  align-self: flex-start;
+}
+
+.time-switch button {
+  padding: 2px 12px;
+}
+
+/* Livelier controls: a little lift on hover, a squish on press, and dock icons that float. */
+@media (hover: hover) {
+  .btn-small:hover:not(:disabled),
+  .time-badge:hover,
+  .sticker.is-have:hover {
+    transform: translateY(-2px);
+  }
+}
+
+.btn-small:active:not(:disabled) {
+  transform: translateY(3px) scale(0.97);
+}
+
+.btn-round .btn-emoji {
+  display: inline-block;
+  animation: float 4.5s ease-in-out infinite;
+}
+
+.actionbar > :nth-child(2) .btn-emoji {
+  animation-delay: -0.9s;
+}
+
+.actionbar > :nth-child(3) .btn-emoji {
+  animation-delay: -1.8s;
+}
+
+.actionbar > :nth-child(5) .btn-emoji {
+  animation-delay: -2.7s;
+}
+
+.actionbar > :nth-child(6) .btn-emoji {
+  animation-delay: -3.6s;
+}
+
+@keyframes float {
+  50% {
+    transform: translateY(-3px) rotate(-4deg);
+  }
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-16px) scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes toast-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes card-out {
+  to {
+    opacity: 0;
+    transform: translateY(14px) scale(0.96);
+  }
+}
+
+@keyframes swap-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+@keyframes fact-in {
+  from {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+}
+
+@keyframes chip-in {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+}
+
+@keyframes spin-in {
+  from {
+    opacity: 0;
+    transform: rotate(-120deg) scale(0.4);
+  }
+}
+
+@keyframes sticker-pop {
+  30% {
+    transform: scale(1.25) rotate(-8deg);
+    box-shadow: 0 0 0 8px rgba(47, 191, 143, 0.35), var(--shadow);
+  }
+  60% {
+    transform: scale(0.95) rotate(4deg);
+  }
+}
+
+@keyframes shine {
+  0%,
+  70% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@media (max-width: 600px) {
+  /* Learning cards stay short on phones so the tank stays in view. */
+  .fish-card {
+    max-height: min(52dvh, calc(100dvh - var(--top-space) - var(--dock-space) - 16px));
+    padding: 12px 12px 10px;
+  }
+
+  .chips {
+    margin: 0 -12px;
+    padding: 2px 12px 4px;
+  }
+
+  .toasts .toast {
+    animation-name: toast-up;
+  }
+
+  .time-badge {
+    width: 42px;
+    height: 42px;
+    font-size: 21px;
+  }
+}
+
+@media (max-width: 380px) {
+  :root {
+    --btn: 46px;
+    --feed: 70px;
+  }
+
+  .btn-round .btn-label {
+    font-size: 10px;
+  }
+
+  .gauge svg {
+    width: 40px;
+    height: 40px;
+  }
+
+  .gauge-icon {
+    top: 9px;
+    font-size: 16px;
   }
 }

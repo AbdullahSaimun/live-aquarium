@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { useCursor } from '@react-three/drei';
 import { world, queueEffect } from '../sim/world';
-import { critterFact, sfx } from '../state/store';
+import { showCreature, sfx } from '../state/store';
 
 const FLOOR = world.floorY;
 const HOP_TIME = 1;
@@ -64,7 +64,7 @@ function Star({ kit, def }) {
     if (hop.current <= 0) hop.current = HOP_TIME;
     queueEffect('hearts', group.current.position.clone().setY(FLOOR + 0.6), 2);
     sfx('squeak');
-    critterFact('starfish');
+    showCreature('starfish');
   };
 
   return (

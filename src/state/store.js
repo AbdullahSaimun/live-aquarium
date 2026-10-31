@@ -6,7 +6,10 @@ import { playSound } from '../audio/sounds';
 import { allFacts } from '../data/factsBn';
 import { startVisit, snackSpot } from '../sim/asmaBrain';
 import { startShark, sendSharkAway, SHARK_HITS } from '../sim/sharkBrain';
-import { CRITTERS } from '../data/critters';
+import { CREATURES, CREATURE_IDS } from '../data/creatures';
+import { creatureInfo } from '../data/factsBn';
+import { startVisitor, visitorActive } from '../sim/visitors';
+import { phaseFor, PHASE_LIGHT } from './daylight';
 
 export const MAX_FISH = 10;
 export const HUNGER_RATE = 1 / 200; // per second, before personality appetite
@@ -66,6 +69,11 @@ function starterFish(remembered = []) {
   return fish;
 }
 
+// Species that join older tanks as new neighbours, once each, while there is room.
+const NEWCOMERS = { batfish: '🦇', pufferfish: '🐡' };
+const NEWCOMER_ROOM = 8;
+const freshStats = () => ({ pellets: 0, births: 0, arrived: { batfish: true }, stickers: {} });
+
 function sanitizeFish(f) {
   if (!SPECIES[f.species]) return null;
   const clamp = (v, d) => (Number.isFinite(v) ? Math.min(1, Math.max(0, v)) : d);
@@ -109,10 +117,22 @@ function initialState() {
     selectedId: null,
     panel: null,
     toasts: [],
-    settings: { showNames: true, calmMode: false, factLang: 'bn', sound: true, asmaVisits: true, sharkVisits: true },
+    settings: {
+      showNames: true,
+      calmMode: false,
+      factLang: 'bn',
+      sound: true,
+      asmaVisits: true,
+      sharkVisits: true,
+      visitors: true,
+      tankTime: 'auto',
+      infoCards: true,
+    },
     asma: { visible: false, phase: 'idle', line: '', restUntil: 0, missUntil: 0 },
     shark: { visible: false, hitsLeft: 0 },
-    stats: { pellets: 0, births: 0, batfishArrived: true },
+    stats: freshStats(),
+    creatureId: null,
+    newcomers: [],
     hintDismissed: false,
     version: 0,
   };
@@ -140,18 +160,27 @@ function initialState() {
   }
   const neverPlayed = !alive.length && !memorial.length;
   const stats = { ...base.stats, ...(save.stats || {}) };
-  // Tanks saved before batfish existed get one as a new neighbour, once.
-  let newcomer = null;
-  if (alive.length && alive.length < MAX_FISH && !save.stats?.batfishArrived && !alive.some((f) => f.species === 'batfish')) {
-    newcomer = createFish([...alive, ...memorial], 'batfish');
-    alive.push(newcomer);
+  stats.arrived = { ...(save.stats?.arrived || {}) };
+  if (save.stats?.batfishArrived) stats.arrived.batfish = true;
+  stats.stickers = { ...(save.stats?.stickers || {}) };
+  // Species added after this tank was started move in as new neighbours, once each.
+  const newcomers = [];
+  for (const species of Object.keys(NEWCOMERS)) {
+    if (stats.arrived[species]) continue;
+    if (alive.some((f) => f.species === species)) stats.arrived[species] = true;
+    else if (alive.length && alive.length < NEWCOMER_ROOM) {
+      const fish = createFish([...alive, ...memorial], species);
+      alive.push(fish);
+      newcomers.push(fish);
+      stats.arrived[species] = true;
+    }
   }
   return {
     ...base,
     fish: neverPlayed ? starterFish() : alive,
     memorial,
     lostWhileAway: lost,
-    newcomer: newcomer?.name || null,
+    newcomers,
     settings: { ...base.settings, ...(save.settings || {}) },
     stats,
     hintDismissed: !!save.hintDismissed,
@@ -159,6 +188,10 @@ function initialState() {
 }
 
 const state = initialState();
+// Start in the right light, so a night visit doesn't fade in from daytime.
+state.daylight = phaseFor(state.settings.tankTime);
+world.light = world.lightTarget = PHASE_LIGHT[state.daylight].light;
+world.dusk = world.duskTarget = PHASE_LIGHT[state.daylight].dusk;
 const listeners = new Set();
 
 export function getState() {
@@ -190,7 +223,7 @@ export function save() {
 // ---------- toasts ----------
 let toastId = 0;
 const CAN_BUZZ = typeof navigator !== 'undefined' && 'vibrate' in navigator && matchMedia('(pointer: coarse)').matches;
-const BUZZ = { plop: 8, squeak: 12, pop: 6, treasure: [15, 40, 15], chime: 10, splash: 20, bonk: 18, chomp: [20, 40, 20] };
+const BUZZ = { puff: 10, plop: 8, squeak: 12, pop: 6, treasure: [15, 40, 15], chime: 10, splash: 20, bonk: 18, chomp: [20, 40, 20] };
 
 export function sfx(name) {
   if (!state.settings.sound) return;
@@ -223,14 +256,61 @@ export function findFish(id) {
 
 export function selectFish(id) {
   state.selectedId = id;
-  if (id) state.panel = null;
+  state.creatureId = null;
+  if (id) {
+    state.panel = null;
+    const fish = findFish(id);
+    if (fish) collectSticker(fish.species);
+  }
   emit();
 }
 
 export function openPanel(panel) {
   state.panel = state.panel === panel ? null : panel;
-  if (state.panel) state.selectedId = null;
+  if (state.panel) {
+    state.selectedId = null;
+    state.creatureId = null;
+  }
   emit();
+}
+
+// ---------- tank neighbours and the sticker book ----------
+// Tapping a neighbour opens its little learning card and earns its sticker.
+export function showCreature(id) {
+  // With info cards off, a tap is just for fun (and still earns the sticker).
+  state.creatureId = state.settings.infoCards ? id : null;
+  state.selectedId = null;
+  state.panel = null;
+  collectSticker(id);
+  emit();
+}
+
+export function closeCreature() {
+  state.creatureId = null;
+  emit();
+}
+
+let stickerFlashId = 0;
+export function collectSticker(id) {
+  const stickers = state.stats.stickers;
+  if (!CREATURES[id] || stickers[id]) return;
+  stickers[id] = Date.now();
+  state.stickerFlash = ++stickerFlashId;
+  const got = CREATURE_IDS.filter((c) => stickers[c]).length;
+  const lang = state.settings.factLang;
+  const { label } = creatureInfo(id, lang);
+  if (got === CREATURE_IDS.length) {
+    toast('You collected every sticker! You are an ocean expert! 🏆', '📖', 5000);
+    sfx('treasure');
+    for (const rt of world.runtime.values()) queueEffect('hearts', rt.pos, 2);
+  } else if (got === Math.ceil(CREATURE_IDS.length / 2)) {
+    toast(`Half the sticker book is full! ${got} of ${CREATURE_IDS.length} 🌟`, '📖', 4500);
+    sfx('treasure');
+  } else {
+    toast(lang === 'bn' ? `নতুন স্টিকার: ${label}!` : `New sticker: ${label}!`, CREATURES[id].emoji, 2600, lang === 'bn' ? 'bn' : '');
+    sfx('chime');
+  }
+  save();
 }
 
 export function dismissHint() {
@@ -242,6 +322,11 @@ export function dismissHint() {
 export function setSetting(key, value) {
   state.settings = { ...state.settings, [key]: value };
   if (key === 'sharkVisits' && !value) sendSharkAway(true);
+  if (key === 'tankTime') tickDaylight();
+  if (key === 'infoCards' && !value) {
+    state.selectedId = null;
+    state.creatureId = null;
+  }
   emit();
   save();
 }
@@ -275,9 +360,11 @@ export function dropFoodAt(point) {
 
 // Tapping empty water first closes an open card or panel; otherwise it drops food there.
 export function tapWater(point) {
-  if (state.selectedId || state.panel) {
+  const cardOpen = state.settings.infoCards && (state.selectedId || state.creatureId);
+  if (state.panel || cardOpen) {
     state.selectedId = null;
     state.panel = null;
+    state.creatureId = null;
     emit();
     return;
   }
@@ -354,8 +441,11 @@ function maybeHaveBaby(parent) {
 export function petFish(fish) {
   const now = performance.now();
   const rtNow = world.runtime.get(fish.id);
-  if (rtNow) rtNow.flip = FLIP_TIME; // every tap earns a happy barrel roll
-  sfx('squeak');
+  if (rtNow) {
+    if (SPECIES[fish.species].spikes) rtNow.puffUp = 1.6; // a tap makes the pufferfish puff in surprise
+    else rtNow.flip = FLIP_TIME; // every tap earns a happy barrel roll
+  }
+  sfx(SPECIES[fish.species].spikes ? 'puff' : 'squeak');
   if (!fish.lastPet || now - fish.lastPet > 8000) {
     fish.lastPet = now;
     fish.affection = Math.min(1, fish.affection + 0.02);
@@ -395,10 +485,11 @@ export function cycleColor(fish) {
 
 // Tells the child, once, about fish lost while the app was closed.
 export function announceLosses() {
-  if (state.newcomer) {
-    toast(`A batfish named ${state.newcomer} moved into your tank! Say hello!`, '🦇', 5000);
-    state.newcomer = null;
+  for (const fish of state.newcomers) {
+    const kind = SPECIES[fish.species].label.toLowerCase();
+    toast(`A ${kind} named ${fish.name} moved into your tank! Say hello!`, NEWCOMERS[fish.species], 5000);
   }
+  state.newcomers = [];
   const lost = state.lostWhileAway;
   if (!lost.length) return;
   state.lostWhileAway = [];
@@ -434,7 +525,7 @@ export function resetAquarium() {
   state.fish = starterFish(state.memorial);
   state.selectedId = null;
   state.panel = null;
-  state.stats = { pellets: 0, births: 0, batfishArrived: true };
+  state.stats = { ...freshStats(), stickers: state.stats.stickers };
   emit();
   save();
   toast('A fresh new aquarium!', '🌊');
@@ -606,6 +697,7 @@ export function summonShark() {
 export function shooShark() {
   const s = world.shark;
   if (s.phase === 'idle' || s.phase === 'leaving') return;
+  collectSticker('shark');
   s.hits++;
   s.hurt = 0.7;
   queueEffect('bubbles', s.pos, 8);
@@ -658,19 +750,42 @@ export function sharkEvent(event) {
 
 function tickShark(dt) {
   if (!state.settings.sharkVisits || !state.hintDismissed || !state.fish.length) return;
-  if (world.shark.phase !== 'idle' || state.asma.phase !== 'idle') return;
+  if (world.shark.phase !== 'idle' || state.asma.phase !== 'idle' || visitorActive()) return;
+  if (state.daylight === 'night') return; // nights stay calm
   nextSharkIn -= dt;
   if (nextSharkIn <= 0) summonShark();
 }
 
-// ---------- tank neighbours: tap one to hear about it ----------
-const critterTurn = {};
-export function critterFact(kind) {
-  const c = CRITTERS[kind];
-  const lang = state.settings.factLang;
-  const side = lang === 'bn' ? c.bn : c.en;
-  const i = (critterTurn[kind] = ((critterTurn[kind] ?? -1) + 1) % side.facts.length);
-  toast(`${side.label}: ${side.facts[i]}`, c.emoji, 6500, lang === 'bn' ? 'bn' : '');
+// ---------- big visitors passing behind the reef ----------
+let nextVisitorIn = 60;
+
+export function callVisitor(kind) {
+  if (visitorActive() || world.shark.phase !== 'idle') return false;
+  if (startVisitor(kind) === 'whale') sfx('whale');
+  nextVisitorIn = 180 + Math.random() * 120;
+  return true;
+}
+
+function tickVisitors(dt) {
+  if (!state.settings.visitors || !state.hintDismissed) return;
+  if (visitorActive() || world.shark.phase !== 'idle') return;
+  nextVisitorIn -= dt;
+  if (nextVisitorIn <= 0) callVisitor();
+}
+
+// ---------- day and night ----------
+function tickDaylight() {
+  const phase = phaseFor(state.settings.tankTime);
+  if (phase === state.daylight) return;
+  state.daylight = phase;
+  world.lightTarget = PHASE_LIGHT[phase].light;
+  world.duskTarget = PHASE_LIGHT[phase].dusk;
+}
+
+// Tapping the sun/moon badge steps through the looks; Settings can hand it back to the clock.
+export function cycleTankTime() {
+  const order = ['day', 'sunset', 'night'];
+  setSetting('tankTime', order[(order.indexOf(state.daylight) + 1) % order.length]);
 }
 
 // Slow stat changes, run once per second (cheap, and keeps UI meters fresh).
@@ -694,6 +809,8 @@ export function tickStats(dt) {
   }
   tickAsma(dt);
   tickShark(dt);
+  tickVisitors(dt);
+  tickDaylight();
   if (weakened.length === 1) toast(`${weakened[0]} is very weak from hunger! Please feed soon.`, '🥺', 4500);
   else if (weakened.length > 1) toast(`${weakened.length} fish are very weak from hunger! Please feed them soon.`, '🥺', 4500);
   emit();

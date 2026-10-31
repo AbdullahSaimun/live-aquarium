@@ -1,4 +1,5 @@
-import { useStore, feed, openPanel, selectFish } from '../state/store';
+import { useStore, feed, openPanel, selectFish, cycleTankTime } from '../state/store';
+import { PHASE_ICON } from '../state/daylight';
 import { MOODS } from '../data/species';
 import FishIcon from './FishIcon';
 import { AsmaButton } from './Asma';
@@ -25,8 +26,26 @@ function Roster() {
   );
 }
 
+// Sun, sunset or moon: shows the tank's time of day; tapping it steps to the next look.
+function TimeBadge() {
+  const phase = useStore((s) => s.daylight);
+  const auto = useStore((s) => s.settings.tankTime === 'auto');
+  return (
+    <button
+      className={`time-badge time-${phase}`}
+      onClick={cycleTankTime}
+      aria-label={`Tank time: ${phase}${auto ? ', following the clock' : ''}. Tap to change`}
+      title={auto ? 'Following the clock. Tap to change' : 'Tap to change. Settings can follow the clock again'}
+    >
+      <span key={phase}>{PHASE_ICON[phase]}</span>
+      {auto && <small>auto</small>}
+    </button>
+  );
+}
+
 export default function HUD() {
   const panel = useStore((s) => s.panel);
+  const flash = useStore((s) => s.stickerFlash);
   return (
     <>
       <header className="topbar">
@@ -34,6 +53,7 @@ export default function HUD() {
           <span className="brand-icon">🐠</span>
           <span className="brand-text">My Little Ocean</span>
         </div>
+        <TimeBadge />
         <Roster />
       </header>
 
@@ -45,6 +65,14 @@ export default function HUD() {
         <button className={`btn btn-round btn-memories${panel === 'memories' ? ' is-on' : ''}`} onClick={() => openPanel('memories')}>
           <span className="btn-emoji">🌈</span>
           <span className="btn-label">Memories</span>
+        </button>
+        <button
+          key={flash || 0}
+          className={`btn btn-round btn-stickers${panel === 'stickers' ? ' is-on' : ''}${flash ? ' is-new' : ''}`}
+          onClick={() => openPanel('stickers')}
+        >
+          <span className="btn-emoji">📖</span>
+          <span className="btn-label">Stickers</span>
         </button>
         <button className="btn btn-feed" onClick={feed}>
           <span className="btn-emoji">🍤</span>
