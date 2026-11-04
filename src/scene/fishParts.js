@@ -93,6 +93,15 @@ export const SPIKE_DIRS = Array.from({ length: 30 }, (_, i) => {
   return { dir, quat: new THREE.Quaternion().setFromUnitVectors(UP, dir) };
 }).filter(({ dir }) => dir.z > -0.75); // none sticking out through the tail
 
+// Birthday party hat: a striped cone with a pom-pom (shown only on Asma's birthday).
+export const hatGeo = new THREE.ConeGeometry(1, 2.4, 14);
+hatGeo.translate(0, 1.2, 0);
+export const hatBandGeo = new THREE.TorusGeometry(0.62, 0.12, 6, 16);
+export const HAT_MATS = ['#ff7eb6', '#8fd3ff', '#ffd23f', '#a98bff', '#7ee0b5'].map(
+  (color) => new THREE.MeshStandardMaterial({ color, roughness: 0.45 }),
+);
+export const pomMat = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.8 });
+
 export const eyeWhiteMat = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.25 });
 export const pupilMat = new THREE.MeshBasicMaterial({ color: '#1d1b33' });
 export const shineMat = new THREE.MeshBasicMaterial({ color: '#ffffff' });

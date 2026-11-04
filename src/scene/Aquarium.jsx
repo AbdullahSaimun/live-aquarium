@@ -25,6 +25,7 @@ import Lobster from './Lobster';
 import Visitors from './Visitors';
 import DayNight from './DayNight';
 import SeaSnow from './SeaSnow';
+import Balloons from './Balloons';
 
 const FOV = 45;
 const BASE_Z = 11;
@@ -61,6 +62,7 @@ function CameraRig({ calm }) {
 
 export default function Aquarium() {
   const calm = useStore((s) => s.settings.calmMode);
+  const party = useStore((s) => s.party);
   const [dpr, setDpr] = useState(() => Math.min(1.5, window.devicePixelRatio || 1));
 
   return (
@@ -92,6 +94,7 @@ export default function Aquarium() {
       <Seahorse calm={calm} />
       <Jellyfish calm={calm} />
       <Visitors />
+      {party && <Balloons />}
       <Plants calm={calm} />
       <Bubbles ambient={calm ? 18 : 45} />
       {!calm && <SeaSnow />}

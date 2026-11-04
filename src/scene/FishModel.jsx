@@ -1,6 +1,7 @@
 import { forwardRef, useImperativeHandle, useRef } from 'react';
 import { SPECIES } from '../data/species';
-import { sphereGeo, smallSphereGeo, TAILS, DORSALS, eyeWhiteMat, pupilMat, shineMat, blushMat, spikeGeo, SPIKE_DIRS } from './fishParts';
+import { sphereGeo, smallSphereGeo, TAILS, DORSALS, eyeWhiteMat, pupilMat, shineMat, blushMat, spikeGeo, SPIKE_DIRS, hatGeo, hatBandGeo, HAT_MATS, pomMat } from './fishParts';
+import { SPECIES_IDS } from '../data/species';
 
 // Pufferfish spots: a sprinkle over its back and sides.
 const SPOTS = SPIKE_DIRS.filter((_, i) => i % 3 === 1).filter(({ dir }) => dir.y > -0.2 && dir.z < 0.75);
@@ -32,8 +33,11 @@ const FishModel = forwardRef(function FishModel({ species, mats }, ref) {
   const eyeL = useRef();
   const eyeR = useRef();
   const spikes = useRef();
+  const hat = useRef();
 
-  useImperativeHandle(ref, () => ({ tail, finL, finR, body, eyeL, eyeR, spikes }), []);
+  useImperativeHandle(ref, () => ({ tail, finL, finR, body, eyeL, eyeR, spikes, hat }), []);
+  const hatMat = HAT_MATS[SPECIES_IDS.indexOf(species) % HAT_MATS.length];
+  const hatSize = Math.min(0.16, by * 0.3);
 
   const finScale = bz * 1.05;
   const stripeZs = def.stripes ? (species === 'clownfish' ? [0.42, -0.2, -0.72] : [0.25, -0.15]) : [];
@@ -113,6 +117,13 @@ const FishModel = forwardRef(function FishModel({ species, mats }, ref) {
           />
         </group>
       ))}
+
+      {/* party hat, perched just in front of the dorsal fin */}
+      <group ref={hat} position={[0, by * 0.88, bz * 0.42]} rotation={[0.35, 0, 0.18]} scale={hatSize} visible={false}>
+        <mesh geometry={hatGeo} material={hatMat} />
+        <mesh geometry={hatBandGeo} material={pomMat} position={[0, 0.9, 0]} rotation={[Math.PI / 2, 0, 0]} />
+        <mesh geometry={smallSphereGeo} material={pomMat} position={[0, 2.45, 0]} scale={0.38} />
+      </group>
 
       <Eye side={1} bx={bx} by={by} bz={bz} eyeRef={eyeL} />
       <Eye side={-1} bx={bx} by={by} bz={bz} eyeRef={eyeR} />

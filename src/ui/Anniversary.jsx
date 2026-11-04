@@ -4,18 +4,20 @@ import { WEDDING, SECRET, loveStatus, spanLabel, formatDate, dailyNote } from '.
 
 const plural = (n, word) => `${n.toLocaleString()} ${word}${n === 1 ? '' : 's'}`;
 
-// Hearts and petals drifting up behind the letter.
-function FloatingHearts() {
+const HEART_ICONS = ['💖', '💕', '🌸', '💗', '✨', '🌹'];
+
+// Hearts and petals (or any icons) drifting up behind the letter.
+export function FloatingHearts({ icons = HEART_ICONS }) {
   const hearts = useMemo(
     () =>
       Array.from({ length: 26 }, (_, i) => ({
-        icon: ['💖', '💕', '🌸', '💗', '✨', '🌹'][i % 6],
+        icon: icons[i % icons.length],
         left: Math.random() * 100,
         size: 16 + Math.random() * 22,
         delay: Math.random() * 6,
         dur: 6 + Math.random() * 5,
       })),
-    [],
+    [icons],
   );
   return (
     <div className="love-hearts" aria-hidden="true">
@@ -32,7 +34,13 @@ function FloatingHearts() {
 }
 
 // Asks for the secret word before the letter opens.
-function SecretPrompt({ onUnlock, onClose }) {
+export function SecretPrompt({
+  onUnlock,
+  onClose,
+  icon = '💌',
+  title = 'A secret message for Asma',
+  className = '',
+}) {
   const [word, setWord] = useState('');
   const [wrong, setWrong] = useState(0);
   const submit = (e) => {
@@ -46,12 +54,12 @@ function SecretPrompt({ onUnlock, onClose }) {
   };
   return (
     <div className="love-overlay" role="dialog" aria-modal="true" aria-label="Secret word" onClick={onClose}>
-      <form key={wrong} className={`love-card love-lock${wrong ? ' is-wrong' : ''}`} onSubmit={submit} onClick={(e) => e.stopPropagation()}>
+      <form key={wrong} className={`love-card love-lock ${className}${wrong ? ' is-wrong' : ''}`} onSubmit={submit} onClick={(e) => e.stopPropagation()}>
         <button type="button" className="card-close" onClick={onClose} aria-label="Close">
           ✕
         </button>
-        <div className="love-ring">💌</div>
-        <h2 className="love-title">A secret message for Asma</h2>
+        <div className="love-ring">{icon}</div>
+        <h2 className="love-title">{title}</h2>
         <p className="love-date">Enter our secret word to open it 🔐</p>
         <input
           className="love-input"
@@ -75,7 +83,7 @@ function SecretPrompt({ onUnlock, onClose }) {
   );
 }
 
-function Counters({ items }) {
+export function Counters({ items }) {
   return (
     <div className="love-count">
       {items.map(([value, label]) => (

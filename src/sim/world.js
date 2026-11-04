@@ -59,6 +59,9 @@ export const world = {
   dusk: 0,
   lightTarget: 1,
   duskTarget: 0,
+  // Birthday party mode (hats, tiara, balloons) and when the balloons were last all popped.
+  party: false,
+  balloonBurst: -Infinity,
   // Queued particle bursts, drained each frame by the matching effect component.
   effects: { hearts: [], bubbles: [] },
 };

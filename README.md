@@ -74,6 +74,15 @@ Built with React, Vite, Three.js, React Three Fiber and drei. Everything runs in
 - **🪙 Treasure chest**: tap it for coins, sparkles and a surprise fact.
 - Bubbly sound effects, synthesized in the browser with no audio files.
 
+**🎂 Asma's birthday (23 December)**
+- From 1 December a 🎂 chip counts down the days; behind the secret word is a sealed envelope with a live countdown.
+- On her birthday the fish wear party hats, Asma wears a tiara and balloons float up the tank (tap to pop them).
+- The surprise opens with the secret word and plays in four steps: unwrap a present, light the candles and make a wish, blow them out (with a little Happy Birthday tune) and cut a slice, open a jar with one wish for every year of her age, and read a letter from Saimun.
+- It comes back every year with her new age, new candles, a new letter and a new jar of wishes. Letters live in `src/data/birthday.js`.
+
+**🎈 Saimun's birthday (31 January)**
+- Through January a small blue chip counts down the days to Saimun's birthday; tap it for a reminder. On the day it turns gold and says "Saimun's Birthday!".
+
 **Settings**
 - Name tags, sounds, Asma's surprise visits, shark visits, big sea visitors and calm mode (less motion) can be turned on or off.
 - Tank time: Clock (default), Day, Sunset or Night.

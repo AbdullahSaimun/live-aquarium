@@ -28,6 +28,8 @@ function makeKit() {
     shine: new THREE.MeshBasicMaterial({ color: '#ffffff' }),
     blush: new THREE.MeshBasicMaterial({ color: '#ff8fb1', transparent: true, opacity: 0.7, depthWrite: false }),
     lips: std('#e2476d'),
+    gold: std('#ffd23f', { roughness: 0.25, metalness: 0.6, emissive: '#7a5200', emissiveIntensity: 0.25 }),
+    gem: std('#ff5c9a', { roughness: 0.15, emissive: '#ff2f7a', emissiveIntensity: 0.4 }),
     hidden: new THREE.MeshBasicMaterial({ visible: false }),
   };
 }
@@ -52,6 +54,7 @@ export default function AsmaDiver() {
   const legL = useRef();
   const legR = useRef();
   const tail = useRef();
+  const tiara = useRef();
   const cheeks = useRef();
   const lastX = useRef(0);
   const [hovered, setHovered] = useState(false);
@@ -91,6 +94,7 @@ export default function AsmaDiver() {
     legL.current.rotation.x = kick;
     legR.current.rotation.x = -kick;
     tail.current.rotation.x = -0.9 + Math.sin(t * 1.3) * 0.15;
+    tiara.current.visible = world.party; // birthday girl
     tail.current.rotation.z = Math.sin(t * 0.9) * 0.2;
 
     // Puffed cheeks while holding her breath; they swell a little as air runs low.
@@ -132,6 +136,16 @@ export default function AsmaDiver() {
             <mesh geometry={kit.ring} material={kit.suit} rotation={[Math.PI / 2, 0, 0]} scale={0.09} />
             <mesh geometry={kit.limb} material={kit.hair} position={[0, 0.28, 0]} scale={[0.11, 0.2, 0.11]} />
             <mesh geometry={kit.small} material={kit.hair} position={[0, 0.55, 0]} scale={[0.13, 0.12, 0.13]} />
+          </group>
+          {/* a little gold tiara on her birthday */}
+          <group ref={tiara} position={[0, 0.38, 0.12]} rotation={[-0.35, 0, 0]} visible={false}>
+            <mesh geometry={kit.ring} material={kit.gold} rotation={[Math.PI / 2, 0, 0]} scale={[0.3, 0.3, 0.12]} />
+            {[-0.17, 0, 0.17].map((x) => (
+              <group key={x} position={[x, 0.07 + (x === 0 ? 0.05 : 0), 0.25 - Math.abs(x) * 0.4]}>
+                <mesh geometry={kit.small} material={kit.gold} scale={[0.035, x === 0 ? 0.11 : 0.07, 0.035]} />
+                <mesh geometry={kit.small} material={kit.gem} position={[0, x === 0 ? 0.11 : 0.07, 0]} scale={x === 0 ? 0.05 : 0.035} />
+              </group>
+            ))}
           </group>
           {/* goggles pushed up on her forehead */}
           {[-0.15, 0.15].map((x) => (

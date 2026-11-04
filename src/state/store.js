@@ -10,6 +10,7 @@ import { CREATURES, CREATURE_IDS } from '../data/creatures';
 import { creatureInfo } from '../data/factsBn';
 import { startVisitor, visitorActive } from '../sim/visitors';
 import { phaseFor, PHASE_LIGHT } from './daylight';
+import { birthdayStatus, BIRTHDAY_LINES } from '../data/birthday';
 
 export const MAX_FISH = 10;
 export const HUNGER_RATE = 1 / 200; // per second, before personality appetite
@@ -192,6 +193,7 @@ const state = initialState();
 state.daylight = phaseFor(state.settings.tankTime);
 world.light = world.lightTarget = PHASE_LIGHT[state.daylight].light;
 world.dusk = world.duskTarget = PHASE_LIGHT[state.daylight].dusk;
+state.party = world.party = birthdayStatus().phase === 'today';
 const listeners = new Set();
 
 export function getState() {
@@ -774,6 +776,20 @@ function tickVisitors(dt) {
 }
 
 // ---------- day and night ----------
+// Asma's birthday: party hats, a tiara and balloons in the tank all day on 23 December.
+function tickParty() {
+  const party = birthdayStatus().phase === 'today';
+  if (party === state.party) return;
+  state.party = world.party = party;
+}
+
+// The birthday letter's last button: the fish throw her a party and Asma dives in.
+export function celebrateBirthday() {
+  world.balloonBurst = world.time;
+  celebrateAnniversary('Happy birthday to me! 🎂', BIRTHDAY_LINES);
+  sfx('birthday');
+}
+
 function tickDaylight() {
   const phase = phaseFor(state.settings.tankTime);
   if (phase === state.daylight) return;
@@ -811,6 +827,7 @@ export function tickStats(dt) {
   tickShark(dt);
   tickVisitors(dt);
   tickDaylight();
+  tickParty();
   if (weakened.length === 1) toast(`${weakened[0]} is very weak from hunger! Please feed soon.`, '🥺', 4500);
   else if (weakened.length > 1) toast(`${weakened.length} fish are very weak from hunger! Please feed them soon.`, '🥺', 4500);
   emit();

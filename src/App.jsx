@@ -7,6 +7,7 @@ import FishCard from './ui/FishCard';
 import CreatureCard from './ui/CreatureCard';
 import StickerBook from './ui/StickerBook';
 import AnniversaryButton from './ui/Anniversary';
+import BirthdayButton, { HusbandCountdown } from './ui/Birthday';
 import { FactPanel, SettingsPanel, MemoriesPanel, EmptyTank, WelcomeHint, Toasts } from './ui/Panels';
 import { useStore, tickStats, save, announceLosses } from './state/store';
 
@@ -51,6 +52,8 @@ export default function App() {
       <HUD />
       <AsmaCard />
       <AnniversaryButton />
+      <BirthdayButton />
+      <HusbandCountdown />
       <FishCard />
       <CreatureCard />
       {panel === 'stickers' && <StickerBook />}

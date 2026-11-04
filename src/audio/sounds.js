@@ -85,6 +85,37 @@ const SOUNDS = {
     tone(ac, { type: 'sine', from: 160, to: 340, dur: 1.4, vol: 0.06 });
     tone(ac, { type: 'sine', from: 330, to: 180, start: 1.3, dur: 1.6, vol: 0.05 });
   },
+  // "Happy Birthday to You" (public domain melody), played softly on a music-box tone.
+  birthday: (ac) => {
+    const N = { G4: 392, A4: 440, B4: 494, C5: 523, D5: 587, E5: 659, F5: 698, G5: 784 };
+    const tune = [
+      ['G4', 0.75], ['G4', 0.25], ['A4', 1], ['G4', 1], ['C5', 1], ['B4', 2],
+      ['G4', 0.75], ['G4', 0.25], ['A4', 1], ['G4', 1], ['D5', 1], ['C5', 2],
+      ['G4', 0.75], ['G4', 0.25], ['G5', 1], ['E5', 1], ['C5', 1], ['B4', 1], ['A4', 2],
+      ['F5', 0.75], ['F5', 0.25], ['E5', 1], ['C5', 1], ['D5', 1], ['C5', 2.5],
+    ];
+    const beat = 0.34;
+    let t = 0;
+    for (const [note, len] of tune) {
+      const f = N[note];
+      tone(ac, { type: 'triangle', from: f, to: f, start: t, dur: Math.max(0.18, len * beat * 0.95), vol: 0.08 });
+      tone(ac, { type: 'sine', from: f * 2, to: f * 2, start: t, dur: 0.12, vol: 0.025 });
+      t += len * beat;
+    }
+  },
+  // A soft breath of air.
+  blow: (ac) => {
+    for (let i = 0; i < 6; i++) tone(ac, { from: 260 - i * 20, to: 70, start: i * 0.03, dur: 0.22, vol: 0.035 });
+  },
+  // A match striking, then the little whoomph of a flame.
+  light: (ac) => {
+    tone(ac, { type: 'square', from: 2400, to: 1600, dur: 0.04, vol: 0.03 });
+    tone(ac, { from: 300, to: 620, start: 0.05, dur: 0.14, vol: 0.06 });
+  },
+  balloon: (ac) => {
+    tone(ac, { type: 'square', from: 700, to: 90, dur: 0.08, vol: 0.08 });
+    tone(ac, { from: 1600, to: 2400, start: 0.05, dur: 0.06, vol: 0.04 });
+  },
   sad: (ac) => {
     tone(ac, { type: 'triangle', from: 520, to: 440, dur: 0.35, vol: 0.08 });
     tone(ac, { type: 'triangle', from: 440, to: 330, start: 0.3, dur: 0.5, vol: 0.07 });
