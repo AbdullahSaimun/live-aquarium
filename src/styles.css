@@ -19,9 +19,14 @@
   --safe-top: max(12px, env(safe-area-inset-top));
   --safe-bottom: max(12px, env(safe-area-inset-bottom));
   --top-space: calc(var(--safe-top) + 62px); /* room taken by the top bar */
-  --btn: 66px; /* round dock buttons */
-  --feed: 100px; /* the big Feed button */
-  --dock-space: calc(var(--safe-bottom) + var(--feed) + 34px); /* room taken by the dock */
+  --btn: 58px; /* round rail buttons */
+  --feed: 70px; /* the Feed button, the widest thing in the rail */
+  --rail-gap: 8px;
+  --rail-pad: 8px;
+  --rail-left: max(var(--gutter), env(safe-area-inset-left));
+  --rail-w: calc(var(--feed) + 2 * var(--rail-pad));
+  --rail-top: calc(var(--top-space) + 112px); /* below the ring and cake chips */
+  --rail-space: calc(var(--rail-left) + var(--rail-w) + 10px); /* where things beside the rail start */
   --sheet-w: 360px;
   --card-w: 310px; /* compact learning cards */
   /* Motion: a soft spring for things arriving, a quick ease for things leaving. */
@@ -201,23 +206,35 @@ button:focus-visible,
   font-size: 14px;
 }
 
-/* ---------- action bar ---------- */
+/* ---------- the button rail (left edge) ----------
+   A slim glass column, vertically centred in the space below the top-left chips. It never sits over
+   the middle or bottom of the tank, and the camera frames the tank beside it (see CameraRig). */
 .actionbar {
   position: absolute;
-  left: 50%;
+  left: var(--rail-left);
+  top: var(--rail-top);
   bottom: var(--safe-bottom);
-  transform: translateX(-50%);
+  height: fit-content;
+  margin: auto 0;
+  width: var(--rail-w);
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 10px;
-  padding: 8px 14px;
-  border-radius: 34px;
-  background: rgba(255, 255, 255, 0.32);
+  gap: var(--rail-gap);
+  padding: var(--rail-pad) 0 4px;
+  border-radius: calc(var(--feed) * 0.36 + var(--rail-pad));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.2));
   border: 1px solid rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  box-shadow: 0 12px 30px rgba(10, 40, 90, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(14px) saturate(1.2);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  box-shadow: 0 14px 34px rgba(10, 40, 90, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.75);
   z-index: 5;
+  transition:
+    transform 0.45s var(--ease-out),
+    opacity 0.35s ease,
+    background 2s ease,
+    border-color 2s ease;
+  animation: rail-in 0.6s var(--spring) backwards;
 }
 
 .btn {
@@ -243,7 +260,7 @@ button:focus-visible,
   box-shadow: 0 4px 0 rgba(42, 106, 168, 0.25), 0 8px 16px rgba(10, 40, 90, 0.15);
 }
 
-/* Each dock button has its own colour so kids can find it by colour alone. */
+/* Each rail button has its own colour so kids can find it by colour alone. */
 .btn-facts {
   --tile: #fff1c2;
   --tile-ink: #a8740a;
@@ -301,16 +318,18 @@ button:focus-visible,
 .btn-feed {
   width: var(--feed);
   height: var(--feed);
-  border-radius: calc(var(--feed) * 0.35);
+  flex-shrink: 0;
+  margin-bottom: 4px;
+  border-radius: calc(var(--feed) * 0.36);
   color: #fff;
   background: linear-gradient(160deg, #ffb35c, #ff6f61 60%, #ff5c9a);
-  box-shadow: 0 10px 0 #d9485f, 0 18px 30px rgba(255, 92, 120, 0.45);
+  box-shadow: 0 6px 0 #d9485f, 0 12px 22px rgba(255, 92, 120, 0.42);
   animation: pulse 2.6s ease-in-out infinite;
 }
 
 .btn-feed:active {
-  box-shadow: 0 4px 0 #d9485f, 0 8px 18px rgba(255, 92, 120, 0.45);
-  transform: translateY(6px) scale(0.97);
+  box-shadow: 0 2px 0 #d9485f, 0 6px 14px rgba(255, 92, 120, 0.45);
+  transform: translateY(4px) scale(0.97);
 }
 
 .btn-emoji {
@@ -328,7 +347,7 @@ button:focus-visible,
 }
 
 .btn-feed .btn-label {
-  font-size: calc(var(--feed) * 0.19);
+  font-size: calc(var(--feed) * 0.2);
   text-shadow: 0 2px 0 rgba(0, 0, 0, 0.12);
 }
 
@@ -376,13 +395,13 @@ button:focus-visible,
   color: var(--ink-soft);
 }
 
-/* Side sheet on tablets and desktops; becomes a bottom sheet on phones. */
+/* Cards open as a sheet right beside the rail, like a drawer sliding out of it. */
 .fish-card,
 .panel {
-  left: max(var(--gutter), env(safe-area-inset-left));
-  bottom: var(--dock-space);
-  width: min(var(--sheet-w), calc(100vw - 2 * var(--gutter)));
-  max-height: calc(100dvh - var(--top-space) - var(--dock-space) - 8px);
+  left: var(--rail-space);
+  bottom: var(--safe-bottom);
+  width: min(var(--sheet-w), calc(100vw - var(--rail-space) - var(--gutter)));
+  max-height: calc(100dvh - var(--top-space) - var(--safe-bottom) - 8px);
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
@@ -1231,7 +1250,7 @@ button:focus-visible,
 .toasts {
   position: absolute;
   top: calc(var(--top-space) + 4px);
-  left: 50%;
+  left: calc(50% + var(--rail-space) / 2);
   transform: translateX(-50%);
   display: flex;
   flex-direction: column;
@@ -1239,7 +1258,8 @@ button:focus-visible,
   gap: 6px;
   z-index: 40;
   pointer-events: none;
-  width: min(440px, calc(100vw - 32px));
+  width: min(440px, calc(100vw - var(--rail-space) - 2 * var(--gutter)));
+  transition: left 0.45s var(--ease-out);
 }
 
 .toast {
@@ -1417,23 +1437,67 @@ button:focus-visible,
    Desktop (default) > tablet (<= 1024px) > phone portrait (<= 600px) > phone landscape (short screens).
    Only layout tokens and placement change; components size themselves from the tokens. */
 
-/* Tablet: slightly smaller dock, same side-sheet layout. */
+/* Tablet: slightly smaller rail, same side-sheet layout. */
 @media (max-width: 1024px) {
   :root {
-    --btn: 64px;
-    --feed: 92px;
+    --btn: 56px;
+    --feed: 66px;
     --sheet-w: 340px;
   }
 }
 
-/* Phone portrait: one-row top bar, full-width dock, bottom sheets. */
+/* Short desktop windows: a tighter rail so it always fits. */
+@media (max-height: 760px) and (min-width: 601px) {
+  :root {
+    --btn: 50px;
+    --feed: 60px;
+    --rail-gap: 6px;
+  }
+}
+
+/* Very short desktop windows (small laptops): icon-only rail from just under the top bar, so the
+   chips move to the right and Asma's card to the bottom right. */
+@media (max-height: 680px) and (min-width: 601px) {
+  :root {
+    --btn: 42px;
+    --feed: 50px;
+    --rail-gap: 5px;
+    --rail-pad: 6px;
+    --rail-top: calc(var(--top-space) + 2px);
+  }
+
+  .actionbar .btn-label {
+    display: none;
+  }
+
+  .actionbar .btn-feed .btn-emoji {
+    font-size: calc(var(--feed) * 0.52);
+  }
+
+  .app .btn-anniversary,
+  .app .btn-birthday {
+    left: auto;
+    right: max(var(--gutter), env(safe-area-inset-right));
+  }
+
+  .asma-card {
+    top: auto;
+    bottom: var(--safe-bottom);
+  }
+}
+
+/* Phone portrait: one-row top bar, a slim rail on the left, sheets beside it. */
 @media (max-width: 600px) {
   :root {
     --gutter: 10px;
     --top-space: calc(var(--safe-top) + 58px);
-    --btn: 52px;
-    --feed: 76px;
-    --dock-space: calc(var(--safe-bottom) + 86px);
+    --btn: 46px;
+    --feed: 54px;
+    --rail-gap: 6px;
+    --rail-pad: 6px;
+    --rail-left: max(8px, env(safe-area-inset-left));
+    --rail-top: calc(var(--top-space) + 58px); /* below Asma's card */
+    --rail-space: calc(var(--rail-left) + var(--rail-w) + 6px);
   }
 
   .brand {
@@ -1454,35 +1518,18 @@ button:focus-visible,
     font-size: 13px;
   }
 
-  /* Full-width dock; the Feed button rises out of it like a bubble. */
-  .actionbar {
-    left: var(--gutter);
-    right: var(--gutter);
-    transform: none;
-    justify-content: space-between;
-    gap: 0;
-    padding: 6px 8px;
-    border-radius: 28px;
-  }
-
-  .btn-feed {
-    margin-top: -30px;
-    border-radius: 50%;
-    box-shadow: 0 6px 0 #d9485f, 0 12px 24px rgba(255, 92, 120, 0.45);
-  }
-
   .btn-round .btn-label {
-    font-size: 11px;
+    font-size: 10px;
   }
 
-  /* Cards become bottom sheets that slide up above the dock. */
+  /* Cards become sheets that slide up from the bottom, beside the rail. */
   .fish-card,
   .panel {
-    left: var(--gutter);
+    left: var(--rail-space);
     right: var(--gutter);
     width: auto;
-    bottom: calc(var(--dock-space) + 6px);
-    max-height: calc(100dvh - var(--top-space) - var(--dock-space) - 16px);
+    bottom: calc(var(--safe-bottom) + 4px);
+    max-height: calc(100dvh - var(--top-space) - var(--safe-bottom) - 12px);
     border-radius: 26px;
     padding: 18px 14px 14px;
     animation: sheet-up 0.32s cubic-bezier(0.2, 1.2, 0.4, 1);
@@ -1531,11 +1578,11 @@ button:focus-visible,
     width: 90px;
   }
 
-  /* Toasts sit just above the dock, where small hands already are. */
+  /* Toasts rise from the bottom of the free space, where the tank is calm. */
   .toasts {
     top: auto;
-    bottom: calc(var(--dock-space) + 10px);
-    width: calc(100vw - 2 * var(--gutter));
+    bottom: calc(var(--safe-bottom) + 8px);
+    width: calc(100vw - var(--rail-space) - var(--gutter));
     flex-direction: column-reverse;
   }
 
@@ -1578,13 +1625,16 @@ button:focus-visible,
   }
 }
 
-/* Phone landscape and other short screens: the dock moves to the right edge as a column. */
+/* Phone landscape and other short screens: icon-only rail, chips move to the right. */
 @media (max-height: 520px) and (orientation: landscape) {
   :root {
     --top-space: calc(var(--safe-top) + 54px);
-    --btn: 48px;
-    --feed: 62px;
-    --dock-space: var(--safe-bottom);
+    --btn: 38px;
+    --feed: 46px;
+    --rail-gap: 4px;
+    --rail-pad: 5px;
+    --rail-top: calc(var(--top-space) + 2px);
+    --rail-space: calc(var(--rail-left) + var(--rail-w) + 8px);
     --sheet-w: 340px;
   }
 
@@ -1592,8 +1642,18 @@ button:focus-visible,
     display: none;
   }
 
-  .topbar {
-    padding-right: calc(var(--btn) + 40px);
+  .actionbar .btn-label {
+    display: none;
+  }
+
+  .actionbar .btn-feed .btn-emoji {
+    font-size: calc(var(--feed) * 0.52);
+  }
+
+  .app .btn-anniversary,
+  .app .btn-birthday {
+    left: auto;
+    right: max(var(--gutter), env(safe-area-inset-right));
   }
 
   .roster {
@@ -1602,31 +1662,11 @@ button:focus-visible,
     margin-left: 0;
   }
 
-  .actionbar {
-    left: auto;
-    right: max(8px, env(safe-area-inset-right));
-    top: 50%;
-    bottom: auto;
-    transform: translateY(-50%);
-    flex-direction: column;
-    gap: 6px;
-    padding: 8px 6px;
-  }
-
-  .btn-feed {
-    margin: 0;
-    border-radius: 50%;
-  }
-
-  .btn-round .btn-label {
-    font-size: 10px;
-  }
-
   .fish-card,
   .panel {
     top: var(--top-space);
     bottom: var(--safe-bottom);
-    left: max(var(--gutter), env(safe-area-inset-left));
+    left: var(--rail-space);
     right: auto;
     width: min(var(--sheet-w), 46vw);
     max-height: none;
@@ -1643,7 +1683,7 @@ button:focus-visible,
     top: auto;
     bottom: var(--safe-bottom);
     left: auto;
-    right: calc(var(--feed) + 30px);
+    right: max(var(--gutter), env(safe-area-inset-right));
   }
 
   .emote-text {
@@ -2161,7 +2201,7 @@ button:focus-visible,
   padding: 2px 12px;
 }
 
-/* Livelier controls: a little lift on hover, a squish on press, and dock icons that float. */
+/* Livelier controls: a little lift on hover, a squish on press, and rail icons that float. */
 @media (hover: hover) {
   .btn-small:hover:not(:disabled),
   .time-badge:hover,
@@ -2179,20 +2219,16 @@ button:focus-visible,
   animation: float 4.5s ease-in-out infinite;
 }
 
-.actionbar > :nth-child(2) .btn-emoji {
+.btn-stickers .btn-emoji {
   animation-delay: -0.9s;
 }
 
-.actionbar > :nth-child(3) .btn-emoji {
+.btn-memories .btn-emoji {
   animation-delay: -1.8s;
 }
 
-.actionbar > :nth-child(5) .btn-emoji {
+.btn-settings .btn-emoji {
   animation-delay: -2.7s;
-}
-
-.actionbar > :nth-child(6) .btn-emoji {
-  animation-delay: -3.6s;
 }
 
 @keyframes float {
@@ -2281,7 +2317,7 @@ button:focus-visible,
 @media (max-width: 600px) {
   /* Learning cards stay short on phones so the tank stays in view. */
   .fish-card {
-    max-height: min(52dvh, calc(100dvh - var(--top-space) - var(--dock-space) - 16px));
+    max-height: min(52dvh, calc(100dvh - var(--top-space) - var(--safe-bottom) - 16px));
     padding: 12px 12px 10px;
   }
 
@@ -2303,8 +2339,8 @@ button:focus-visible,
 
 @media (max-width: 380px) {
   :root {
-    --btn: 46px;
-    --feed: 70px;
+    --btn: 44px;
+    --feed: 50px;
   }
 
   .btn-round .btn-label {
@@ -2981,5 +3017,537 @@ button:focus-visible,
   .bday-jar {
     width: 110px;
     height: 140px;
+  }
+}
+
+/* ---------- everyday and anniversary letters ---------- */
+.love-letter p:nth-child(n + 7) {
+  animation-delay: 1.8s;
+}
+
+.love-card:not(.love-lock) {
+  max-height: calc(100dvh - 32px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.love-chip {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: #ffe3f0;
+  color: #c2386f;
+  font-size: 11px;
+  letter-spacing: 0;
+  vertical-align: 2px;
+}
+
+.love-chip.is-streak {
+  background: #fff1d6;
+  color: #c4610e;
+}
+
+.love-greeting {
+  font-family: 'Dancing Script', 'Baloo 2', cursive;
+  font-size: 23px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: #c2386f;
+}
+
+.love-occasion {
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #fff6d8, #ffe6f1);
+  border: 1px dashed #ffb3cf;
+  font-weight: 700;
+}
+
+.love-occasion > span {
+  font-size: 18px;
+}
+
+.love-occasion.is-milestone {
+  background: linear-gradient(135deg, #fff2c2, #ffd9ea);
+  border-style: solid;
+  border-color: #ffd23f;
+}
+
+.love-welcome {
+  font-style: italic;
+  color: #a0467a;
+}
+
+.love-ps {
+  font-size: 14px;
+  color: #8a5070;
+}
+
+.love-bonus {
+  padding: 8px 12px;
+  border-radius: 14px;
+  background: #fff;
+  border: 1px solid #ffd0e3;
+  font-weight: 700;
+  animation: pop-in 0.45s cubic-bezier(0.2, 1.4, 0.4, 1) both !important;
+}
+
+.love-more {
+  display: block;
+  margin: 2px auto 10px;
+  min-height: 44px;
+  padding: 8px 18px;
+  border: 2px dashed #ff9cc4;
+  border-radius: 999px;
+  background: transparent;
+  color: #c2386f;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.love-more:disabled {
+  border-style: solid;
+  border-color: #ffd0e3;
+  color: #b07a95;
+  cursor: default;
+}
+
+/* Today's little surprise: a sealed gift tile. */
+.love-surprise {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  margin: 4px 0 12px;
+  min-height: 64px;
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #ff9fc6, #ff6f9f);
+  color: #fff;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(255, 79, 139, 0.3);
+  animation: love-wiggle 2.4s ease-in-out 1.2s infinite;
+}
+
+.love-surprise.is-open {
+  background: linear-gradient(135deg, #fffaf0, #fff0f6);
+  color: #5a2140;
+  border: 2px solid #ffc2dc;
+  box-shadow: none;
+  animation: love-unwrap 0.5s cubic-bezier(0.2, 1.4, 0.4, 1);
+  cursor: default;
+}
+
+.love-surprise-icon {
+  flex: none;
+  font-size: 32px;
+  line-height: 1;
+}
+
+.love-surprise-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-weight: 800;
+  font-size: 15px;
+  line-height: 1.35;
+}
+
+.love-surprise-body small {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.85;
+}
+
+.love-surprise.is-open .love-surprise-body small {
+  color: #e2476d;
+}
+
+@keyframes love-wiggle {
+  0%, 70%, 100% { transform: rotate(0); }
+  76% { transform: rotate(-2deg) scale(1.02); }
+  84% { transform: rotate(2deg) scale(1.02); }
+  92% { transform: rotate(-1deg); }
+}
+
+@keyframes love-unwrap {
+  from { transform: scale(0.85) rotateX(60deg); opacity: 0.4; }
+}
+
+/* Anniversary days: script title, golden border and a slow line-by-line reveal. */
+.love-card.is-special {
+  border: 3px solid transparent;
+  background:
+    linear-gradient(180deg, #fffdf6, #fff1f6) padding-box,
+    linear-gradient(135deg, #ffd23f, #ff7eb6, #a98bff, #ffd23f) border-box;
+}
+
+.love-card.is-special .love-title {
+  font-family: 'Dancing Script', 'Baloo 2', cursive;
+  font-size: clamp(32px, 8.5vw, 42px);
+  font-weight: 700;
+  background-image: linear-gradient(90deg, #d99a00, #ff4f8b, #b0479a);
+}
+
+.love-letter.is-special p {
+  animation-duration: 1.2s;
+}
+
+.love-letter.is-special p:nth-child(2) { animation-delay: 0.7s; }
+.love-letter.is-special p:nth-child(3) { animation-delay: 1.6s; }
+.love-letter.is-special p:nth-child(4) { animation-delay: 2.5s; }
+.love-letter.is-special p:nth-child(5) { animation-delay: 3.4s; }
+.love-letter.is-special p:nth-child(6) { animation-delay: 4.3s; }
+.love-letter.is-special p:nth-child(n + 7) { animation-delay: 5.2s; }
+
+.love-extras {
+  margin: 6px 0 12px;
+  animation: fade-in 1s ease both;
+  animation-delay: 1.2s;
+}
+
+.love-extras h3 {
+  margin: 0 0 8px;
+  font-family: 'Dancing Script', 'Baloo 2', cursive;
+  font-size: 22px;
+  color: #c2386f;
+}
+
+/* Love coupons: a ticket with a stamp. */
+.love-coupon {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin-bottom: 8px;
+  min-height: 64px;
+  padding: 10px 12px;
+  border: 2px dashed #ffb3cf;
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at 0 50%, #fff1f6 0 9px, transparent 10px),
+    radial-gradient(circle at 100% 50%, #fff1f6 0 9px, transparent 10px),
+    linear-gradient(135deg, #fffbe6, #fff);
+  color: #5a2140;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.love-coupon-icon {
+  flex: none;
+  font-size: 30px;
+}
+
+.love-coupon-text {
+  flex: 1;
+  font-weight: 800;
+  font-size: 14px;
+  line-height: 1.3;
+}
+
+.love-coupon-text small {
+  display: block;
+  font-size: 11px;
+  color: #e2476d;
+}
+
+.love-coupon-stamp {
+  flex: none;
+  padding: 4px 8px;
+  border-radius: 10px;
+  background: #ff4f8b;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.love-coupon.is-claimed {
+  border-style: solid;
+  border-color: #7fd8a8;
+  cursor: default;
+}
+
+.love-coupon.is-claimed .love-coupon-stamp {
+  background: transparent;
+  border: 2px solid #2fa36b;
+  color: #2fa36b;
+  transform: rotate(-8deg);
+  animation: love-stamp 0.4s cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+
+@keyframes love-stamp {
+  from { transform: rotate(-8deg) scale(2.2); opacity: 0; }
+}
+
+/* Yearly promises: cards that flip over. */
+.love-promises {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.love-promise {
+  position: relative;
+  min-height: 112px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+  perspective: 600px;
+}
+
+.love-promise-front,
+.love-promise-back {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 8px;
+  border-radius: 14px;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transition: transform 0.6s cubic-bezier(0.3, 1.3, 0.5, 1);
+}
+
+.love-promise-front {
+  background: linear-gradient(135deg, #ffd23f, #ff7eb6);
+  color: #fff;
+  font-weight: 800;
+  font-size: 13px;
+}
+
+.love-promise-back {
+  background: #fff;
+  border: 2px solid #ffd23f;
+  color: #5a2140;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.3;
+  transform: rotateY(180deg);
+}
+
+.love-promise.is-open .love-promise-front {
+  transform: rotateY(-180deg);
+}
+
+.love-promise.is-open .love-promise-back {
+  transform: rotateY(0);
+}
+
+@media (max-width: 420px) {
+  .love-promises {
+    grid-template-columns: 1fr;
+  }
+
+  .love-promise {
+    min-height: 64px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .love-surprise,
+  .love-surprise.is-open,
+  .love-coupon.is-claimed .love-coupon-stamp {
+    animation: none;
+  }
+
+  .love-promise-front,
+  .love-promise-back {
+    transition: none;
+  }
+}
+
+/* ---------- the rail: tuck away, night glass, bubbles and the quiet fade ---------- */
+@keyframes rail-in {
+  from {
+    opacity: 0;
+    transform: translateX(calc(-100% - 24px));
+  }
+}
+
+/* A few bubbles drift up from the top of the rail now and then, as if it breathes. */
+.actionbar::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  width: 30px;
+  height: 64px;
+  margin-left: -15px;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 30% 88%, rgba(255, 255, 255, 0.85) 0 3px, transparent 3.5px),
+    radial-gradient(circle at 68% 62%, rgba(255, 255, 255, 0.7) 0 2px, transparent 2.5px),
+    radial-gradient(circle at 44% 30%, rgba(255, 255, 255, 0.6) 0 2.5px, transparent 3px);
+  opacity: 0;
+  animation: rail-bubbles 7s ease-in 2s infinite;
+}
+
+@keyframes rail-bubbles {
+  0% {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  15% {
+    opacity: 1;
+  }
+  45%,
+  100% {
+    opacity: 0;
+    transform: translateY(-26px);
+  }
+}
+
+/* The small handle at the bottom tucks the rail away. */
+.rail-tuck {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 30px;
+  margin-top: -2px;
+  border-radius: 0 0 20px 20px;
+  color: rgba(35, 54, 94, 0.55);
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1;
+  transition: color 0.2s, transform 0.2s var(--spring);
+}
+
+.rail-tuck span {
+  transform: translateY(-2px);
+}
+
+@media (hover: hover) {
+  .rail-tuck:hover {
+    color: var(--ink);
+    transform: translateX(-3px);
+  }
+}
+
+.actionbar.is-tucked {
+  transform: translateX(calc(-100% - var(--rail-left) - 16px));
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* When tucked, only this little tab peeks out of the left edge. */
+.rail-tab {
+  position: absolute;
+  left: 0;
+  top: var(--rail-top);
+  bottom: var(--safe-bottom);
+  height: fit-content;
+  margin: auto 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-height: 56px;
+  padding: 8px 10px 8px max(8px, env(safe-area-inset-left));
+  border-radius: 0 24px 24px 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.35));
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-left: 0;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 10px 24px rgba(10, 40, 90, 0.22);
+  color: var(--ink);
+  font-size: 22px;
+  font-weight: 800;
+  transition: opacity 0.35s ease, background 2s ease;
+  animation:
+    tab-in 0.5s var(--spring) 0.15s both,
+    tab-nudge 6s ease-in-out 3s infinite;
+}
+
+.rail-tab-icon {
+  font-size: 26px;
+}
+
+@keyframes tab-in {
+  from {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes tab-nudge {
+  0%,
+  88%,
+  100% {
+    transform: none;
+  }
+  92% {
+    transform: translateX(5px);
+  }
+  96% {
+    transform: translateX(-1px);
+  }
+}
+
+/* With the rail tucked, everything that sat beside it moves back to the edge. */
+.app:has(.actionbar.is-tucked) {
+  --rail-space: max(var(--gutter), env(safe-area-inset-left));
+}
+
+/* At night the glass dims with the water. */
+.app[data-time='night'] .actionbar,
+.app[data-time='night'] .rail-tab {
+  background: linear-gradient(180deg, rgba(60, 90, 170, 0.42), rgba(20, 40, 95, 0.32));
+  border-color: rgba(170, 200, 255, 0.35);
+}
+
+.app[data-time='night'] .rail-tuck,
+.app[data-time='night'] .rail-tab {
+  color: rgba(220, 232, 255, 0.85);
+}
+
+.app[data-time='sunset'] .actionbar {
+  background: linear-gradient(180deg, rgba(255, 236, 222, 0.45), rgba(255, 210, 200, 0.22));
+}
+
+/* Quiet mode: after a while without a touch, the buttons fade so the tank takes the whole stage.
+   Any touch, click, key or mouse move brings them straight back. */
+.topbar,
+.btn-anniversary,
+.btn-birthday {
+  transition: opacity 0.35s ease;
+}
+
+.app[data-idle]:not(:has(.card, .love-overlay, .welcome-backdrop)) :is(.topbar, .actionbar, .rail-tab, .btn-anniversary, .btn-birthday) {
+  opacity: 0.28;
+  transition-duration: 1.4s;
+}
+
+.app[data-idle] .actionbar.is-tucked {
+  opacity: 0;
+}
+
+@media (max-height: 520px) and (orientation: landscape) {
+  .rail-tuck {
+    height: 24px;
+    font-size: 20px;
+  }
+
+  .actionbar::before {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .actionbar,
+  .rail-tab,
+  .actionbar::before {
+    animation: none;
   }
 }

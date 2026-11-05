@@ -39,23 +39,3 @@ export function spanLabel(months) {
 }
 
 export const formatDate = (d) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
-
-// A different sweet note for ordinary days, picked by the day number.
-export const DAILY_NOTES = [
-  'Every morning I wake up grateful that the first thing I get to see is your smile.',
-  'You make the most ordinary day feel like a little adventure under the sea.',
-  'Some people search their whole life for home. I found mine in you.',
-  'Your laugh is my favourite song, and I never want it to stop playing.',
-  'Thank you for every cup of tea, every kind word and every warm hug.',
-  'If I had to choose again, I would choose you, in every life, every time.',
-  'You are the calm water I swim back to after every long day.',
-  'With you, even quiet moments feel full of love.',
-  'I love the way you care for everyone around you. You make the world softer.',
-  'Being your husband is the best thing that has ever happened to me.',
-  'Every day with you is my new favourite day.',
-  'You are my best friend, my sweetest partner and my forever.',
-];
-
-export function dailyNote(days) {
-  return DAILY_NOTES[days % DAILY_NOTES.length];
-}

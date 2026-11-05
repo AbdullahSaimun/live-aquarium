@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Aquarium from './scene/Aquarium';
 import HUD from './ui/HUD';
 import FishLabels from './ui/FishLabels';
@@ -38,12 +38,34 @@ function useGameLoop() {
   }, []);
 }
 
+// True after `ms` without any touch, click, key or mouse move: the buttons then fade (see styles.css).
+function useIdle(ms) {
+  const [idle, setIdle] = useState(false);
+  useEffect(() => {
+    let timer;
+    const wake = () => {
+      setIdle(false);
+      clearTimeout(timer);
+      timer = setTimeout(() => setIdle(true), ms);
+    };
+    const events = ['pointerdown', 'pointermove', 'keydown', 'wheel'];
+    events.forEach((e) => window.addEventListener(e, wake, { passive: true }));
+    wake();
+    return () => {
+      clearTimeout(timer);
+      events.forEach((e) => window.removeEventListener(e, wake));
+    };
+  }, [ms]);
+  return idle;
+}
+
 export default function App() {
   useGameLoop();
   const panel = useStore((s) => s.panel);
   const daylight = useStore((s) => s.daylight);
+  const idle = useIdle(20000);
   return (
-    <div className="app" data-time={daylight}>
+    <div className="app" data-time={daylight} data-idle={idle && !panel ? '' : undefined}>
       {/* Water colour layers behind the 3D scene, cross-faded for sunset and night. */}
       <div className="sky sky-sunset" aria-hidden="true" />
       <div className="sky sky-night" aria-hidden="true" />

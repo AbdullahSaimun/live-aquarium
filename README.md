@@ -74,6 +74,28 @@ Built with React, Vite, Three.js, React Three Fiber and drei. Everything runs in
 - **🪙 Treasure chest**: tap it for coins, sparkles and a surprise fact.
 - Bubbly sound effects, synthesized in the browser with no audio files.
 
+**💍 Love letters for Asma**
+- The 💍 chip counts the days since the wedding (29 September 2026) and opens a letter from Saimun behind the secret word.
+- **Every day is a new letter:**
+  - a greeting that fits the time of day;
+  - one of 61 notes;
+  - a "today's little surprise" tile to tap open (a reason I love you, a promise, a date idea, a tiny mission or a question);
+  - a seasonal P.S. and a rotating Bangla line and sign-off;
+  - "One more note, please" for up to three bonus notes.
+- The pieces rotate at different speeds, so the same full letter doesn't come back for decades.
+- It knows the calendar:
+  - Jumma, Ramadan and both Eids (from the browser's Islamic calendar);
+  - New Year, Valentine's Day / Pohela Falgun and Pohela Boishakh;
+  - both birthdays;
+  - round day counts (100, 200, 500, 1,000 days…).
+- It notices her visits: a letter number, a 🔥 streak, "back again today?" and "I missed you" after a few days away. This is saved in this browser only.
+- **Anniversaries are special:**
+  - a gold card and a slower line-by-line reveal;
+  - a hand-written letter for each of months 1–11 and years 1–5 (later ones are built from rotating paragraphs);
+  - a love coupon to claim, or three on a yearly anniversary;
+  - three promise cards to flip on yearly anniversaries.
+- All the words live in `src/data/loveNotes.js`.
+
 **🎂 Asma's birthday (23 December)**
 - From 1 December a 🎂 chip counts down the days; behind the secret word is a sealed envelope with a live countdown.
 - On her birthday the fish wear party hats, Asma wears a tiara and balloons float up the tank (tap to pop them).
@@ -92,16 +114,21 @@ Progress (fish, growth, love, health, memories, stickers, settings) is saved in 
 
 ## Plays great on every screen
 
+The buttons live in a slim glass **rail on the left edge**. Nothing covers the middle or the bottom of the tank, and the camera frames the tank in the space beside the rail, so no fish ever swims behind a button.
+
 | Device | Layout |
 | ------ | ------ |
-| **Phone (portrait)** | One-row top bar, full-width dock at the bottom with a big round Feed button rising out of it, fish cards and panels slide up as bottom sheets, toasts appear right above the dock. |
-| **Phone (landscape)** | The dock moves to the right edge as a column; cards open as a side sheet on the left. |
-| **Tablet** | Floating frosted dock, side sheets, larger buttons. |
+| **Phone (portrait)** | One-row top bar, a slim rail on the left, fish cards and panels slide up beside the rail, toasts rise from the bottom of the free space. The camera steps back a little so the fish keep room to swim. |
+| **Phone (landscape)** and **small laptops** | Icon-only rail from just under the top bar; the 💍 and 🎂 chips move to the right and Asma's card to the bottom right. |
+| **Tablet** | Same rail with labels, side sheets. |
 | **Desktop** | Same layout with gentle hover effects and mouse parallax. |
 
-- Every tap target is at least 44px, and dock buttons are 46–66px.
-- Each dock button has its own colour (Facts yellow, Memories purple, Stickers green, Feed orange, Asma pink, Settings blue), so kids can find them before they can read.
-- Cards and panels spring in and fade out, toasts slide in, and dock icons float gently. Everything respects "reduce motion".
+- **Tuck it away:** the ‹ handle at the bottom of the rail hides it, and the tank glides back to full width. A small 🍤 › tab brings it back, and the choice is remembered.
+- **Quiet mode:** after 20 seconds without a touch, the buttons fade softly so the tank takes the whole stage, and they come straight back on the next touch or mouse move. This doesn't happen while a card or panel is open.
+- The rail's glass follows the time of day (warm at sunset, deep blue at night), and little bubbles drift up from it now and then.
+- Every tap target is at least 44px, and rail buttons are 38–58px.
+- Each rail button has its own colour (Feed orange, Asma pink, Facts yellow, Stickers green, Memories purple, Settings blue), so kids can find them before they can read.
+- Cards and panels spring in and fade out, toasts slide in, and rail icons float gently. Everything respects "reduce motion".
 - Safe areas (notches, home bars) are respected, double-tap zoom is disabled, and floating bubbles show icons only on small screens to keep the ocean uncluttered.
 - On phones, feeding, tapping a fish and the treasure chest give a tiny haptic buzz.
 - **Full screen** button in Settings, and the app can be added to the home screen (web app manifest) to play like a real app.

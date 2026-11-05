@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { PerformanceMonitor } from '@react-three/drei';
 import { useStore, selectFish, getState } from '../state/store';
@@ -32,21 +32,38 @@ const BASE_Z = 11;
 
 // Fits the tank to the screen and adds a gentle pointer parallax. Portrait screens pull the
 // camera back a little, narrow the swim area and let fish use the extra height instead.
+// The button rail on the left covers `world.viewInset` pixels: the picture is shifted right by half
+// of that, so the tank is centred in the free space and no fish swims behind the buttons.
 function CameraRig({ calm }) {
   const { camera, size } = useThree();
   const aspect = size.width / size.height;
   const camZ = aspect < 1 ? BASE_Z + (1 - aspect) * 5.5 : BASE_Z;
+  const inset = useRef(0); // eased towards world.viewInset, so tucking the rail glides
+  const applied = useRef(NaN);
+  const zoomOut = useRef(1); // portrait screens step back a little to win back the rail's width
 
   useEffect(() => {
-    const halfH = camZ * Math.tan((FOV / 2) * (Math.PI / 180));
-    const halfW = halfH * aspect;
-    const maxX = Math.max(1.4, Math.min(6.5, halfW - 0.7));
-    world.bounds.minX = -maxX;
-    world.bounds.maxX = maxX;
+    applied.current = NaN; // screen size changed: re-apply the offset and bounds
     world.bounds.maxY = aspect < 0.8 ? 2.3 : 1.6;
-  }, [aspect, camZ]);
+  }, [aspect, camZ, size.width, size.height]);
 
   useFrame((state, dt) => {
+    const target = Math.min(world.viewInset || 0, size.width * 0.4);
+    inset.current += (target - inset.current) * (1 - Math.exp(-Math.min(dt, 0.1) * 6));
+    if (Math.abs(target - inset.current) < 0.5) inset.current = target;
+    if (inset.current !== applied.current) {
+      const off = inset.current;
+      applied.current = off;
+      if (off > 0) camera.setViewOffset(size.width, size.height, -off / 2, 0, size.width, size.height);
+      else camera.clearViewOffset();
+      zoomOut.current = aspect < 1 ? 1 + 0.5 * (off / size.width) : 1;
+      const halfW = camZ * zoomOut.current * Math.tan((FOV / 2) * (Math.PI / 180)) * aspect;
+      const covered = (off / size.width) * halfW; // world units hidden by the rail on each side
+      const maxX = Math.max(1.4, Math.min(6.5, halfW - covered - 0.7));
+      world.bounds.minX = -maxX;
+      world.bounds.maxX = maxX;
+    }
+
     const k = 1 - Math.exp(-Math.min(dt, 0.1) * 2);
     // Lean gently towards the fish whose card is open.
     const sel = calm ? null : world.runtime.get(getState().selectedId);
@@ -54,7 +71,7 @@ function CameraRig({ calm }) {
     const py = calm ? 0 : state.pointer.y * 0.3 + (sel ? sel.pos.y * 0.06 : 0);
     camera.position.x += (px - camera.position.x) * k;
     camera.position.y += (0.4 + py - camera.position.y) * k;
-    camera.position.z += (camZ - camera.position.z) * k;
+    camera.position.z += (camZ * zoomOut.current - camera.position.z) * k;
     camera.lookAt(0, -0.2, 0);
   });
   return null;

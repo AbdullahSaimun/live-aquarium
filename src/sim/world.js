@@ -6,6 +6,8 @@ export const MAX_PELLETS = 14;
 export const world = {
   // Swimming volume; x is narrowed on portrait screens by CameraRig.
   bounds: { minX: -6.5, maxX: 6.5, minY: -2.4, maxY: 1.6, minZ: -3, maxZ: 2.6 },
+  // Screen pixels covered by the left button rail. CameraRig frames the tank in the space beside it.
+  viewInset: 0,
   floorY: -3.1,
   surfaceY: 3.6,
   dropY: 2.5, // where food appears: high in the water but below the top UI

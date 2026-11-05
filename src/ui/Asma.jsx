@@ -81,7 +81,7 @@ export function AsmaCard() {
   );
 }
 
-// Dock button: call Asma, see her resting, or notice the fish asking for her.
+// Rail button: call Asma, see her resting, or notice the fish asking for her.
 export function AsmaButton() {
   const asma = useStore((s) => s.asma);
   const resting = Math.ceil(asma.restUntil - performance.now() / 1000);
