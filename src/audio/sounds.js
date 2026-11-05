@@ -112,6 +112,10 @@ const SOUNDS = {
     tone(ac, { type: 'square', from: 2400, to: 1600, dur: 0.04, vol: 0.03 });
     tone(ac, { from: 300, to: 620, start: 0.05, dur: 0.14, vol: 0.06 });
   },
+  clam: (ac) => {
+    tone(ac, { type: 'square', from: 240, to: 80, dur: 0.07, vol: 0.08 });
+    tone(ac, { from: 520, to: 260, start: 0.05, dur: 0.12, vol: 0.05 });
+  },
   balloon: (ac) => {
     tone(ac, { type: 'square', from: 700, to: 90, dur: 0.08, vol: 0.08 });
     tone(ac, { from: 1600, to: 2400, start: 0.05, dur: 0.06, vol: 0.04 });

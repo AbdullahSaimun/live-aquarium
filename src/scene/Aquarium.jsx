@@ -26,6 +26,14 @@ import Visitors from './Visitors';
 import DayNight from './DayNight';
 import SeaSnow from './SeaSnow';
 import Balloons from './Balloons';
+import Rocks from './Rocks';
+import SeabedScatter from './SeabedScatter';
+import Algae from './Algae';
+import Critters from './Critters';
+import GiantClam from './GiantClam';
+import GardenEels from './GardenEels';
+import FishSchool from './FishSchool';
+import WaterSurface from './WaterSurface';
 
 const FOV = 45;
 const BASE_Z = 11;
@@ -81,6 +89,9 @@ export default function Aquarium() {
   const calm = useStore((s) => s.settings.calmMode);
   const party = useStore((s) => s.party);
   const [dpr, setDpr] = useState(() => Math.min(1.5, window.devicePixelRatio || 1));
+  const [slow, setSlow] = useState(false);
+  // Fewer seagrass blades, pebbles and school fish on phones, in calm mode and on slow devices.
+  const detail = calm || slow || Math.min(window.innerWidth, window.innerHeight) < 600 ? 'low' : 'high';
 
   return (
     <Canvas
@@ -92,7 +103,10 @@ export default function Aquarium() {
     >
       {/* Drop resolution on slow devices, restore it when frames are smooth again. */}
       <PerformanceMonitor
-        onDecline={() => setDpr(1)}
+        onDecline={() => {
+          setDpr(1);
+          setSlow(true);
+        }}
         onIncline={() => setDpr(Math.min(1.5, window.devicePixelRatio || 1))}
       />
       <DayNight />
@@ -100,6 +114,12 @@ export default function Aquarium() {
       <CameraRig calm={calm} />
       <WaterTap />
       <Seabed />
+      <Rocks />
+      <SeabedScatter detail={detail} />
+      <Algae detail={detail} />
+      <Critters calm={calm} />
+      <GiantClam />
+      <GardenEels calm={calm} />
       <Coral calm={calm} />
       <TreasureChest />
       <Starfish />
@@ -110,10 +130,12 @@ export default function Aquarium() {
       <Shrimp calm={calm} />
       <Seahorse calm={calm} />
       <Jellyfish calm={calm} />
+      <FishSchool detail={detail} calm={calm} />
       <Visitors />
       {party && <Balloons />}
       <Plants calm={calm} />
-      <Bubbles ambient={calm ? 18 : 45} />
+      <Bubbles ambient={calm ? 18 : 45} airStone={!calm} />
+      <WaterSurface />
       {!calm && <SeaSnow />}
       <School />
       <FoodPellets />

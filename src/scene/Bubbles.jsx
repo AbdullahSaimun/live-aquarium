@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { world } from '../sim/world';
+import { AIR_STONE, sandY } from './reefLayout';
 
 const BURST = 40;
 const VENTS = [
@@ -9,10 +10,13 @@ const VENTS = [
   [3.8, -2.4],
   [0.6, -3.4],
 ];
+// The air stone gets a steady stream of its own, like a real aquarium bubbler.
+const WITH_STONE = [...VENTS, [AIR_STONE.x, AIR_STONE.z], [AIR_STONE.x, AIR_STONE.z], [AIR_STONE.x, AIR_STONE.z]];
+const STONE_Y = sandY(AIR_STONE.x, AIR_STONE.z);
 const dummy = new THREE.Object3D();
 
 // Ambient bubble streams from a few vents plus pooled bursts (eating, tapping food), in one instanced mesh.
-export default function Bubbles({ ambient = 45 }) {
+export default function Bubbles({ ambient = 45, airStone = true }) {
   const mesh = useRef();
   const total = ambient + BURST;
   const geo = useMemo(() => new THREE.SphereGeometry(1, 10, 8), []);
@@ -29,11 +33,14 @@ export default function Bubbles({ ambient = 45 }) {
       }),
     [],
   );
+  const stoneGeo = useMemo(() => new THREE.IcosahedronGeometry(0.16, 1), []);
+  const stoneMat = useMemo(() => new THREE.MeshStandardMaterial({ color: '#8fa3b8', roughness: 1, flatShading: true }), []);
   const bubbles = useMemo(
     () =>
       Array.from({ length: total }, (_, i) => {
         const isAmbient = i < ambient;
-        const vent = VENTS[i % VENTS.length];
+        const vents = airStone ? WITH_STONE : VENTS;
+        const vent = vents[i % vents.length];
         return {
           isAmbient,
           vent,
@@ -44,14 +51,16 @@ export default function Bubbles({ ambient = 45 }) {
           life: isAmbient ? 1 : 0,
         };
       }),
-    [total, ambient],
+    [total, ambient, airStone],
   );
   useEffect(
     () => () => {
       geo.dispose();
       mat.dispose();
+      stoneGeo.dispose();
+      stoneMat.dispose();
     },
-    [geo, mat],
+    [geo, mat, stoneGeo, stoneMat],
   );
 
   useFrame((_, rawDt) => {
@@ -96,5 +105,10 @@ export default function Bubbles({ ambient = 45 }) {
     m.instanceMatrix.needsUpdate = true;
   });
 
-  return <instancedMesh key={total} ref={mesh} args={[geo, mat, total]} frustumCulled={false} />;
+  return (
+    <>
+      <instancedMesh key={`${total}${airStone}`} ref={mesh} args={[geo, mat, total]} frustumCulled={false} />
+      {airStone && <mesh geometry={stoneGeo} material={stoneMat} position={[AIR_STONE.x, STONE_Y + 0.05, AIR_STONE.z]} scale={[1.3, 0.6, 1]} />}
+    </>
+  );
 }

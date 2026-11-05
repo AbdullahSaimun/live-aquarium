@@ -9,7 +9,17 @@ Built with React, Vite, Three.js, React Three Fiber and drei. Everything runs in
 **Fish and the tank**
 - Cute fish built from simple shapes in code (clownfish, blue tang, yellow tang, angelfish, betta, a tall-finned batfish and a pufferfish that blows up into a spiky ball when tapped or scared). No 3D model files are needed.
 - Smooth curved swimming, wagging tails, flapping fins and blinking, sleepy eyes.
-- A colourful reef: branching, table, bubble, brain, tube and swaying finger corals, plus kelp, anemones, rocks, light rays, rippling light on the sand and rising bubbles.
+- A colourful reef: branching, table, bubble, brain, tube and swaying finger corals, plus kelp and anemones.
+
+**🌿 A living seabed**
+- Natural sand with current ripples, fine grain, damp patches and soft shade around the boulders, with moving light patterns on top.
+- Pebbles, broken shells and bits of bleached coral rubble scattered across the floor (always in the same spots).
+- A low wall of natural boulders at the back, green with moss on top and dotted with pink coralline crust.
+- Swaying seagrass meadows, see-through sea lettuce, crimson feather algae and grape algae; the red algae and the grape beads glow faintly at night.
+- Sponges (an orange barrel, purple vases and blue crusts), half-buried clams that open a crack now and then, and a striped sea snail that hides in its shell when tapped.
+- A rippling water surface at the top with light shimmering down, sunbeams that sway, an air stone sending up a steady stream of bubbles, and a bluer haze in the distance.
+- A shoal of tiny silver fish swims as one flock far in the background, glints as it turns, and swerves away from the shark.
+- Everything is placed in three layers (back, edges, low front) so the middle of the tank stays open for the pet fish, and the detail level drops on phones, in calm mode and on slow devices.
 
 **Feeding**
 - **Feed** drops a handful of pellets. **Tap the water** to drop food exactly where you want it.
@@ -54,6 +64,9 @@ Built with React, Vite, Three.js, React Three Fiber and drei. Everything runs in
 - A **seahorse** bobs beside the kelp and turns to peek at you.
 - Two **cleaner shrimp** potter about the sand, nibble leftovers and backflip when tapped.
 - A shy **lobster** lives behind the treasure chest, peeks out, and zooms backwards with a tail flick.
+- A **giant clam** slowly breathes open and closed, shows a glowing blue mantle, puffs bubbles, and snaps shut when tapped or when the shark comes near.
+- A colony of **garden eels** sways out of the sand and turns to watch the fish. They all dive into their holes when tapped, when a fish swims right over them, or while the shark is around, then peek out again one by one.
+- Two **sea urchins** bristle their spines when tapped, and a spotted **sea cucumber** inches slowly across the sand and squishes when tapped.
 - Neighbours stay on the sand, at the edges or behind the fish, so the middle of the tank stays clear.
 
 **🐋 Big sea visitors**
@@ -61,7 +74,7 @@ Built with React, Vite, Three.js, React Three Fiber and drei. Everything runs in
 - Tap a visitor while it passes to learn about it. Turn visitors off, or call one, in Settings.
 
 **📖 Ocean sticker book**
-- Tapping a fish or creature for the first time earns its sticker (19 in all: pet fish, tank friends and ocean visitors).
+- Tapping a fish or creature for the first time earns its sticker (23 in all: pet fish, tank friends and ocean visitors).
 - The book shows progress, grey "?" spaces for animals not met yet, and opens each collected sticker's learning card again. Half and full books are celebrated.
 
 **🌗 Day and night**
@@ -205,7 +218,10 @@ src/
 ├── scene/               3D: fish model, seabed, coral, plants, bubbles, hearts,
 │                        food pellets, treasure chest, Asma, shark, turtle, crab,
 │                        starfish, octopus, jellyfish, seahorse, shrimp, lobster,
-│                        visitors, day/night lights, sea snow, tap-to-feed backdrop
+│                        visitors, day/night lights, sea snow, tap-to-feed backdrop,
+│                        rocks, algae, seabed scatter, critters, giant clam,
+│                        garden eels, background fish school, water surface;
+│                        reefLayout.js keeps their positions and keep-out zones
 └── ui/                  HUD, fish and creature cards, sticker book, panels, labels
 ```
 

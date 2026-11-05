@@ -42,7 +42,8 @@ export default function DayNight() {
 
   return (
     <>
-      <fog attach="fog" args={[LOOKS.day.fog, 14, 32]} />
+      {/* Starts a little closer so the back of the reef fades into blue, like real depth. */}
+      <fog attach="fog" args={[LOOKS.day.fog, 12, 30]} />
       <hemisphereLight ref={hemi} args={[LOOKS.day.sky, LOOKS.day.ground, LOOKS.day.hemi]} />
       <directionalLight ref={sun} position={[3, 10, 6]} intensity={LOOKS.day.sunI} color={LOOKS.day.sun} />
       <ambientLight ref={amb} intensity={LOOKS.day.amb} />
