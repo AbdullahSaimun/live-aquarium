@@ -10,6 +10,10 @@ export const world = {
   viewInset: 0,
   clamPearl: false, // a pearl is shining inside the giant clam
   morayClean: 0, // world.time until which a cleaner shrimp is cleaning the moray
+  cleaning: null, // { fishId, pos, until }: a pet fish visiting a cleaner shrimp
+  crabPos: new THREE.Vector3(0, -40, 0), // the red crab, so the octopus can play with it
+  octopusPos: new THREE.Vector3(0, -40, 0),
+  partnerEvents: [], // 'cleaning' | 'anemone' | 'moray' | 'octopusCrab': first-time fact toasts
   decorPop: { id: null, t: -Infinity }, // the decoration that just arrived plays a pop-in
   floorY: -3.1,
   surfaceY: 3.6,

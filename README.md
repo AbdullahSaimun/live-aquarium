@@ -82,14 +82,26 @@ Built with React, Vite, Three.js, React Three Fiber and drei. Everything runs in
 **🐋 Big sea visitors**
 - Every few minutes a **manta ray**, **dolphin** or **blue whale** swims past far behind the reef, one at a time and never while the shark is in. The whale puffs a spout of bubbles.
 - Tap a visitor while it passes to learn about it. Turn visitors off, or call one, in Settings.
+- **✨ Rare visitors:** now and then (about 1 visitor in 12) an **orca**, a giant **ocean sunfish** or a singing **humpback whale** swims by instead, with a "Rare sighting!" message. If none has come for two days, the next visitor is sure to be rare, and rare guests the child hasn't met yet come first. Their stickers are gold and give 5 pearls.
+
+**🔍 Hide-and-seek**
+- Every day a **leafy sea dragon** hides among the kelp or seagrass, and a tiny purple **pygmy seahorse** clings to one of the sea fans, perfectly camouflaged. Their spots change every day.
+- Once a day a message says someone is hiding. Still not found after a few minutes? A faint sparkle gives a little hint.
+- Finding one gives hearts, 3 pearls and its sticker.
+
+**🤝 Reef partnerships** (with a fact the first time each is seen)
+- **Cleaning station:** now and then a cleaner shrimp invites a fish over; the fish hovers still while the shrimp hops on and cleans it.
+- **Clownfish** sometimes swim down and snuggle into an anemone, their stinging but safe home.
+- The **moray eel** opens wide while its own little cleaner shrimp tidies its teeth.
+- When the crab wanders close to the **octopus**'s den, the octopus reaches for it and the crab scuttles off (only playing!).
 
 **🦪 Pearls & decorations**
-- Earn pearls by playing: the treasure chest (+1 every couple of minutes), every new sticker (+2), and a pearl that now and then shines inside the open giant clam (tap it for +3). Small rewards share a soft cap of 15 a day, so pearls stay special.
+- Earn pearls by playing: the treasure chest (+1 every couple of minutes), every new sticker (+2), a pearl that now and then shines inside the open giant clam (tap it for +3), hidden friends (+3) and gold rare stickers (+5). Small rewards share a soft cap of 15 a day, so pearls stay special.
 - Tap the pearl counter in the top bar to open the **Decorate** shop. Buy decorations and show or hide them any time: rainbow fan coral (5), old anchor (8), diver helmet that puffs bubbles (12), sand castle with waving flags (15), lantern corals that glow at night (18), bubble volcano (25), mossy rock arch the fish swim under (30) and a sunken shipwreck behind the reef (40).
 - Every decoration has its own spot, measured so it never lands on a coral, rock or creature. Pearls and decorations are kept when the aquarium is reset.
 
 **📖 Ocean sticker book**
-- Tapping a fish or creature for the first time earns its sticker (30 in all: pet fish, tank friends, night friends and ocean visitors).
+- Tapping a fish or creature for the first time earns its sticker (35 in all, in six sections: pet fish, tank friends, night friends, ocean visitors, gold rare visitors and hidden friends).
 - The book shows progress, grey "?" spaces for animals not met yet, and opens each collected sticker's learning card again. Half and full books are celebrated.
 
 **🌗 Day and night**

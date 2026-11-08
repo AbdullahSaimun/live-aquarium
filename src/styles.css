@@ -3727,3 +3727,30 @@ button:focus-visible,
     height: 19px;
   }
 }
+
+/* Gold stickers for rare visitors, and a soft sea-green frame for hidden friends. */
+.sticker.sticker-rare.is-have {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(145deg, #fff6c8, #ffd96a 55%, #ffeaa0);
+  box-shadow: 0 0 0 2px #e8b730, 0 4px 12px rgba(200, 150, 20, 0.35);
+}
+
+.sticker.sticker-rare.is-have::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 35%, rgba(255, 255, 255, 0.75) 50%, transparent 65%);
+  animation: shine 3.2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.sticker.sticker-hidden.is-have {
+  background: linear-gradient(145deg, #e6fff4, #b8f0d8);
+  box-shadow: 0 0 0 2px #46c08f, 0 4px 10px rgba(30, 140, 100, 0.25);
+}
+
+.sticker.sticker-night.is-have {
+  background: linear-gradient(145deg, #2c3a6e, #46578f);
+  color: #fff;
+}

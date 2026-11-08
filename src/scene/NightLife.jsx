@@ -10,7 +10,7 @@ const LANTERNS = 9;
 const dummy = new THREE.Object3D();
 
 // A soft round glow, drawn once into a tiny canvas and used for the anglerfish lure.
-function glowTexture() {
+export function glowTexture() {
   const c = document.createElement('canvas');
   c.width = c.height = 64;
   const g = c.getContext('2d');

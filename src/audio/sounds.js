@@ -112,6 +112,12 @@ const SOUNDS = {
     tone(ac, { type: 'square', from: 2400, to: 1600, dur: 0.04, vol: 0.03 });
     tone(ac, { from: 300, to: 620, start: 0.05, dur: 0.14, vol: 0.06 });
   },
+  song: (ac) => {
+    // A humpback's song: long, slow glides up and down.
+    [[180, 420, 0, 1.6], [420, 260, 1.5, 1.4], [240, 520, 3.0, 1.8], [500, 300, 4.7, 1.6]].forEach(([from, to, start, dur]) =>
+      tone(ac, { type: 'sine', from, to, start, dur, vol: 0.05 }),
+    );
+  },
   pearl: (ac) => {
     [1320, 1760, 2350].forEach((f, i) => tone(ac, { type: 'sine', from: f, to: f, start: i * 0.07, dur: 0.22, vol: 0.06 }));
   },

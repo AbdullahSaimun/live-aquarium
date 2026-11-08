@@ -57,8 +57,14 @@ export default function Crab() {
     } else if (c.wait > 0) {
       c.wait -= dt;
       if (c.wait <= 0) {
-        c.tx = rand(b.minX + 0.6, b.maxX - 0.6);
-        c.tz = rand(0.8, 2.2);
+        if (Math.random() < 0.2) {
+          // Sometimes it wanders over towards the octopus's den... and gets chased off.
+          c.tx = world.octopusPos.x + rand(-0.3, 0.3);
+          c.tz = -0.7;
+        } else {
+          c.tx = rand(b.minX + 0.6, b.maxX - 0.6);
+          c.tz = rand(0.8, 2.2);
+        }
       }
     }
     const dx = c.tx - c.x;
@@ -87,6 +93,15 @@ export default function Crab() {
 
     const hopY = c.hop > 0 ? Math.sin((1 - c.hop / 0.5) * Math.PI) * 0.35 : 0;
     root.current.position.set(c.x, Y + hopY, c.z);
+    world.crabPos.copy(root.current.position);
+    // Too close to the octopus's den: it reaches out, and the crab hurries away.
+    if (!c.crumb && Math.hypot(c.x - world.octopusPos.x, c.z - world.octopusPos.z) < 1.45 && c.hop <= 0) {
+      c.hop = 0.5;
+      c.tx = c.x + Math.sign(c.x - world.octopusPos.x || 1) * 2;
+      c.tz = THREE.MathUtils.clamp(c.z + 0.8, 0.8, 2.2);
+      c.wait = 0;
+      world.partnerEvents.push('octopusCrab');
+    }
     // Mostly faces the viewer, with a slight lean into the walk.
     body.current.rotation.z = walking ? Math.sin(t * 14) * 0.06 : 0;
     body.current.rotation.y = walking ? Math.sign(dx) * 0.25 : 0;

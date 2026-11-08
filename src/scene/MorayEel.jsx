@@ -29,6 +29,8 @@ export default function MorayEel({ calm }) {
       spot: new THREE.MeshStandardMaterial({ color: '#c8d84a', roughness: 0.5 }),
       mouth: new THREE.MeshStandardMaterial({ color: '#7a2b2b', roughness: 0.6 }),
       white: new THREE.MeshStandardMaterial({ color: '#fff9d6', roughness: 0.25 }),
+      shrimp: new THREE.MeshStandardMaterial({ color: '#ff4f4f', roughness: 0.45 }),
+      shrimpStripe: new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.4 }),
       pupil: new THREE.MeshBasicMaterial({ color: '#1d1b33' }),
       dark: new THREE.MeshBasicMaterial({ color: '#141a14' }),
       hidden: new THREE.MeshBasicMaterial({ visible: false }),
@@ -40,7 +42,8 @@ export default function MorayEel({ calm }) {
   const slide = useRef();
   const segs = useRef([]);
   const jaw = useRef();
-  const s = useRef({ out: 0.8, hide: 0 });
+  const helper = useRef();
+  const s = useRef({ out: 0.8, hide: 0, nextClean: 35 });
   const [hovered, setHovered] = useState(false);
   useCursor(hovered);
 
@@ -56,8 +59,21 @@ export default function MorayEel({ calm }) {
     segs.current.forEach((g, i) => {
       if (g) g.rotation.y = Math.sin(t * (calm ? 0.6 : 1) - i * 0.6) * 0.12 * (i / NECK);
     });
+    // Now and then its own little cleaner shrimp climbs in to clean its teeth.
+    c.nextClean -= dt;
+    if (c.nextClean <= 0 && c.hide <= 0) {
+      c.nextClean = 45 + Math.random() * 40;
+      world.morayClean = t + 6;
+      world.partnerEvents.push('moray');
+    }
     // Morays breathe by opening and closing their mouths; wide open while being cleaned.
-    const cleaning = world.morayClean > t;
+    const cleaning = world.morayClean > t && c.hide <= 0;
+    helper.current.visible = cleaning;
+    if (cleaning) {
+      const k = Math.min(1, (6 - (world.morayClean - t)) / 1.2);
+      helper.current.position.set(0.12 - k * 0.1, -0.06 + k * 0.02, 0.35 + k * 0.25);
+      helper.current.rotation.y = Math.sin(t * 8) * 0.3;
+    }
     jaw.current.rotation.x = cleaning ? 0.65 : 0.12 + Math.max(0, Math.sin(t * 1.6)) * 0.28;
   });
 
@@ -98,6 +114,11 @@ export default function MorayEel({ calm }) {
     <group position={[MORAY_DEN.x, MORAY_DEN.y, MORAY_DEN.z]}>
       <mesh geometry={kit.cave} material={kit.dark} position={[0, 0, -0.02]} scale={[0.17, 0.14, 1]} />
       <group ref={slide}>{node}</group>
+      {/* the moray's own little cleaner shrimp */}
+      <group ref={helper} visible={false} scale={0.5}>
+        <mesh geometry={kit.seg} material={kit.shrimp} scale={[0.05, 0.05, 0.11]} />
+        <mesh geometry={kit.seg} material={kit.shrimpStripe} position={[0, 0.03, 0]} scale={[0.012, 0.02, 0.1]} />
+      </group>
       <mesh
         geometry={kit.seg}
         material={kit.hidden}

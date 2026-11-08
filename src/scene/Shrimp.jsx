@@ -6,6 +6,9 @@ import { world, queueEffect, removePellet, findCrumb } from '../sim/world';
 import { showCreature, sfx } from '../state/store';
 
 const FLIP_TIME = 0.9;
+const CLEAN_TIME = 16; // time for the invited fish to swim over
+let nextCleaning = 50; // shared by both shrimp: one cleaning at a time
+const cleanPos = new THREE.Vector3();
 const rand = (a, b) => a + Math.random() * (b - a);
 
 // Two cleaner shrimp, each pottering about near its own rock at the front of the sand.
@@ -44,7 +47,7 @@ function OneShrimp({ kit, home, calm }) {
   const root = useRef();
   const pose = useRef();
   const feelers = useRef([]);
-  const s = useRef({ x: home.x, z: home.z, tx: home.x, tz: home.z, yaw: 0, wait: rand(1, 3), crumb: null, nibble: 0, flip: 0 });
+  const s = useRef({ x: home.x, z: home.z, tx: home.x, tz: home.z, yaw: 0, wait: rand(1, 3), crumb: null, nibble: 0, flip: 0, cleaning: false, told: false });
   const [hovered, setHovered] = useState(false);
   useCursor(hovered);
 
@@ -55,6 +58,39 @@ function OneShrimp({ kit, home, calm }) {
     const b = world.bounds;
     const hx = THREE.MathUtils.clamp(home.x, b.minX + 0.5, b.maxX - 0.5);
     c.flip = Math.max(0, c.flip - dt);
+
+    // Cleaning station: invite the nearest relaxed fish, then hop up onto it while it hovers.
+    if (!world.cleaning && !c.crumb && c.flip <= 0 && home === HOMES[0]) {
+      nextCleaning -= dt;
+      if (nextCleaning <= 0) {
+        nextCleaning = rand(80, 150);
+        let best = null;
+        let bestD = Infinity;
+        for (const [id, rt] of world.runtime) {
+          const d = Math.hypot(rt.pos.x - c.x, rt.pos.z - c.z);
+          if (d < bestD && rt.scared <= 0 && rt.sleeping <= 0) {
+            best = id;
+            bestD = d;
+          }
+        }
+        if (best) {
+          world.cleaning = { fishId: best, pos: new THREE.Vector3(c.x, world.floorY + 0.55, c.z), until: t + CLEAN_TIME, shrimp: home };
+          c.told = false;
+        } else nextCleaning = 10; // everyone is napping: ask again soon
+      }
+    }
+    const station = world.cleaning && world.cleaning.shrimp === home ? world.cleaning : null;
+    if (station && t > station.until) {
+      world.cleaning = null;
+      if (!c.told) nextCleaning = 25; // the fish never came: try again a bit later
+    }
+    const client = station ? world.runtime.get(station.fishId) : null;
+    c.cleaning = !!(client && client.pos.distanceTo(station.pos) < 0.6);
+    if (c.cleaning && !c.told) {
+      c.told = true;
+      station.until = Math.max(station.until, t + 6); // a proper clean once it has arrived
+      world.partnerEvents.push('cleaning');
+    }
 
     if (c.crumb && !c.crumb.active) c.crumb = null;
     if (!c.crumb && c.nibble <= 0) c.crumb = findCrumb({ x: hx, z: home.z, radius: 2.5 });
@@ -105,7 +141,11 @@ function OneShrimp({ kit, home, calm }) {
 
     const k = 1 - c.flip / FLIP_TIME;
     const hopY = c.flip > 0 ? Math.sin(k * Math.PI) * 0.45 : walking ? Math.abs(Math.sin(t * 10)) * 0.02 : 0;
-    root.current.position.set(c.x, world.floorY + 0.16 + hopY, c.z);
+    if (c.cleaning) {
+      // Riding on the fish, picking it clean.
+      cleanPos.copy(client.pos);
+      root.current.position.set(cleanPos.x, cleanPos.y - 0.12, cleanPos.z + 0.05);
+    } else root.current.position.set(c.x, world.floorY + 0.16 + hopY, c.z);
     pose.current.rotation.set(c.flip > 0 ? -k * Math.PI * 2 : c.nibble > 0 ? 0.25 + Math.sin(t * 20) * 0.08 : 0, c.yaw, 0, 'YXZ');
     const busy = calm ? 0.5 : 1;
     feelers.current.forEach((f, i) => {

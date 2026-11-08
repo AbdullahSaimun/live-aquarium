@@ -50,6 +50,7 @@ export function createRuntime(fish) {
 function pickWanderTarget(rt, fish, mood) {
   const b = world.bounds;
   const t = rt.target;
+  rt.anemone = false;
   if (mood === 'sleepy') {
     t.set(rand(b.minX, b.maxX) * 0.8, b.minY + rand(0.1, 0.6), rand(b.minZ, b.maxZ - 1));
   } else if (mood === 'hungry' || mood === 'weak') {
@@ -58,6 +59,8 @@ function pickWanderTarget(rt, fish, mood) {
     t.set(THREE.MathUtils.clamp(rt.pos.x + rand(-1.5, 1.5), b.minX, b.maxX), y, b.maxZ);
   } else if (mood === 'curious') {
     t.set(rand(-2, 2) * Math.min(1, b.maxX / 4), rand(-0.3, 1), b.maxZ);
+  } else if (fish.species === 'clownfish' && Math.random() < 0.35 && visitAnemone(rt, b)) {
+    // Clownfish snuggle into their anemone home now and then.
   } else {
     const shy = fish.personality === 'shy';
     t.set(
@@ -67,6 +70,20 @@ function pickWanderTarget(rt, fish, mood) {
     );
   }
   rt.retarget = rand(4, 9);
+}
+
+// The anemones in Coral.jsx; clownfish only visit one that is on screen.
+const ANEMONES = [
+  [-3.4, -0.8],
+  [6.4, 1.2],
+];
+function visitAnemone(rt, b) {
+  const homes = ANEMONES.filter(([x]) => x > b.minX + 0.3 && x < b.maxX - 0.3);
+  if (!homes.length) return false;
+  const [x, z] = homes[Math.floor(Math.random() * homes.length)];
+  rt.target.set(x + rand(-0.15, 0.15), world.floorY + 0.95, z + rand(-0.1, 0.1));
+  rt.anemone = true;
+  return true;
 }
 
 function nearestPellet(rt, mouth) {
@@ -177,6 +194,14 @@ export function updateFish(fish, rt, dt, mates) {
 
   // --- choose where to go ---
   rt.retarget -= dt;
+  // A clownfish that reached its anemone stays and snuggles for a while.
+  if (rt.anemone && !seeking && rt.pos.distanceTo(rt.target) < 0.8) {
+    rt.anemone = false;
+    rt.linger = rand(5, 8);
+    rt.retarget = rt.linger;
+    world.partnerEvents.push('anemone');
+  }
+  if (rt.linger > 0) rt.linger -= dt;
   if (withAsma && !seeking) {
     // Circle around Asma at chest height.
     const o = rt.orbit;
@@ -189,7 +214,11 @@ export function updateFish(fish, rt, dt, mates) {
     rt.retarget = 1;
   } else if (panicking) {
     rt.retarget = 0; // pick a fresh calm spot once the fright is over
-  } else if (!seeking && (rt.retarget <= 0 || (mood === 'happy' && rt.pos.distanceTo(rt.target) < 0.8))) {
+  } else if (!seeking && world.cleaning?.fishId === fish.id && world.time < world.cleaning.until) {
+    // Invited to the cleaning station: hover still above the shrimp with fins spread.
+    rt.target.copy(world.cleaning.pos);
+    rt.retarget = 1;
+  } else if (!seeking && (rt.retarget <= 0 || (mood === 'happy' && !(rt.linger > 0) && rt.pos.distanceTo(rt.target) < 0.8))) {
     pickWanderTarget(rt, fish, mood);
   }
   const goal = seeking ? seeking.pos : rt.target;

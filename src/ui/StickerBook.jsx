@@ -64,7 +64,7 @@ export default function StickerBook() {
                   return (
                     <li key={id}>
                       <button
-                        className={`sticker${have ? ' is-have' : ''}`}
+                        className={`sticker sticker-${CREATURES[id].kind}${have ? ' is-have' : ''}`}
                         onClick={() => have && setOpen(id)}
                         aria-label={have ? info.label : 'Not found yet'}
                         disabled={!have}

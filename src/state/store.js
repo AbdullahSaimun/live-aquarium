@@ -8,7 +8,7 @@ import { startVisit, snackSpot } from '../sim/asmaBrain';
 import { startShark, sendSharkAway, SHARK_HITS } from '../sim/sharkBrain';
 import { CREATURES, CREATURE_IDS } from '../data/creatures';
 import { creatureInfo } from '../data/factsBn';
-import { startVisitor, visitorActive } from '../sim/visitors';
+import { startVisitor, visitorActive, RARE_KINDS } from '../sim/visitors';
 import { phaseFor, PHASE_LIGHT } from './daylight';
 import { birthdayStatus, BIRTHDAY_LINES, bnNumber } from '../data/birthday';
 import { DECOR, decorText } from '../data/decor';
@@ -403,6 +403,79 @@ export function noticeOnce(key, en, bn, emoji = '✨') {
   const isBn = state.settings.factLang === 'bn';
   toast(isBn ? bn : en, emoji, 6000, isBn ? 'bn' : '');
   sfx('chime');
+  save();
+}
+
+// ---------- animal partnerships: a fact toast the first time each one is seen ----------
+const PARTNER_FACTS = {
+  cleaning: [
+    'A fish spa! The cleaner shrimp is eating the bits off the fish, and both of them are happy. 🦐',
+    'মাছের স্পা! পরিষ্কারক চিংড়ি মাছের গা থেকে ময়লা খাচ্ছে, আর দুজনেই খুশি। 🦐',
+    '🦐',
+  ],
+  anemone: [
+    "The clownfish is snuggling into the anemone. Its stings don't hurt clownfish, so it is a safe home! 🐠",
+    'ক্লাউনফিশ অ্যানিমোনের ভেতরে ঢুকে আরাম করছে। অ্যানিমোনের হুল ক্লাউনফিশকে ব্যথা দেয় না, তাই এটা নিরাপদ বাড়ি! 🐠',
+    '🐠',
+  ],
+  moray: [
+    "Look! A tiny shrimp is cleaning the moray's teeth, and the moray keeps very still. 🦷",
+    'দেখো! ছোট্ট চিংড়ি মোরে ইলের দাঁত পরিষ্কার করছে, আর মোরে একদম চুপ করে আছে। 🦷',
+    '🦐',
+  ],
+  octopusCrab: [
+    'The octopus is reaching for the crab! Crabs are an octopus\'s favourite snack, so the crab runs. (Just playing!) 🦀',
+    'অক্টোপাস কাঁকড়ার দিকে হাত বাড়াচ্ছে! কাঁকড়া অক্টোপাসের প্রিয় খাবার, তাই কাঁকড়া পালাচ্ছে। (শুধু খেলা!) 🦀',
+    '🐙',
+  ],
+};
+
+function tickPartners() {
+  const events = world.partnerEvents;
+  while (events.length) {
+    const key = events.shift();
+    const fact = PARTNER_FACTS[key];
+    if (fact) noticeOnce(`partner-${key}`, fact[0], fact[1], fact[2]);
+  }
+}
+
+// ---------- hide-and-seek: friends hiding in the reef, in a new spot every day ----------
+const todayKey = () => new Date().toDateString();
+
+/** Which hidden friends have been found today: { seadragon: bool, pygmySeahorse: bool }. */
+export function hiddenFound() {
+  const h = state.stats.hidden;
+  return h && h.day === todayKey() ? h : {};
+}
+
+export function findHidden(id, pos) {
+  if (hiddenFound()[id]) {
+    showCreature(id);
+    return;
+  }
+  state.stats.hidden = { ...hiddenFound(), day: todayKey(), [id]: true };
+  if (pos) queueEffect('hearts', pos, 5);
+  for (const rt of world.runtime.values()) queueEffect('hearts', rt.pos, 1);
+  const lang = state.settings.factLang;
+  const { label } = creatureInfo(id, lang);
+  showCreature(id);
+  earnPearls(3, {
+    capped: false,
+    reason: lang === 'bn' ? `দারুণ! তুমি লুকিয়ে থাকা ${label} খুঁজে পেয়েছ! +৩ 🦪` : `Great spotting! You found the hidden ${label.toLowerCase()}! +3`,
+  });
+}
+
+// Once a day, a gentle nudge that someone is hiding (only after the welcome is done).
+let hideHintIn = 45;
+function tickHideAndSeek(dt) {
+  if (!state.hintDismissed || state.stats.hideHintDay === todayKey()) return;
+  hideHintIn -= dt;
+  if (hideHintIn > 0) return;
+  const found = hiddenFound();
+  if (found.seadragon && found.pygmySeahorse) return;
+  state.stats.hideHintDay = todayKey();
+  const bn = state.settings.factLang === 'bn';
+  toast(bn ? '🔍 আজ প্রবালের মধ্যে কেউ লুকিয়ে আছে! খুঁজে পাবে?' : '🔍 Someone is hiding in the reef today! Can you find them?', '🔍', 6000, bn ? 'bn' : '');
   save();
 }
 
@@ -856,9 +929,39 @@ function tickShark(dt) {
 // ---------- big visitors passing behind the reef ----------
 let nextVisitorIn = 60;
 
+const RARE_CHANCE = 0.08;
+const RARE_PROMISE = 2 * 24 * 3600 * 1000; // a rare guest at least every two days of play
+
+// Usually a regular visitor; sometimes (and surely after two days without one) a rare guest,
+// preferring the ones the child has not met yet.
+function pickVisitorKind() {
+  const s = state.stats;
+  if (!s.lastRare) s.lastRare = Date.now();
+  const due = Date.now() - s.lastRare > RARE_PROMISE;
+  if (!due && Math.random() > RARE_CHANCE) return undefined;
+  const unseen = RARE_KINDS.filter((k) => !s.stickers[k]);
+  return pick(unseen.length ? unseen : RARE_KINDS);
+}
+
+function announceRare(kind) {
+  state.stats.lastRare = Date.now();
+  const lang = state.settings.factLang;
+  const { label } = creatureInfo(kind, lang);
+  toast(
+    lang === 'bn' ? `✨ বিরল অতিথি! ${label} সাঁতরে যাচ্ছে। তাড়াতাড়ি ছুঁয়ে দেখো!` : `✨ Rare sighting! A ${label.toLowerCase()} is swimming by. Tap it quickly!`,
+    CREATURES[kind].emoji,
+    6000,
+    lang === 'bn' ? 'bn' : '',
+  );
+  sfx(kind === 'humpback' ? 'song' : 'chime');
+  save();
+}
+
 export function callVisitor(kind) {
   if (visitorActive() || world.shark.phase !== 'idle') return false;
-  if (startVisitor(kind) === 'whale') sfx('whale');
+  const started = startVisitor(kind || pickVisitorKind());
+  if (started === 'whale') sfx('whale');
+  if (RARE_KINDS.includes(started)) announceRare(started);
   nextVisitorIn = 180 + Math.random() * 120;
   return true;
 }
@@ -922,6 +1025,8 @@ export function tickStats(dt) {
   tickShark(dt);
   tickVisitors(dt);
   tickClamPearl(dt);
+  tickHideAndSeek(dt);
+  tickPartners();
   tickDaylight();
   tickParty();
   if (weakened.length === 1) toast(`${weakened[0]} is very weak from hunger! Please feed soon.`, '🥺', 4500);

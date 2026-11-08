@@ -58,6 +58,8 @@ export default function Octopus({ calm }) {
     c.wave = Math.max(0, c.wave - dt);
     const x = THREE.MathUtils.clamp(HOME.x, b.minX + 0.6, b.maxX - 0.5);
     root.current.position.set(x, world.floorY, HOME.z);
+    world.octopusPos.copy(root.current.position);
+    const crabNear = Math.hypot(world.crabPos.x - x, world.crabPos.z - HOME.z) < 1.8;
 
     if (sharkActive() && c.inkCool <= 0 && world.shark.pos.distanceTo(root.current.position) < 5) {
       c.ink = INK_TIME;
@@ -84,7 +86,7 @@ export default function Octopus({ calm }) {
     const sway = calm ? 0.4 : 1;
     arms.current.forEach((arm, a) => {
       if (!arm) return;
-      const waving = c.wave > 0 && (a === 1 || a === 2);
+      const waving = (c.wave > 0 || crabNear) && (a === 1 || a === 2);
       // Walk down the chain of segments; each one curls a little further out and up.
       let seg = arm.children.find((ch) => ch.isGroup);
       for (let j = 1; seg; j++) {

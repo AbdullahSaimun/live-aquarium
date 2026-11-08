@@ -41,6 +41,7 @@ import Nudibranchs from './Nudibranchs';
 import Stingray from './Stingray';
 import MorayEel from './MorayEel';
 import NightLife from './NightLife';
+import HiddenFriends from './HiddenFriends';
 
 const FOV = 45;
 const BASE_Z = 11;
@@ -135,6 +136,7 @@ export default function Aquarium() {
       <MorayEel calm={calm} />
       <Cuttlefish calm={calm} />
       {night && <NightLife />}
+      <HiddenFriends />
       <Coral calm={calm} />
       <TreasureChest />
       <Starfish />
