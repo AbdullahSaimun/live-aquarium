@@ -67,14 +67,29 @@ Built with React, Vite, Three.js, React Three Fiber and drei. Everything runs in
 - A **giant clam** slowly breathes open and closed, shows a glowing blue mantle, puffs bubbles, and snaps shut when tapped or when the shark comes near.
 - A colony of **garden eels** sways out of the sand and turns to watch the fish. They all dive into their holes when tapped, when a fish swims right over them, or while the shark is around, then peek out again one by one.
 - Two **sea urchins** bristle their spines when tapped, and a spotted **sea cucumber** inches slowly across the sand and squishes when tapped.
+- A **hermit crab** wanders the front sand with its spiral shell. Every few minutes it finds the other shell lying nearby, climbs out (you can see its soft pink tummy) and moves in. Tapped, it pulls into its shell.
+- A **cuttlefish** hovers on the left with a rippling fin skirt and colour clouds rolling over its skin; tap it for a rainbow light show.
+- Three neon **sea slugs** (nudibranchs) crawl slowly over the sand: a blue-and-yellow one, a purple one with orange-tipped fingers, and a red "Spanish dancer".
+- A spotted **ray** glides low over the sand and now and then buries itself until only its eyes peek out. Tapped, it lifts off in a puff.
+- A green **moray eel** peeks out of a cave in the big back boulder, opening and closing its mouth as it breathes.
+
+**🌙 Night friends** (only after dark)
+- An **anglerfish** drifts deep at the back with a glowing lure bobbing on its head.
+- A little group of **lanternfish** drifts by, dotted with glowing blue lights.
+- Tap the water at night and blue **glowing plankton** sparkles where you touched.
 - Neighbours stay on the sand, at the edges or behind the fish, so the middle of the tank stays clear.
 
 **🐋 Big sea visitors**
 - Every few minutes a **manta ray**, **dolphin** or **blue whale** swims past far behind the reef, one at a time and never while the shark is in. The whale puffs a spout of bubbles.
 - Tap a visitor while it passes to learn about it. Turn visitors off, or call one, in Settings.
 
+**🦪 Pearls & decorations**
+- Earn pearls by playing: the treasure chest (+1 every couple of minutes), every new sticker (+2), and a pearl that now and then shines inside the open giant clam (tap it for +3). Small rewards share a soft cap of 15 a day, so pearls stay special.
+- Tap the pearl counter in the top bar to open the **Decorate** shop. Buy decorations and show or hide them any time: rainbow fan coral (5), old anchor (8), diver helmet that puffs bubbles (12), sand castle with waving flags (15), lantern corals that glow at night (18), bubble volcano (25), mossy rock arch the fish swim under (30) and a sunken shipwreck behind the reef (40).
+- Every decoration has its own spot, measured so it never lands on a coral, rock or creature. Pearls and decorations are kept when the aquarium is reset.
+
 **📖 Ocean sticker book**
-- Tapping a fish or creature for the first time earns its sticker (23 in all: pet fish, tank friends and ocean visitors).
+- Tapping a fish or creature for the first time earns its sticker (30 in all: pet fish, tank friends, night friends and ocean visitors).
 - The book shows progress, grey "?" spaces for animals not met yet, and opens each collected sticker's learning card again. Half and full books are celebrated.
 
 **🌗 Day and night**

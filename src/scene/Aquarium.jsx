@@ -34,6 +34,13 @@ import GiantClam from './GiantClam';
 import GardenEels from './GardenEels';
 import FishSchool from './FishSchool';
 import WaterSurface from './WaterSurface';
+import Decorations from './Decorations';
+import HermitCrab from './HermitCrab';
+import Cuttlefish from './Cuttlefish';
+import Nudibranchs from './Nudibranchs';
+import Stingray from './Stingray';
+import MorayEel from './MorayEel';
+import NightLife from './NightLife';
 
 const FOV = 45;
 const BASE_Z = 11;
@@ -88,6 +95,7 @@ function CameraRig({ calm }) {
 export default function Aquarium() {
   const calm = useStore((s) => s.settings.calmMode);
   const party = useStore((s) => s.party);
+  const night = useStore((s) => s.daylight === 'night');
   const [dpr, setDpr] = useState(() => Math.min(1.5, window.devicePixelRatio || 1));
   const [slow, setSlow] = useState(false);
   // Fewer seagrass blades, pebbles and school fish on phones, in calm mode and on slow devices.
@@ -115,11 +123,18 @@ export default function Aquarium() {
       <WaterTap />
       <Seabed />
       <Rocks />
+      <Decorations calm={calm} />
       <SeabedScatter detail={detail} />
       <Algae detail={detail} />
       <Critters calm={calm} />
       <GiantClam />
       <GardenEels calm={calm} />
+      <HermitCrab calm={calm} />
+      <Nudibranchs />
+      <Stingray calm={calm} />
+      <MorayEel calm={calm} />
+      <Cuttlefish calm={calm} />
+      {night && <NightLife />}
       <Coral calm={calm} />
       <TreasureChest />
       <Starfish />

@@ -29,7 +29,7 @@ function makeRock(seed) {
 }
 
 // Grey-brown stone with green moss on the surfaces that face up and pink coralline crust patches.
-function makeRockMaterial() {
+export function makeRockMaterial() {
   const mat = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.95 });
   mat.onBeforeCompile = (shader) => {
     shader.vertexShader = shader.vertexShader

@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { useCursor } from '@react-three/drei';
 import { world, queueEffect } from '../sim/world';
-import { showCreature, sfx } from '../state/store';
+import { showCreature, sfx, collectClamPearl } from '../state/store';
 import { sharkActive } from '../sim/sharkBrain';
 import { CLAM_SPOT, sandY } from './reefLayout';
 
@@ -66,6 +66,7 @@ export default function GiantClam() {
       sphere: new THREE.SphereGeometry(1, 12, 8),
       shellMat: new THREE.MeshStandardMaterial({ color: '#d9cdb7', roughness: 0.75, side: THREE.DoubleSide }),
       lipMat: new THREE.MeshStandardMaterial({ color: '#efe6d6', roughness: 0.5 }),
+      pearlMat: new THREE.MeshStandardMaterial({ color: '#fbf6ff', roughness: 0.12, metalness: 0.15, emissive: '#f3e9ff', emissiveIntensity: 0.25 }),
       mantleMat: mantleMaterial(),
       hidden: new THREE.MeshBasicMaterial({ visible: false }),
     }),
@@ -75,6 +76,7 @@ export default function GiantClam() {
 
   const lid = useRef();
   const mantle = useRef();
+  const pearl = useRef();
   const s = useRef({ open: 0.3, snap: 0, puff: 6 });
   const [hovered, setHovered] = useState(false);
   useCursor(hovered);
@@ -92,6 +94,10 @@ export default function GiantClam() {
     lid.current.rotation.x = -c.open;
     mantle.current.scale.y = 0.08 + c.open * 0.35;
     kit.mantleMat.emissiveIntensity = 0.12 + (1 - world.light) * 0.9;
+    // Now and then a pearl shines on the mantle while the clam is open.
+    pearl.current.visible = world.clamPearl && c.open > 0.12;
+    kit.pearlMat.emissiveIntensity = 0.25 + Math.max(0, Math.sin(t * 3)) * 0.45;
+    pearl.current.scale.setScalar(0.15 + Math.sin(t * 3) * 0.008);
 
     c.puff -= dt;
     if (c.puff <= 0) {
@@ -102,6 +108,11 @@ export default function GiantClam() {
 
   const onClick = (e) => {
     e.stopPropagation();
+    // Tapping while a pearl shines collects the pearl instead of snapping shut.
+    if (pearl.current.visible) {
+      collectClamPearl(HOME.clone().setY(Y + 0.5));
+      return;
+    }
     s.current.snap = SNAP_TIME;
     sfx('clam');
     showCreature('giantClam');
@@ -112,6 +123,7 @@ export default function GiantClam() {
       {/* bottom shell, sunk a little into the sand */}
       <mesh geometry={kit.shell} material={kit.shellMat} rotation={[Math.PI, 0, 0]} position={[0, 0.12, 0]} />
       <mesh ref={mantle} geometry={kit.mantle} material={kit.mantleMat} position={[0, 0.12, 0.04]} scale={[0.9, 0.15, 0.62]} />
+      <mesh ref={pearl} geometry={kit.sphere} material={kit.pearlMat} position={[0, 0.3, 0.18]} scale={0.15} visible={false} />
       {/* top shell, hinged at the back */}
       <group ref={lid} position={[0, 0.12, -0.7]}>
         <mesh geometry={kit.shell} material={kit.shellMat} position={[0, 0, 0.7]} />

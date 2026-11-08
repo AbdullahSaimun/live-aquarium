@@ -53,22 +53,37 @@ export const CLAM_SPOT = { x: -2.3, z: -1.7 };
 export const EEL_SPOT = { x: 0.45, z: -0.35 };
 export const AIR_STONE = { x: 2.9, z: -4.3 };
 
-// Circles [x, z, radius] that scattered pebbles, shells and plants keep out of.
-export const KEEP_OUT = [
+// Each decoration bought with pearls has its own spot: [x, z, keep-out radius, turn].
+export const DECOR_SPOTS = {
+  // Chosen by measuring against every coral, plant, rock and creature home, so nothing overlaps.
+  fanCoral: [2.6, -3.2, 0.9, 0.1],
+  anchor: [-6.3, 0.9, 0.7, 0.6],
+  diver: [0.0, -2.8, 0.45, 0.3],
+  castle: [6.9, -1.9, 0.75, -0.4],
+  lanterns: [4.2, -3.1, 0.5, 0],
+  volcano: [-3.6, -2.4, 0.7, 0],
+  arch: [2.6, -0.2, 1.2, 0],
+  shipwreck: [0.0, -9.1, 2.4, 0.25],
+};
+
+// Homes of creatures and decorations: plants may grow right up to rocks, but never here.
+const HOME_SPOTS = [
   [-4.4, 0.6, 1.2], // treasure chest
   [-1.25, 0.6, 0.9], // where the chest sits on narrow phones
   [3.3, -1.8, 1.2], // octopus den
   [CLAM_SPOT.x, CLAM_SPOT.z, 0.9],
   [EEL_SPOT.x, EEL_SPOT.z, 0.9],
   [AIR_STONE.x, AIR_STONE.z, 0.4],
-  ...ROCKS.map(([x, z, s]) => [x, z, s * 0.9]),
+  ...Object.values(DECOR_SPOTS).map(([x, z, r]) => [x, z, r]),
 ];
+
+// Circles [x, z, radius] that scattered pebbles, shells and plants keep out of.
+export const KEEP_OUT = [...HOME_SPOTS, ...ROCKS.map(([x, z, s]) => [x, z, s * 0.9])];
 
 export const isClear = (x, z, pad = 0) => KEEP_OUT.every(([kx, kz, r]) => Math.hypot(x - kx, z - kz) > r + pad);
 
 // Plants may grow right up against rocks; they only keep out of the chest, den and creature homes.
-const HOMES = KEEP_OUT.slice(0, 6);
-export const isClearOfHomes = (x, z, pad = 0) => HOMES.every(([kx, kz, r]) => Math.hypot(x - kx, z - kz) > r + pad);
+export const isClearOfHomes = (x, z, pad = 0) => HOME_SPOTS.every(([kx, kz, r]) => Math.hypot(x - kx, z - kz) > r + pad);
 
 // One clock for every swaying plant shader, ticked by Seabed.
 export const reefTime = { value: 0 };

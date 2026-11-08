@@ -5,8 +5,8 @@ import LearnStrip from './LearnStrip';
 import usePresence from './usePresence';
 
 const KIND_LABEL = {
-  en: { fish: 'Pet fish', neighbour: 'Tank friend', visitor: 'Ocean visitor' },
-  bn: { fish: 'পোষা মাছ', neighbour: 'ট্যাংকের বন্ধু', visitor: 'সমুদ্রের অতিথি' },
+  en: { fish: 'Pet fish', neighbour: 'Tank friend', night: 'Night friend', visitor: 'Ocean visitor', rare: 'Rare visitor', hidden: 'Hidden friend' },
+  bn: { fish: 'পোষা মাছ', neighbour: 'ট্যাংকের বন্ধু', night: 'রাতের বন্ধু', visitor: 'সমুদ্রের অতিথি', rare: 'বিরল অতিথি', hidden: 'লুকানো বন্ধু' },
 };
 
 // Picture for a creature: pet fish use their drawn icon, everyone else an emoji.

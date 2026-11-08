@@ -128,6 +128,29 @@ function Rail() {
   );
 }
 
+// Pearls earned by playing; tapping the chip opens the decorations shop.
+function PearlChip() {
+  const pearls = useStore((s) => s.stats.pearls || 0);
+  const flash = useStore((s) => s.pearlFlash);
+  const panel = useStore((s) => s.panel);
+  return (
+    <button
+      className={`pearl-chip${panel === 'decor' ? ' is-on' : ''}`}
+      onClick={() => openPanel('decor')}
+      aria-label={`${pearls} pearls. Open decorations`}
+      title="Pearls: decorate your tank"
+    >
+      <span className="pearl-dot" aria-hidden="true" />
+      <span className="pearl-count">{pearls}</span>
+      {flash && (
+        <span key={flash.id} className="pearl-plus" aria-hidden="true">
+          +{flash.n}
+        </span>
+      )}
+    </button>
+  );
+}
+
 export default function HUD() {
   return (
     <>
@@ -137,6 +160,7 @@ export default function HUD() {
           <span className="brand-text">My Little Ocean</span>
         </div>
         <TimeBadge />
+        <PearlChip />
         <Roster />
       </header>
       <Rail />

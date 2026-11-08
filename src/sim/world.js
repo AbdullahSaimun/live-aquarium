@@ -8,6 +8,9 @@ export const world = {
   bounds: { minX: -6.5, maxX: 6.5, minY: -2.4, maxY: 1.6, minZ: -3, maxZ: 2.6 },
   // Screen pixels covered by the left button rail. CameraRig frames the tank in the space beside it.
   viewInset: 0,
+  clamPearl: false, // a pearl is shining inside the giant clam
+  morayClean: 0, // world.time until which a cleaner shrimp is cleaning the moray
+  decorPop: { id: null, t: -Infinity }, // the decoration that just arrived plays a pop-in
   floorY: -3.1,
   surfaceY: 3.6,
   dropY: 2.5, // where food appears: high in the water but below the top UI
@@ -65,7 +68,7 @@ export const world = {
   party: false,
   balloonBurst: -Infinity,
   // Queued particle bursts, drained each frame by the matching effect component.
-  effects: { hearts: [], bubbles: [] },
+  effects: { hearts: [], bubbles: [], sparkles: [] },
 };
 
 export function activePellets() {

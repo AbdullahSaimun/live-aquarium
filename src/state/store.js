@@ -10,7 +10,8 @@ import { CREATURES, CREATURE_IDS } from '../data/creatures';
 import { creatureInfo } from '../data/factsBn';
 import { startVisitor, visitorActive } from '../sim/visitors';
 import { phaseFor, PHASE_LIGHT } from './daylight';
-import { birthdayStatus, BIRTHDAY_LINES } from '../data/birthday';
+import { birthdayStatus, BIRTHDAY_LINES, bnNumber } from '../data/birthday';
+import { DECOR, decorText } from '../data/decor';
 
 export const MAX_FISH = 10;
 export const HUNGER_RATE = 1 / 200; // per second, before personality appetite
@@ -312,6 +313,96 @@ export function collectSticker(id) {
     toast(lang === 'bn' ? `নতুন স্টিকার: ${label}!` : `New sticker: ${label}!`, CREATURES[id].emoji, 2600, lang === 'bn' ? 'bn' : '');
     sfx('chime');
   }
+  earnPearls(CREATURES[id].kind === 'rare' ? 5 : 2, { quiet: true, capped: CREATURES[id].kind !== 'rare' });
+  save();
+}
+
+// ---------- pearls and decorations ----------
+// Pearls are earned by playing and spent on tank decorations. Small, repeatable rewards share a soft
+// daily cap so pearls stay special; rare finds (hidden friends, rare visitors, clam pearls) don't.
+const PEARL_DAY_CAP = 15;
+let pearlFlashId = 0;
+
+/** Adds pearls. `reason` shows a toast; `quiet` only animates the pearl counter. Returns pearls given. */
+export function earnPearls(n, { reason = '', capped = true, quiet = false } = {}) {
+  const s = state.stats;
+  const today = new Date().toDateString();
+  if (s.pearlDay !== today) {
+    s.pearlDay = today;
+    s.pearlsToday = 0;
+  }
+  const got = capped ? Math.min(n, Math.max(0, PEARL_DAY_CAP - s.pearlsToday)) : n;
+  if (got <= 0) return 0;
+  s.pearls = (s.pearls || 0) + got;
+  if (capped) s.pearlsToday += got;
+  state.pearlFlash = { id: ++pearlFlashId, n: got };
+  if (!quiet) {
+    sfx('pearl');
+    toast(reason || `+${got} pearl${got === 1 ? '' : 's'}!`, '🦪', 3500);
+  }
+  emit();
+  save();
+  return got;
+}
+
+// The giant clam grows a pearl now and then (counted in play time, the first one quite soon).
+let clamPearlIn = 200;
+function tickClamPearl(dt) {
+  if (world.clamPearl) return;
+  clamPearlIn -= dt;
+  if (clamPearlIn <= 0) world.clamPearl = true;
+}
+
+export function collectClamPearl(pos) {
+  if (!world.clamPearl) return;
+  world.clamPearl = false;
+  clamPearlIn = 2400 + Math.random() * 1200;
+  if (pos) queueEffect('hearts', pos, 4);
+  const bn = state.settings.factLang === 'bn';
+  earnPearls(3, { capped: false, reason: bn ? 'দৈত্যাকার ঝিনুকে একটা মুক্তা পেয়েছ! +৩ 🦪' : 'You found a pearl in the giant clam! +3' });
+}
+
+export function buyDecor(id) {
+  const item = DECOR[id];
+  const s = state.stats;
+  if (!item || s.decor?.[id]) return false;
+  const have = s.pearls || 0;
+  const lang = state.settings.factLang;
+  const { label } = decorText(id, lang);
+  if (have < item.price) {
+    sfx('bonk');
+    toast(lang === 'bn' ? `আরও ${bnNumber(item.price - have)}টা মুক্তা লাগবে!` : `You need ${item.price - have} more pearls for that!`, '🦪', 3000, lang === 'bn' ? 'bn' : '');
+    return false;
+  }
+  s.pearls = have - item.price;
+  s.decor = { ...s.decor, [id]: { shown: true, at: Date.now() } };
+  world.decorPop = { id, t: world.time };
+  sfx('treasure');
+  toast(lang === 'bn' ? `${label} এখন তোমার ট্যাংকে! 🎉` : `${label} is now in your tank! 🎉`, item.emoji, 3500, lang === 'bn' ? 'bn' : '');
+  for (const rt of world.runtime.values()) queueEffect('hearts', rt.pos, 1);
+  emit();
+  save();
+  return true;
+}
+
+export function toggleDecor(id) {
+  const d = state.stats.decor?.[id];
+  if (!d) return;
+  state.stats.decor = { ...state.stats.decor, [id]: { ...d, shown: !d.shown } };
+  if (!d.shown) world.decorPop = { id, t: world.time };
+  sfx(d.shown ? 'plop' : 'pop');
+  emit();
+  save();
+}
+
+// A little fact toast for something special the child just watched happen, shown only the first time.
+export function noticeOnce(key, en, bn, emoji = '✨') {
+  const seen = (state.stats.seen = state.stats.seen || {});
+  if (seen[key]) return;
+  seen[key] = Date.now();
+  const isBn = state.settings.factLang === 'bn';
+  toast(isBn ? bn : en, emoji, 6000, isBn ? 'bn' : '');
+  sfx('chime');
   save();
 }
 
@@ -370,6 +461,8 @@ export function tapWater(point) {
     emit();
     return;
   }
+  // At night the water lights up with glowing plankton wherever it is touched.
+  if (state.daylight === 'night') queueEffect('sparkles', point, 16);
   dropFoodAt(point);
 }
 
@@ -463,6 +556,7 @@ export function petFish(fish) {
 // Treasure chest: a surprise fact plus sparkles, with a short cooldown while the lid is open.
 export const CHEST_OPEN_TIME = 5;
 let chestOpenedAt = -Infinity;
+let chestPearlAt = -Infinity;
 
 export function openChest(pos) {
   const now = performance.now() / 1000;
@@ -475,6 +569,7 @@ export function openChest(pos) {
   sfx('treasure');
   state.stats.treasures = (state.stats.treasures || 0) + 1;
   toast(fact.text, '🪙', 7000, lang === 'bn' ? 'bn' : '');
+  if (now - chestPearlAt > 120 && earnPearls(1, { quiet: true })) chestPearlAt = now;
   save();
   return true;
 }
@@ -527,7 +622,7 @@ export function resetAquarium() {
   state.fish = starterFish(state.memorial);
   state.selectedId = null;
   state.panel = null;
-  state.stats = { ...freshStats(), stickers: state.stats.stickers };
+  state.stats = { ...freshStats(), stickers: state.stats.stickers, pearls: state.stats.pearls, decor: state.stats.decor };
   emit();
   save();
   toast('A fresh new aquarium!', '🌊');
@@ -826,6 +921,7 @@ export function tickStats(dt) {
   tickAsma(dt);
   tickShark(dt);
   tickVisitors(dt);
+  tickClamPearl(dt);
   tickDaylight();
   tickParty();
   if (weakened.length === 1) toast(`${weakened[0]} is very weak from hunger! Please feed soon.`, '🥺', 4500);
