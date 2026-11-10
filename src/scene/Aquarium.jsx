@@ -42,7 +42,11 @@ import Stingray from './Stingray';
 import MorayEel from './MorayEel';
 import NightLife from './NightLife';
 import HiddenFriends from './HiddenFriends';
+import StaticBatch from './StaticBatch';
+import { underwaterStrength } from './underwater';
 
+const PIXEL_RATIO = window.devicePixelRatio || 1;
+const MAX_DPR = Math.min(1.5, PIXEL_RATIO);
 const FOV = 45;
 const BASE_Z = 11;
 
@@ -97,26 +101,34 @@ export default function Aquarium() {
   const calm = useStore((s) => s.settings.calmMode);
   const party = useStore((s) => s.party);
   const night = useStore((s) => s.daylight === 'night');
-  const [dpr, setDpr] = useState(() => Math.min(1.5, window.devicePixelRatio || 1));
+  const [dpr, setDpr] = useState(MAX_DPR);
   const [slow, setSlow] = useState(false);
   // Fewer seagrass blades, pebbles and school fish on phones, in calm mode and on slow devices.
   const detail = calm || slow || Math.min(window.innerWidth, window.innerHeight) < 600 ? 'low' : 'high';
+
+  underwaterStrength.value = calm ? 0 : detail === 'low' ? 0.6 : 1;
 
   return (
     <Canvas
       className="aquarium-canvas"
       dpr={dpr}
       camera={{ position: [0, 0.4, BASE_Z], fov: FOV, near: 0.1, far: 60 }}
-      gl={{ antialias: true, alpha: true, powerPreference: 'default' }}
+      gl={{ antialias: PIXEL_RATIO < 2, alpha: true, powerPreference: 'high-performance' }}
       onPointerMissed={() => selectFish(null)}
+      onCreated={(s) => {
+        if (import.meta.env.DEV) window.__ocean = s; // for measuring in the browser console
+      }}
     >
-      {/* Drop resolution on slow devices, restore it when frames are smooth again. */}
+      {/* Drop resolution one step at a time on slow devices and climb back slowly. After a few
+          changes it settles on the lower setting, so the picture never keeps jumping. */}
       <PerformanceMonitor
+        flipflops={3}
         onDecline={() => {
-          setDpr(1);
+          setDpr((d) => Math.max(1, d - 0.25));
           setSlow(true);
         }}
-        onIncline={() => setDpr(Math.min(1.5, window.devicePixelRatio || 1))}
+        onIncline={() => setDpr((d) => Math.min(MAX_DPR, d + 0.25))}
+        onFallback={() => setDpr(1)}
       />
       <DayNight />
 
@@ -137,7 +149,9 @@ export default function Aquarium() {
       <Cuttlefish calm={calm} />
       {night && <NightLife />}
       <HiddenFriends />
-      <Coral calm={calm} />
+      <StaticBatch>
+        <Coral calm={calm} />
+      </StaticBatch>
       <TreasureChest />
       <Starfish />
       <Crab />

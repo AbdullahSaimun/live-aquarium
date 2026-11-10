@@ -12,6 +12,7 @@ const v3 = new THREE.Vector3();
 function fanMaterial() {
   const mat = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.6, side: THREE.DoubleSide });
   mat.onBeforeCompile = (shader) => {
+    THREE.Material.prototype.onBeforeCompile.call(mat, shader); // shared underwater light
     shader.uniforms.uReefTime = reefTime;
     shader.vertexShader = shader.vertexShader
       .replace('#include <common>', '#include <common>\nvarying vec2 vFan;')

@@ -33,6 +33,7 @@ function shellHalf() {
 function mantleMaterial() {
   const mat = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.35, emissive: '#ffffff', emissiveIntensity: 0.15 });
   mat.onBeforeCompile = (shader) => {
+    THREE.Material.prototype.onBeforeCompile.call(mat, shader); // shared underwater light
     shader.vertexShader = shader.vertexShader
       .replace('#include <common>', '#include <common>\nvarying vec3 vMantleP;')
       .replace('#include <begin_vertex>', '#include <begin_vertex>\nvMantleP = position;');

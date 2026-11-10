@@ -27,6 +27,7 @@ export function createRuntime(fish) {
     yaw: angle,
     pitch: 0,
     tailPhase: Math.random() * 10,
+    bank: 0, // lean into turns
     wiggle: 0,
     squint: 0,
     happyTimer: 0,
@@ -294,7 +295,10 @@ export function updateFish(fish, rt, dt, mates) {
     let dy = targetYaw - rt.yaw;
     dy = Math.atan2(Math.sin(dy), Math.cos(dy));
     rt.yaw += dy * (1 - Math.exp(-dt * 5));
-  }
+    // Lean into the turn like a real fish, more when swimming fast.
+    const lean = THREE.MathUtils.clamp(-dy * 0.55 * Math.min(1, flatSpeed), -0.5, 0.5);
+    rt.bank += (lean - rt.bank) * (1 - Math.exp(-dt * 3));
+  } else rt.bank *= Math.exp(-dt * 3);
   const targetPitch = THREE.MathUtils.clamp(-Math.atan2(rt.vel.y, flatSpeed + 0.2), -0.6, 0.6);
   rt.pitch += (targetPitch - rt.pitch) * (1 - Math.exp(-dt * 4));
 

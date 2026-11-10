@@ -28,6 +28,7 @@ const sandFragment = /* glsl */ `
   uniform float uLight;
   uniform float uDusk;
   uniform vec3 uRocks[ROCK_COUNT];
+  uniform vec3 uShadows[SHADOW_COUNT];
   varying float vShade;
   varying vec3 vNormalW;
   varying vec2 vXZ;
@@ -63,6 +64,13 @@ const sandFragment = /* glsl */ `
       ao *= mix(0.62, 1.0, smoothstep(0.75, 1.7, d));
     }
     base *= ao;
+    // Soft shadows under the animals: darker and tighter the closer they swim to the sand.
+    float shade = 1.0;
+    for (int i = 0; i < SHADOW_COUNT; i++) {
+      float d = length(vXZ - uShadows[i].xy);
+      shade *= 1.0 - 0.34 * uShadows[i].z * (1.0 - smoothstep(0.12, 0.95 - 0.5 * uShadows[i].z, d));
+    }
+    base *= shade;
     float light = 0.62 + 0.38 * max(dot(vNormalW, normalize(vec3(0.3, 1.0, 0.4))), 0.0);
     float c = caustic(vXZ * 0.9, uTime) * 0.6 + caustic(vXZ * 1.6 + 3.0, uTime * 1.3) * 0.35;
     // Moonlit blue at night, a warm glow at sunset; ripples of light fade in the dark.
@@ -113,6 +121,8 @@ function buildSand() {
   return geo;
 }
 
+const SHADOWS = 12; // most animals that can cast a soft shadow on the sand at once
+
 const RAYS = [
   [-6, -4.5, 0.25, 2.2],
   [-2.5, -5.5, 0.12, 1.6],
@@ -136,9 +146,10 @@ export default function Seabed() {
           uSandB: { value: new THREE.Color('#f6e2bf') },
           uLight: { value: 1 },
           uDusk: { value: 0 },
+          uShadows: { value: Array.from({ length: SHADOWS }, () => new THREE.Vector3()) },
           uRocks: { value: ROCKS.map(([x, z, s]) => new THREE.Vector3(x, z, s * 1.15)) },
         },
-        defines: { ROCK_COUNT: ROCKS.length },
+        defines: { ROCK_COUNT: ROCKS.length, SHADOW_COUNT: SHADOWS },
       }),
     [],
   );
@@ -177,6 +188,16 @@ export default function Seabed() {
     sandMat.uniforms.uTime.value = world.time;
     sandMat.uniforms.uLight.value = world.light;
     sandMat.uniforms.uDusk.value = world.dusk;
+    // Shadows: every pet fish, then the crab and the octopus. x, z and how close to the sand (0..1).
+    const shadows = sandMat.uniforms.uShadows.value;
+    let n = 0;
+    for (const rt of world.runtime.values()) {
+      if (n >= SHADOWS - 2) break;
+      shadows[n++].set(rt.pos.x, rt.pos.z, THREE.MathUtils.clamp(1 - (rt.pos.y - world.floorY) / 3.2, 0, 1) * world.light);
+    }
+    shadows[n++].set(world.crabPos.x, world.crabPos.z, world.light);
+    shadows[n++].set(world.octopusPos.x, world.octopusPos.z, world.light);
+    for (; n < SHADOWS; n++) shadows[n].z = 0;
     rayMats.forEach((m) => {
       m.uniforms.uTime.value = world.time;
       m.uniforms.uLight.value = world.light;

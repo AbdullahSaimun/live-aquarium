@@ -95,6 +95,7 @@ export const reefLight = { value: 1 };
  */
 export function addSway(material, { amp = 0.12, speed = 1, height = 1 } = {}) {
   material.onBeforeCompile = (shader) => {
+    THREE.Material.prototype.onBeforeCompile.call(material, shader); // shared underwater light
     shader.uniforms.uReefTime = reefTime;
     shader.vertexShader = shader.vertexShader
       .replace('#include <common>', '#include <common>\nuniform float uReefTime;')

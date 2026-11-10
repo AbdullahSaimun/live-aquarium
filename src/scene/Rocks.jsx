@@ -32,6 +32,7 @@ function makeRock(seed) {
 export function makeRockMaterial() {
   const mat = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.95 });
   mat.onBeforeCompile = (shader) => {
+    THREE.Material.prototype.onBeforeCompile.call(mat, shader); // shared underwater light
     shader.vertexShader = shader.vertexShader
       .replace('#include <common>', '#include <common>\nvarying vec3 vRockN;\nvarying vec3 vRockP;')
       .replace(

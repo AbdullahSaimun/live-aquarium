@@ -139,6 +139,13 @@ export default function FishSchool({ detail = 'high', calm }) {
 
       tmpObj.position.copy(f.pos);
       tmpObj.quaternion.setFromUnitVectors(fwd, v.copy(f.vel).normalize());
+      // Lean into turns: the heading change since last frame, eased.
+      const heading = Math.atan2(f.vel.x, f.vel.z);
+      let turn = heading - (f.heading ?? heading);
+      turn = Math.atan2(Math.sin(turn), Math.cos(turn));
+      f.heading = heading;
+      f.bank = (f.bank || 0) + (THREE.MathUtils.clamp(-turn / Math.max(dt, 0.001) * 0.25, -0.6, 0.6) - (f.bank || 0)) * Math.min(1, dt * 4);
+      tmpObj.rotateX(f.bank);
       tmpObj.rotateY(Math.sin(t * 12 + f.wobble) * 0.18); // a quick tail-beat wiggle
       tmpObj.scale.setScalar(1);
       tmpObj.updateMatrix();

@@ -59,14 +59,16 @@ export default function Fish({ fish }) {
     }
     // A fainted fish rolls belly-up, wobbling a little, until it comes round.
     roll += rt.faint * (Math.PI * 0.85 + Math.sin(t * 2 + rt.tailPhase) * 0.15);
-    g.rotation.set(rt.pitch, rt.yaw, roll + Math.sin(t * 13 + rt.tailPhase) * 0.22 * rt.wiggle, 'YXZ');
+    g.rotation.set(rt.pitch, rt.yaw, roll + rt.bank + Math.sin(t * 13 + rt.tailPhase) * 0.22 * rt.wiggle, 'YXZ');
     g.position.y = Math.abs(Math.sin(t * 7)) * 0.15 * rt.wiggle * (rt.happyTimer > 0 ? 1 : 0.3);
 
     const p = parts.current;
     if (p) {
       const sway = Math.sin(rt.tailPhase);
-      p.tail.current.rotation.y = sway * (0.4 + rt.wiggle * 0.25);
-      p.body.current.rotation.y = -sway * 0.06;
+      // The faster it swims, the wider the tail sweeps; the body bends the other way in an S.
+      const drive = Math.min(1, rt.vel.length() / 1.2);
+      p.tail.current.rotation.y = sway * (0.26 + drive * 0.26 + rt.wiggle * 0.25);
+      p.body.current.rotation.y = -sway * (0.04 + drive * 0.07);
       const flap = Math.sin(rt.tailPhase * 1.3) * 0.35;
       p.finL.current.rotation.set(0, 0.5 + flap * 0.5, flap);
       p.finR.current.rotation.set(0, -0.5 - flap * 0.5, -flap);

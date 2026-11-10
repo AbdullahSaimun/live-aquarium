@@ -15,6 +15,7 @@ const SHOW_TIME = 3;
 function skinMaterial(uShow) {
   const mat = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.45, side: THREE.DoubleSide });
   mat.onBeforeCompile = (shader) => {
+    THREE.Material.prototype.onBeforeCompile.call(mat, shader); // shared underwater light
     shader.uniforms.uReefTime = reefTime;
     shader.uniforms.uShow = uShow;
     shader.vertexShader = shader.vertexShader

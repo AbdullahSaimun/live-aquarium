@@ -262,3 +262,11 @@ src/
 ## License
 
 No license has been chosen yet. Add one before publishing if others should reuse the code.
+
+## Water, light and smoothness
+
+- `src/scene/underwater.js` adds the moving light ripples and the "red fades with distance" water colour to every lit material, through one shared shader hook. A material with its own `onBeforeCompile` calls `THREE.Material.prototype.onBeforeCompile.call(material, shader)` first.
+- The sand shader (`Seabed.jsx`) draws a soft shadow under each pet fish, the crab and the octopus.
+- Fish lean into turns and their tail sweep follows their speed (`fishBrain.js`, `Fish.jsx`, `FishSchool.jsx`).
+- `StaticBatch.jsx` merges meshes that never move into one mesh per material (used for the corals).
+- In dev mode, `window.__ocean.gl.info.render` shows draw calls and triangles.
