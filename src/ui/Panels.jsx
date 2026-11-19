@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useStore, openPanel, setSetting, resetAquarium, dismissHint, adoptFish, summonShark, callVisitor, toast } from '../state/store';
+import { useStore, openPanel, setSetting, resetAquarium, dismissHint, adoptFish, summonShark, callVisitor, callSubmarine, toast } from '../state/store';
 import { TANK_TIMES, PHASE_ICON } from '../state/daylight';
 import { SPECIES } from '../data/species';
 import { allFacts, UI_TEXT } from '../data/factsBn';
@@ -185,6 +185,11 @@ export function SettingsPanel() {
         {settings.visitors && (
           <button className="btn-small btn-soft" onClick={() => (callVisitor() ? openPanel(null) : toast('Someone is already swimming by. Wait a moment!', '🐋'))}>
             🐋 Call a visitor
+          </button>
+        )}
+        {settings.visitors && (
+          <button className="btn-small btn-soft" onClick={() => (callSubmarine() ? openPanel(null) : toast('The submarine is already here, or the shark is about. Try again soon!', '🚢'))}>
+            🚢 Call the submarine
           </button>
         )}
       </div>

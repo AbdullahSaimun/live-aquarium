@@ -404,6 +404,21 @@ export function updateFish(fish, rt, dt, mates) {
     }
   }
 
+  // Make way for the submarine.
+  if (world.sub.phase !== 'idle') {
+    const dx = rt.pos.x - world.sub.pos.x;
+    const dy = rt.pos.y - world.sub.pos.y;
+    const dz = rt.pos.z - world.sub.pos.z;
+    const d = Math.sqrt(dx * dx + dy * dy + dz * dz);
+    const room = 1.3 + rt.radius;
+    if (d < room && d > 1e-3) {
+      const k = ((room - d) / room) * 3 / d;
+      desired.x += dx * k;
+      desired.y += dy * k;
+      desired.z += dz * k;
+    }
+  }
+
   // Gentle vertical bob makes paths feel organic.
   desired.y += Math.sin(world.time * 0.9 + rt.tailPhase * 0.3) * 0.12;
 

@@ -3788,3 +3788,79 @@ button:focus-visible,
   font-weight: 500;
   opacity: 0.8;
 }
+
+/* Submarine controls: joystick bottom right, buttons above it. */
+.sub-controls {
+  position: absolute;
+  right: calc(16px + env(safe-area-inset-right));
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  z-index: 25;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  animation: sub-in 0.35s ease-out;
+}
+@keyframes sub-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+}
+.sub-buttons {
+  display: flex;
+  gap: 6px;
+}
+.sub-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.28);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  font-size: 20px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 40, 80, 0.18);
+}
+.sub-btn.is-on {
+  background: rgba(255, 236, 150, 0.6);
+}
+.sub-btn:active {
+  transform: scale(0.92);
+}
+.sub-timer {
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(255, 201, 60, 0.85);
+  color: #4a2a00;
+  font-weight: 700;
+  font-size: 13px;
+}
+.sub-stick {
+  position: relative;
+  width: 124px;
+  height: 124px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.32));
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  touch-action: none;
+  user-select: none;
+  cursor: grab;
+  box-shadow: 0 6px 18px rgba(0, 40, 80, 0.22);
+}
+.sub-knob {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ffe28a, #ffb627 70%);
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 4px 10px rgba(120, 70, 0, 0.35);
+  pointer-events: none;
+  transition: transform 0.05s linear;
+}

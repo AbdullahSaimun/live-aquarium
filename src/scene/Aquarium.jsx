@@ -44,6 +44,7 @@ import NightLife from './NightLife';
 import HiddenFriends from './HiddenFriends';
 import StaticBatch from './StaticBatch';
 import WildFish from './WildFish';
+import Submarine from './Submarine';
 import { underwaterStrength } from './underwater';
 
 const PIXEL_RATIO = window.devicePixelRatio || 1;
@@ -164,6 +165,7 @@ export default function Aquarium() {
       <Jellyfish calm={calm} />
       <FishSchool detail={detail} calm={calm} />
       <WildFish detail={detail} />
+      <Submarine />
       <Visitors />
       {party && <Balloons />}
       <Plants calm={calm} />

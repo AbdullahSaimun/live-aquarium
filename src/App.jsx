@@ -7,6 +7,7 @@ import FishCard from './ui/FishCard';
 import CreatureCard from './ui/CreatureCard';
 import StickerBook from './ui/StickerBook';
 import DecorPanel from './ui/DecorPanel';
+import SubControls from './ui/SubControls';
 import AnniversaryButton from './ui/Anniversary';
 import BirthdayButton, { HusbandCountdown } from './ui/Birthday';
 import { FactPanel, SettingsPanel, MemoriesPanel, EmptyTank, WelcomeHint, Toasts } from './ui/Panels';
@@ -73,6 +74,7 @@ export default function App() {
       <Aquarium />
       <FishLabels />
       <HUD />
+      <SubControls />
       <AsmaCard />
       <AnniversaryButton />
       <BirthdayButton />

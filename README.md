@@ -288,3 +288,12 @@ No license has been chosen yet. Add one before publishing if others should reuse
   - their number follows the visible width, about 43 at 1600×900 and fewer on phones;
   - each has a card and a sticker in the "Reef fish" section.
 - **Shared current** (`sim/life.js`): one slowly turning current leans every swaying plant and drifts sea snow and bubbles. `createGlance`/`glance` give the turtle, crab, octopus and seahorse natural looks around.
+
+## The little submarine
+
+- A yellow submarine (`scene/Submarine.jsx`, `sim/submarine.js`) cruises through now and then when "Big sea visitors" is on. Settings → "🚢 Call the submarine" brings it at once.
+- Tap it to become the captain for 90 seconds:
+  - drive with the on-screen joystick (`ui/SubControls.jsx`) or with the arrow keys or WASD;
+  - buttons switch the headlight, sound the horn, open its card, or send it home.
+- Fish make room for it; wild fish dart away when it speeds past, and the horn startles nearby fish.
+- The first drive earns the "Little submarine" sticker in the Ocean visitors section.

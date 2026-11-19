@@ -233,6 +233,15 @@ export function updateWild(f, i, list, def, group, xMax, dt) {
     if (d < r && d > 1e-4) desired.addScaledVector(push, ((r - d) / r) * 3 / d);
   }
 
+  if (world.sub.phase !== 'idle') {
+    push.subVectors(f.pos, world.sub.pos);
+    const d = push.length();
+    if (d < 1.2 && d > 1e-4) {
+      if (world.sub.speed > 0.7 && f.dart <= 0) startleWild(f, world.sub.pos); // shoo!
+      else desired.addScaledVector(push, ((1.2 - d) / 1.2) * 3 / d);
+    }
+  }
+
   const turn = f.dart > 0 ? 6 : def.style === 'shoal' ? 2.4 : 1.8;
   f.vel.lerp(desired, 1 - Math.exp(-dt * turn));
   f.pos.addScaledVector(f.vel, dt);

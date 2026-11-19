@@ -81,6 +81,11 @@ const SOUNDS = {
     for (let i = 0; i < 5; i++) tone(ac, { from: 300 - i * 30, to: 90, start: i * 0.04, dur: 0.18, vol: 0.05 });
   },
   // A distant whale song: two slow, low sweeps.
+  // A friendly two-note submarine toot.
+  horn: (ac) => {
+    tone(ac, { type: 'triangle', from: 220, to: 210, dur: 0.32, vol: 0.09 });
+    tone(ac, { type: 'triangle', from: 294, to: 280, start: 0.34, dur: 0.45, vol: 0.09 });
+  },
   whale: (ac) => {
     tone(ac, { type: 'sine', from: 160, to: 340, dur: 1.4, vol: 0.06 });
     tone(ac, { type: 'sine', from: 330, to: 180, start: 1.3, dur: 1.6, vol: 0.05 });

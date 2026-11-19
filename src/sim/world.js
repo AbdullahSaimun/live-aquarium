@@ -10,6 +10,18 @@ export const world = {
   viewInset: 0,
   observe: false, // Observe mode: fish just live, nobody begs for food
   current: new THREE.Vector3(0.12, 0, 0), // the slow water current everything drifts in
+  // The visiting submarine (sim/submarine.js). phase: idle | cruising | driving | leaving
+  sub: {
+    phase: 'idle',
+    pos: new THREE.Vector3(0, -40, 0),
+    vel: new THREE.Vector3(),
+    input: { x: 0, y: 0 },
+    dir: 1,
+    face: 0,
+    drive: 0,
+    speed: 0,
+    light: true,
+  },
   startle: { pos: new THREE.Vector3(), time: -Infinity }, // a tap in the water (Observe mode)
   clamPearl: false, // a pearl is shining inside the giant clam
   morayClean: 0, // world.time until which a cleaner shrimp is cleaning the moray

@@ -9,6 +9,7 @@ import { startShark, sendSharkAway, SHARK_HITS } from '../sim/sharkBrain';
 import { CREATURES, CREATURE_IDS } from '../data/creatures';
 import { creatureInfo } from '../data/factsBn';
 import { startVisitor, visitorActive, RARE_KINDS } from '../sim/visitors';
+import { startSub, driveSub, sendSubHome, subActive } from '../sim/submarine';
 import { phaseFor, PHASE_LIGHT } from './daylight';
 import { birthdayStatus, BIRTHDAY_LINES, bnNumber } from '../data/birthday';
 import { DECOR, decorText } from '../data/decor';
@@ -138,6 +139,8 @@ function initialState() {
     creatureId: null,
     newcomers: [],
     hintDismissed: false,
+    subDriving: false,
+    subLight: true,
     version: 0,
   };
   if (!save) return { ...base, fish: starterFish() };
@@ -875,6 +878,10 @@ export function summonShark() {
     toast('The shark is too scared of Asma to come in!', '👧');
     return;
   }
+  if (subActive()) {
+    toast('The shark is shy of the submarine. Try again when it has gone!', '🚢');
+    return;
+  }
   startShark();
   state.shark = { visible: true, hitsLeft: SHARK_HITS };
   state.panel = null;
@@ -941,7 +948,7 @@ export function sharkEvent(event) {
 
 function tickShark(dt) {
   if (!state.settings.sharkVisits || state.settings.observeMode || !state.hintDismissed || !state.fish.length) return;
-  if (world.shark.phase !== 'idle' || state.asma.phase !== 'idle' || visitorActive()) return;
+  if (world.shark.phase !== 'idle' || state.asma.phase !== 'idle' || visitorActive() || subActive()) return;
   if (state.daylight === 'night') return; // nights stay calm
   nextSharkIn -= dt;
   if (nextSharkIn <= 0) summonShark();
@@ -985,6 +992,72 @@ export function callVisitor(kind) {
   if (RARE_KINDS.includes(started)) announceRare(started);
   nextVisitorIn = 180 + Math.random() * 120;
   return true;
+}
+
+// ---------- the visiting submarine ----------
+// Now and then a little submarine cruises through. Tap it to drive it with the joystick.
+let nextSubIn = 240 + Math.random() * 240;
+
+export function callSubmarine() {
+  if (subActive() || world.shark.phase !== 'idle') return false;
+  startSub(world.bounds.maxX + 1.5);
+  state.subLight = true;
+  nextSubIn = 420 + Math.random() * 300;
+  const bn = state.settings.factLang === 'bn';
+  toast(bn ? 'একটা ছোট্ট সাবমেরিন আসছে! ট্যাপ করে চালাও 🚢' : 'A little submarine is coming! Tap it to drive it 🚢', '🚢', 4500, bn ? 'bn' : '');
+  sfx('horn');
+  emit();
+  return true;
+}
+
+export function tapSubmarine() {
+  const s = world.sub;
+  if (s.phase === 'driving') {
+    subHorn();
+    return;
+  }
+  if (!driveSub()) return;
+  state.subDriving = true;
+  state.selectedId = null;
+  state.creatureId = null;
+  state.panel = null;
+  collectSticker('submarine');
+  const bn = state.settings.factLang === 'bn';
+  toast(bn ? 'তুমি এখন ক্যাপ্টেন! জয়স্টিক দিয়ে চালাও 🕹️' : "You're the captain! Drive with the joystick 🕹️", '🚢', 4000, bn ? 'bn' : '');
+  sfx('horn');
+  emit();
+}
+
+export function sendSubmarineHome() {
+  sendSubHome();
+  state.subDriving = false;
+  emit();
+}
+
+export function toggleSubLight() {
+  world.sub.light = !world.sub.light;
+  state.subLight = world.sub.light;
+  sfx('light');
+  emit();
+}
+
+export function subHorn() {
+  sfx('horn');
+  queueEffect('bubbles', world.sub.pos, 6);
+  // Fish close by are startled by the toot.
+  world.startle.pos.copy(world.sub.pos);
+  world.startle.time = world.time;
+}
+
+function tickSubmarine(dt) {
+  if (state.subDriving && world.sub.phase !== 'driving') {
+    state.subDriving = false; // time was up and it sailed home
+    toast('The submarine went home. Bye bye! 👋', '🚢', 3000);
+  }
+  if (!state.settings.visitors || !state.hintDismissed) return;
+  if (subActive() || world.shark.phase !== 'idle' || state.asma.phase !== 'idle') return;
+  nextSubIn -= dt;
+  if (nextSubIn <= 0) callSubmarine();
 }
 
 function tickVisitors(dt) {
@@ -1045,6 +1118,7 @@ export function tickStats(dt) {
   tickAsma(dt);
   tickShark(dt);
   tickVisitors(dt);
+  tickSubmarine(dt);
   tickClamPearl(dt);
   tickHideAndSeek(dt);
   tickPartners();
