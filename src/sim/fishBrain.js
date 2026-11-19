@@ -28,6 +28,23 @@ export function createRuntime(fish) {
     pitch: 0,
     tailPhase: Math.random() * 10,
     bank: 0, // lean into turns
+    turnRate: 0, // eased yaw speed: the head leads into a turn
+    tempo: rand(0.85, 1.18), // every fish has its own rhythm
+    breathRate: rand(1.4, 2.2),
+    stroke: rand(0, 1), // seconds left in this burst or glide
+    bursting: true,
+    thrust: 0.6, // eased 0..1: strong tail beats in a burst, almost still in a glide
+    hover: 0, // seconds left hanging in place, sculling the fins
+    startle: 0, // seconds left darting away from a tap
+    startleDir: new THREE.Vector3(),
+    lastStartle: -Infinity,
+    look: new THREE.Vector3(), // what the fish is glancing at
+    lookTime: 0,
+    nextLook: rand(3, 9),
+    glance: 0,
+    buddy: null, // another fish to swim beside for a while
+    buddyTime: 0,
+    nextBuddy: rand(15, 40),
     wiggle: 0,
     squint: 0,
     happyTimer: 0,
@@ -58,19 +75,59 @@ function pickWanderTarget(rt, fish, mood) {
     // Come up to the "glass" and beg, near where the fish already is.
     const y = mood === 'weak' ? rand(-1.8, -0.8) : rand(-0.6, 1.2);
     t.set(THREE.MathUtils.clamp(rt.pos.x + rand(-1.5, 1.5), b.minX, b.maxX), y, b.maxZ);
+  } else if (mood === 'curious' && world.observe) {
+    // Just watching: go and inspect something on the reef instead of the glass.
+    inspectSomething(rt, b);
   } else if (mood === 'curious') {
     t.set(rand(-2, 2) * Math.min(1, b.maxX / 4), rand(-0.3, 1), b.maxZ);
   } else if (fish.species === 'clownfish' && Math.random() < 0.35 && visitAnemone(rt, b)) {
     // Clownfish snuggle into their anemone home now and then.
+  } else if (Math.random() < 0.28 && rt.hover <= 0) {
+    // Real fish often just hang in the water for a moment, fins sculling.
+    rt.hover = rand(2.5, 6) / rt.tempo;
+    t.copy(rt.pos);
   } else {
+    // Explore onwards from here, roughly the way it is facing, inside its favourite layer.
+    const zone = ZONES[fish.species] || ZONES.default;
     const shy = fish.personality === 'shy';
+    const heading = rt.yaw + rand(-1.1, 1.1) + (Math.random() < 0.2 ? Math.PI : 0);
+    const reach = rand(1.6, 4.2);
+    const lowY = THREE.MathUtils.lerp(b.minY, b.maxY, zone[0]);
+    const highY = THREE.MathUtils.lerp(b.minY, b.maxY, zone[1]);
     t.set(
-      rand(b.minX, b.maxX),
-      rand(b.minY + 0.3, b.maxY),
-      shy ? rand(b.minZ, (b.minZ + b.maxZ) / 2) : rand(b.minZ, b.maxZ - 0.5),
+      THREE.MathUtils.clamp(rt.pos.x + Math.sin(heading) * reach, b.minX + 0.3, b.maxX - 0.3),
+      THREE.MathUtils.clamp(rt.pos.y + rand(-0.9, 0.9), lowY, highY),
+      THREE.MathUtils.clamp(rt.pos.z + Math.cos(heading) * reach * 0.6, b.minZ, shy ? (b.minZ + b.maxZ) / 2 : b.maxZ - 0.5),
     );
   }
-  rt.retarget = rand(4, 9);
+  rt.retarget = rand(4, 9) / rt.tempo;
+}
+
+// Where in the water (0 = floor, 1 = top) each species likes to be, and how stately it swims.
+const ZONES = {
+  default: [0.15, 0.9],
+  clownfish: [0.05, 0.55],
+  blueTang: [0.3, 0.95],
+  yellowTang: [0.25, 0.85],
+  angelfish: [0.3, 0.85],
+  batfish: [0.35, 0.95],
+  betta: [0.55, 1.0],
+  pufferfish: [0.0, 0.45],
+};
+const PACE = { angelfish: 0.8, batfish: 0.78, betta: 0.85, pufferfish: 0.8 };
+
+// Something interesting on the reef: a neighbour animal or another fish.
+function inspectSomething(rt, b) {
+  const spots = [world.crabPos, world.octopusPos];
+  for (const other of world.runtime.values()) if (other !== rt) spots.push(other.pos);
+  const p = spots[Math.floor(Math.random() * spots.length)];
+  if (!p || p.y < -20) {
+    rt.target.set(rand(b.minX, b.maxX), rand(b.minY + 0.3, b.maxY), rand(b.minZ, b.maxZ - 0.5));
+    return;
+  }
+  rt.target.set(p.x + rand(-0.6, 0.6), Math.max(p.y + 0.5, b.minY + 0.2), p.z + rand(0.3, 0.8));
+  rt.look.copy(p);
+  rt.lookTime = 3;
 }
 
 // The anemones in Coral.jsx; clownfish only visit one that is on screen.
@@ -164,14 +221,14 @@ export function updateFish(fish, rt, dt, mates) {
   const seeking = wantsFood && food && rt.sleeping <= 0 && !panicking ? food.pellet : null;
   rt.seeking = seeking;
   // After she leaves, fish take turns asking for her at the glass.
-  const missing = asma.missing && Math.sin(world.time * 0.35 + rt.orbit.seed) > 0.3;
+  const missing = !world.observe && asma.missing && Math.sin(world.time * 0.35 + rt.orbit.seed) > 0.3;
 
   let mood = 'happy';
   if (rt.sleeping > 0) mood = 'sleepy';
-  else if (fish.health < 0.5 && !seeking) mood = 'weak';
+  else if (fish.health < 0.5 && !seeking && !world.observe) mood = 'weak';
   else if (seeking) mood = 'hungry';
   else if (withAsma) mood = 'playing';
-  else if (fish.hunger > 0.65) mood = 'hungry';
+  else if (fish.hunger > 0.65 && !world.observe) mood = 'hungry';
   else if (missing) mood = 'missing';
   else if (rt.curious > 0) mood = 'curious';
   if (rt.happyTimer > 0) mood = 'happy';
@@ -192,6 +249,57 @@ export function updateFish(fish, rt, dt, mates) {
     rt.fullNotice = 7;
     rt.emoteOverride = { type: 'full', time: 2.5 };
   }
+
+  // A tap in the water close by: a quick C-shaped flinch away, then calm again.
+  const st = world.startle;
+  if (st.time > rt.lastStartle && world.time - st.time < 0.2) {
+    rt.lastStartle = st.time;
+    const d = rt.pos.distanceTo(st.pos);
+    if (d < 3.2 && !panicking) {
+      rt.startle = rand(0.45, 0.7);
+      rt.startleDir.subVectors(rt.pos, st.pos).setY(0.2).normalize();
+      rt.hover = 0;
+      rt.sleeping = 0;
+      rt.retarget = rt.startle + rand(0.3, 1);
+    }
+  }
+  rt.startle = Math.max(0, rt.startle - dt);
+
+  // Glances: now and then the head turns towards something nearby.
+  rt.lookTime = Math.max(0, rt.lookTime - dt);
+  rt.nextLook -= dt;
+  if (rt.nextLook <= 0) {
+    rt.nextLook = rand(4, 11);
+    let best = null;
+    let bestD = 4;
+    for (const other of mates) {
+      if (other === rt) continue;
+      const d = other.pos.distanceTo(rt.pos);
+      if (d < bestD) {
+        best = other.pos;
+        bestD = d;
+      }
+    }
+    if (food && food.dist < 6) best = food.pellet.pos;
+    if (best) {
+      rt.look.copy(best);
+      rt.lookTime = rand(1.2, 2.6);
+    }
+  }
+
+  // Friends: two fish sometimes swim side by side for a while.
+  rt.buddyTime = Math.max(0, rt.buddyTime - dt);
+  if (rt.buddyTime <= 0) rt.buddy = null;
+  rt.nextBuddy -= dt;
+  if (rt.nextBuddy <= 0) {
+    rt.nextBuddy = rand(25, 60);
+    const others = [...world.runtime.values()].filter((o) => o !== rt && o.buddy !== rt);
+    if (others.length) {
+      rt.buddy = others[Math.floor(Math.random() * others.length)];
+      rt.buddyTime = rand(8, 16);
+    }
+  }
+  rt.hover = Math.max(0, rt.hover - dt);
 
   // --- choose where to go ---
   rt.retarget -= dt;
@@ -219,12 +327,27 @@ export function updateFish(fish, rt, dt, mates) {
     // Invited to the cleaning station: hover still above the shrimp with fins spread.
     rt.target.copy(world.cleaning.pos);
     rt.retarget = 1;
+  } else if (!seeking && mood === 'happy' && rt.buddy && rt.hover <= 0 && !(rt.linger > 0)) {
+    // Swim beside the friend, a little to one side.
+    rt.target.set(rt.buddy.pos.x + rt.orbit.dir * 0.9, rt.buddy.pos.y + 0.25, rt.buddy.pos.z + 0.4);
+    rt.retarget = 1;
   } else if (!seeking && (rt.retarget <= 0 || (mood === 'happy' && !(rt.linger > 0) && rt.pos.distanceTo(rt.target) < 0.8))) {
     pickWanderTarget(rt, fish, mood);
   }
   const goal = seeking ? seeking.pos : rt.target;
 
-  let speed = 1.0 * persona.speed;
+  // Burst and glide: a few strong tail strokes, then coasting, like real reef fish.
+  rt.stroke -= dt * rt.tempo;
+  if (rt.stroke <= 0) {
+    rt.bursting = !rt.bursting;
+    rt.stroke = rt.bursting ? rand(0.5, 1.1) : rand(0.6, 1.8);
+  }
+  const relaxed = mood === 'happy' || mood === 'curious';
+  const thrustGoal = !relaxed || seeking ? 0.85 : rt.hover > 0 ? 0.05 : rt.bursting ? 1 : 0.12;
+  rt.thrust += (thrustGoal - rt.thrust) * (1 - Math.exp(-dt * (thrustGoal > rt.thrust ? 6 : 2)));
+
+  let speed = 1.0 * persona.speed * rt.tempo * (PACE[fish.species] || 1);
+  if (relaxed && !seeking) speed *= 0.5 + 0.75 * rt.thrust;
   if (mood === 'sleepy') speed = 0.28;
   else if (seeking) speed = 2.1 * Math.min(1.2, persona.speed);
   else if (mood === 'hungry') speed = 1.25;
@@ -235,7 +358,7 @@ export function updateFish(fish, rt, dt, mates) {
 
   desired.subVectors(goal, rt.pos);
   const distToGoal = desired.length();
-  const atGlass = !seeking && (mood === 'hungry' || mood === 'curious' || mood === 'weak' || mood === 'missing') && distToGoal < 1;
+  const atGlass = !seeking && !world.observe && (mood === 'hungry' || mood === 'curious' || mood === 'weak' || mood === 'missing') && distToGoal < 1;
   if (mood === 'fainted') {
     // Dazed: drift slowly down, barely moving.
     desired.set(Math.sin(world.time * 0.8 + rt.tailPhase) * 0.05, -0.3, 0);
@@ -248,6 +371,13 @@ export function updateFish(fish, rt, dt, mates) {
     desired.x += -desired.z * 0.7 * side;
     desired.z += desired.x * 0.7 * side - 0.2;
     desired.normalize().multiplyScalar(2.9 * Math.min(1.15, persona.speed) * (0.6 + 0.4 * fish.health));
+  } else if (rt.startle > 0) {
+    // Flinch: a fast dart away from the splash.
+    desired.copy(rt.startleDir).multiplyScalar(3.4);
+  } else if (rt.hover > 0 && !seeking && relaxed) {
+    // Hang in the water: drift with the current, a tiny bob.
+    desired.copy(world.current).multiplyScalar(0.6);
+    desired.y += Math.sin(world.time * 0.6 + rt.tailPhase) * 0.04;
   } else if (atGlass) {
     // Hover facing the viewer.
     desired.set(Math.sin(world.time * 0.7 + rt.tailPhase) * 0.15, 0, 0.25);
@@ -277,7 +407,7 @@ export function updateFish(fish, rt, dt, mates) {
   // Gentle vertical bob makes paths feel organic.
   desired.y += Math.sin(world.time * 0.9 + rt.tailPhase * 0.3) * 0.12;
 
-  const turn = mood === 'scared' ? 4 : seeking ? 3 : mood === 'sleepy' || mood === 'fainted' ? 0.8 : 1.6;
+  const turn = rt.startle > 0 ? 7 : mood === 'scared' ? 4 : seeking ? 3 : mood === 'sleepy' || mood === 'fainted' ? 0.8 : 1.6;
   rt.vel.lerp(desired, 1 - Math.exp(-dt * turn));
   rt.pos.addScaledVector(rt.vel, dt);
 
@@ -294,16 +424,22 @@ export function updateFish(fish, rt, dt, mates) {
     const targetYaw = Math.atan2(rt.vel.x, rt.vel.z);
     let dy = targetYaw - rt.yaw;
     dy = Math.atan2(Math.sin(dy), Math.cos(dy));
-    rt.yaw += dy * (1 - Math.exp(-dt * 5));
+    const step = dy * (1 - Math.exp(-dt * 5));
+    rt.yaw += step;
+    rt.turnRate += (step / Math.max(dt, 1e-3) - rt.turnRate) * (1 - Math.exp(-dt * 6));
     // Lean into the turn like a real fish, more when swimming fast.
     const lean = THREE.MathUtils.clamp(-dy * 0.55 * Math.min(1, flatSpeed), -0.5, 0.5);
     rt.bank += (lean - rt.bank) * (1 - Math.exp(-dt * 3));
-  } else rt.bank *= Math.exp(-dt * 3);
+  } else {
+    rt.bank *= Math.exp(-dt * 3);
+    rt.turnRate *= Math.exp(-dt * 4);
+  }
   const targetPitch = THREE.MathUtils.clamp(-Math.atan2(rt.vel.y, flatSpeed + 0.2), -0.6, 0.6);
   rt.pitch += (targetPitch - rt.pitch) * (1 - Math.exp(-dt * 4));
 
   const swimSpeed = rt.vel.length();
-  const tailRate = mood === 'sleepy' ? 2 : 4 + swimSpeed * 5;
+  // The tail beats fast in a burst and nearly stops in a glide; a startled fish thrashes.
+  const tailRate = mood === 'sleepy' ? 2 : (2.2 + rt.thrust * 6 + swimSpeed * 2.5 + (rt.startle > 0 ? 8 : 0)) * rt.tempo;
   rt.tailPhase += dt * tailRate;
   const wiggleTarget = (mood === 'hungry' && atGlass) || rt.happyTimer > 0 || mood === 'scared' ? 1 : 0;
   rt.wiggle += (wiggleTarget - rt.wiggle) * (1 - Math.exp(-dt * 4));

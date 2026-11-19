@@ -43,6 +43,7 @@ import MorayEel from './MorayEel';
 import NightLife from './NightLife';
 import HiddenFriends from './HiddenFriends';
 import StaticBatch from './StaticBatch';
+import WildFish from './WildFish';
 import { underwaterStrength } from './underwater';
 
 const PIXEL_RATIO = window.devicePixelRatio || 1;
@@ -162,6 +163,7 @@ export default function Aquarium() {
       <Seahorse calm={calm} />
       <Jellyfish calm={calm} />
       <FishSchool detail={detail} calm={calm} />
+      <WildFish detail={detail} />
       <Visitors />
       {party && <Balloons />}
       <Plants calm={calm} />

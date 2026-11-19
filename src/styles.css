@@ -3754,3 +3754,37 @@ button:focus-visible,
   background: linear-gradient(145deg, #2c3a6e, #46578f);
   color: #fff;
 }
+
+/* Observe mode: a quiet pill to leave it, everything else tucked away. */
+.observe-pill {
+  position: absolute;
+  left: 50%;
+  bottom: calc(14px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  font-size: 14px;
+  text-shadow: 0 1px 2px rgba(0, 40, 80, 0.35);
+  opacity: 0.6;
+  transition: opacity 0.3s;
+  cursor: pointer;
+}
+.observe-pill:hover,
+.observe-pill:focus-visible {
+  opacity: 1;
+}
+.observe-pill small {
+  font-weight: 500;
+  opacity: 0.8;
+}

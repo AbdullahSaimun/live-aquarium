@@ -133,6 +133,18 @@ export function SettingsPanel() {
         onChange={(v) => setSetting('infoCards', v)}
       />
       <Toggle
+        label="Fish talk"
+        desc="Little speech bubbles: hungry, sleepy, missing Asma and more"
+        checked={settings.fishTalk}
+        onChange={(v) => setSetting('fishTalk', v)}
+      />
+      <Toggle
+        label="Observe mode 👀"
+        desc="Just watch: fish swim freely and never ask for food, hunger pauses, buttons and names tuck away. Tap the water to make them flinch"
+        checked={settings.observeMode}
+        onChange={(v) => setSetting('observeMode', v)}
+      />
+      <Toggle
         label="Sounds"
         desc="Bubbly plops and chimes, plus a tiny buzz on phones"
         checked={settings.sound}

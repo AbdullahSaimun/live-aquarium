@@ -49,7 +49,11 @@ export default function SeaSnow() {
       let y = pos.getY(i) - speed[i] * dt;
       if (y < BOTTOM) y = TOP;
       pos.setY(i, y);
-      pos.setX(i, pos.getX(i) + Math.sin(t * 0.3 + i) * 0.03 * dt);
+      // Carried by the current, wrapping round so the water never empties.
+      let x = pos.getX(i) + (Math.sin(t * 0.3 + i) * 0.03 + world.current.x * 0.9) * dt;
+      if (x > 13) x -= 26;
+      else if (x < -13) x += 26;
+      pos.setX(i, x);
     }
     pos.needsUpdate = true;
     const night = 1 - world.light;

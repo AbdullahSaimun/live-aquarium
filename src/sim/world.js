@@ -8,6 +8,9 @@ export const world = {
   bounds: { minX: -6.5, maxX: 6.5, minY: -2.4, maxY: 1.6, minZ: -3, maxZ: 2.6 },
   // Screen pixels covered by the left button rail. CameraRig frames the tank in the space beside it.
   viewInset: 0,
+  observe: false, // Observe mode: fish just live, nobody begs for food
+  current: new THREE.Vector3(0.12, 0, 0), // the slow water current everything drifts in
+  startle: { pos: new THREE.Vector3(), time: -Infinity }, // a tap in the water (Observe mode)
   clamPearl: false, // a pearl is shining inside the giant clam
   morayClean: 0, // world.time until which a cleaner shrimp is cleaning the moray
   cleaning: null, // { fishId, pos, until }: a pet fish visiting a cleaner shrimp

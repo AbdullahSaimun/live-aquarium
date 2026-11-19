@@ -88,6 +88,7 @@ export const isClearOfHomes = (x, z, pad = 0) => HOME_SPOTS.every(([kx, kz, r]) 
 // One clock for every swaying plant shader, ticked by Seabed.
 export const reefTime = { value: 0 };
 export const reefLight = { value: 1 };
+export const reefCurrent = { value: world.current }; // the shared water current
 
 /**
  * Makes a standard material sway gently in the current: vertices bend more the higher they are
@@ -97,8 +98,9 @@ export function addSway(material, { amp = 0.12, speed = 1, height = 1 } = {}) {
   material.onBeforeCompile = (shader) => {
     THREE.Material.prototype.onBeforeCompile.call(material, shader); // shared underwater light
     shader.uniforms.uReefTime = reefTime;
+    shader.uniforms.uCurrent = reefCurrent;
     shader.vertexShader = shader.vertexShader
-      .replace('#include <common>', '#include <common>\nuniform float uReefTime;')
+      .replace('#include <common>', '#include <common>\nuniform float uReefTime;\nuniform vec3 uCurrent;')
       .replace(
         '#include <begin_vertex>',
         `#include <begin_vertex>
@@ -110,7 +112,9 @@ export function addSway(material, { amp = 0.12, speed = 1, height = 1 } = {}) {
         float swayK = pow(clamp(position.y / ${height.toFixed(3)}, 0.0, 1.0), 1.6);
         float swayP = swayAt.x * 0.7 + swayAt.z * 0.45;
         transformed.x += (sin(uReefTime * ${(0.9 * speed).toFixed(3)} + swayP) + 0.35 * sin(uReefTime * ${(2.1 * speed).toFixed(3)} + swayP * 1.7)) * ${amp.toFixed(3)} * swayK;
-        transformed.z += cos(uReefTime * ${(0.7 * speed).toFixed(3)} + swayP * 1.3) * ${(amp * 0.6).toFixed(3)} * swayK;`,
+        transformed.z += cos(uReefTime * ${(0.7 * speed).toFixed(3)} + swayP * 1.3) * ${(amp * 0.6).toFixed(3)} * swayK;
+        // Everything leans the same way with the current, a little more in a gust.
+        transformed.xz += uCurrent.xz * ${(amp * 7).toFixed(3)} * swayK;`,
       );
   };
   material.customProgramCacheKey = () => `sway-${amp}-${speed}-${height}`;

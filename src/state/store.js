@@ -129,6 +129,8 @@ function initialState() {
       visitors: true,
       tankTime: 'auto',
       infoCards: true,
+      fishTalk: true,
+      observeMode: false,
     },
     asma: { visible: false, phase: 'idle', line: '', restUntil: 0, missUntil: 0 },
     shark: { visible: false, hitsLeft: 0 },
@@ -142,7 +144,8 @@ function initialState() {
 
   // Catch up on the time spent away: tummies empty, hunger grows, and long neglect costs health.
   const now = Date.now();
-  const awaySec = Math.max(0, (now - (save.savedAt || now)) / 1000);
+  // In Observe mode time stands still for hunger, even while the app is closed.
+  const awaySec = save.settings?.observeMode ? 0 : Math.max(0, (now - (save.savedAt || now)) / 1000);
   const memorial = Array.isArray(save.memorial) ? save.memorial : [];
   const alive = [];
   const lost = [];
@@ -191,6 +194,7 @@ function initialState() {
 
 const state = initialState();
 // Start in the right light, so a night visit doesn't fade in from daytime.
+world.observe = !!state.settings.observeMode;
 state.daylight = phaseFor(state.settings.tankTime);
 world.light = world.lightTarget = PHASE_LIGHT[state.daylight].light;
 world.dusk = world.duskTarget = PHASE_LIGHT[state.daylight].dusk;
@@ -489,6 +493,16 @@ export function setSetting(key, value) {
   state.settings = { ...state.settings, [key]: value };
   if (key === 'sharkVisits' && !value) sendSharkAway(true);
   if (key === 'tankTime') tickDaylight();
+  if (key === 'observeMode') {
+    world.observe = !!value;
+    world.asma.missing = false;
+    if (value) {
+      sendSharkAway(true);
+      state.selectedId = null;
+      state.creatureId = null;
+      state.panel = null;
+    }
+  }
   if (key === 'infoCards' && !value) {
     state.selectedId = null;
     state.creatureId = null;
@@ -536,6 +550,13 @@ export function tapWater(point) {
   }
   // At night the water lights up with glowing plankton wherever it is touched.
   if (state.daylight === 'night') queueEffect('sparkles', point, 16);
+  if (state.settings.observeMode) {
+    // Just watching: a tap is a little splash that makes nearby fish flinch, not food.
+    world.startle.pos.copy(point);
+    world.startle.time = world.time;
+    queueEffect('bubbles', point, 5);
+    return;
+  }
   dropFoodAt(point);
 }
 
@@ -831,7 +852,7 @@ function tickAsma(dt) {
     state.asma = { ...a, missUntil: 0 };
     world.asma.missing = false;
   }
-  if (state.settings.asmaVisits && state.hintDismissed && state.fish.length && a.phase === 'idle') {
+  if (state.settings.asmaVisits && !state.settings.observeMode && state.hintDismissed && state.fish.length && a.phase === 'idle') {
     nextAsmaIn -= dt;
     if (nextAsmaIn <= 0 && nowSec() > a.restUntil) inviteAsma();
   }
@@ -919,7 +940,7 @@ export function sharkEvent(event) {
 }
 
 function tickShark(dt) {
-  if (!state.settings.sharkVisits || !state.hintDismissed || !state.fish.length) return;
+  if (!state.settings.sharkVisits || state.settings.observeMode || !state.hintDismissed || !state.fish.length) return;
   if (world.shark.phase !== 'idle' || state.asma.phase !== 'idle' || visitorActive()) return;
   if (state.daylight === 'night') return; // nights stay calm
   nextSharkIn -= dt;
@@ -1005,7 +1026,7 @@ export function cycleTankTime() {
 // Slow stat changes, run once per second (cheap, and keeps UI meters fresh).
 export function tickStats(dt) {
   const weakened = [];
-  for (const f of [...state.fish]) {
+  for (const f of state.settings.observeMode ? [] : [...state.fish]) {
     const appetite = PERSONALITIES[f.personality]?.appetite ?? 1;
     f.hunger = Math.min(1, f.hunger + dt * HUNGER_RATE * appetite);
     f.fullness = Math.max(0, f.fullness - dt * FULL_DECAY);

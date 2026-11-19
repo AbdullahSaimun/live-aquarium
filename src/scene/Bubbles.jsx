@@ -86,6 +86,7 @@ export default function Bubbles({ ambient = 45, airStone = true }) {
       let visible = true;
       if (b.isAmbient) {
         b.pos.y += b.speed * dt;
+        b.pos.x += world.current.x * 0.6 * dt; // rising bubbles drift with the current
         if (b.pos.y > world.surfaceY + 0.5) {
           b.pos.set(b.vent[0], world.floorY, b.vent[1]);
           b.speed = 0.5 + Math.random() * 0.6;

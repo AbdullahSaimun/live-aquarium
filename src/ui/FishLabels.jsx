@@ -44,7 +44,9 @@ export default function FishLabels() {
   useLabelVersion();
   const fish = useStore((s) => s.fish);
   const selectedId = useStore((s) => s.selectedId);
-  const showNames = useStore((s) => s.settings.showNames);
+  const observe = useStore((s) => s.settings.observeMode);
+  const showNames = useStore((s) => s.settings.showNames) && !observe;
+  const talk = useStore((s) => s.settings.fishTalk) && !observe;
 
   return (
     <div className="fish-labels" aria-hidden="true">
@@ -52,7 +54,7 @@ export default function FishLabels() {
       <SharkBubble />
       {fish.map((f) => {
         const emote = world.runtime.get(f.id)?.emote;
-        const e = emote && EMOTES[emote];
+        const e = talk && emote && EMOTES[emote];
         const selected = f.id === selectedId;
         return (
           <div

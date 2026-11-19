@@ -5,6 +5,7 @@ import { useCursor } from '@react-three/drei';
 import { world, queueEffect } from '../sim/world';
 import { sharkActive } from '../sim/sharkBrain';
 import { showCreature, sfx } from '../state/store';
+import { createGlance, glance } from '../sim/life';
 
 const HOME = { x: 3.3, z: -1.8 };
 const ARMS = 8;
@@ -47,6 +48,7 @@ export default function Octopus({ calm }) {
   useCursor(hovered);
   useEffect(() => () => Object.values(kit).forEach((x) => x.dispose()), [kit]);
 
+  const watch = useMemo(() => createGlance(0.35, [2, 5]), []);
   useFrame((_, rawDt) => {
     const dt = Math.min(rawDt, 0.1);
     const c = s.current;
@@ -82,6 +84,7 @@ export default function Octopus({ calm }) {
     body.current.position.y = 0.62 + hopY;
     body.current.scale.set(breathe, 1 / breathe, breathe);
     body.current.rotation.z = Math.sin(t * 0.7) * 0.06;
+    body.current.rotation.y = glance(watch, dt, 2.5);
 
     const sway = calm ? 0.4 : 1;
     arms.current.forEach((arm, a) => {

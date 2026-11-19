@@ -4,6 +4,7 @@ import { useFrame } from '@react-three/fiber';
 import { useCursor } from '@react-three/drei';
 import { world, queueEffect } from '../sim/world';
 import { showCreature, sfx } from '../state/store';
+import { createGlance, glance } from '../sim/life';
 
 const SPIN_TIME = 1.4;
 const BACK_Z = -3.4; // glides behind the fish
@@ -41,6 +42,7 @@ export default function Turtle() {
   const root = useRef();
   const pose = useRef();
   const head = useRef();
+  const look = useRef(createGlance(0.45, [2.5, 6]));
   const flippers = useRef([]);
   const angle = useRef(Math.random() * Math.PI * 2);
   const spin = useRef(0);
@@ -70,6 +72,7 @@ export default function Turtle() {
       f.rotation.y = side * (front ? 0.5 + stroke * 0.2 : -0.4);
     });
     head.current.rotation.x = Math.sin(t * 0.9) * 0.12;
+    head.current.rotation.y = glance(look.current, dt, 2);
   });
 
   const onClick = (e) => {

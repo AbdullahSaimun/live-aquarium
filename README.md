@@ -270,3 +270,21 @@ No license has been chosen yet. Add one before publishing if others should reuse
 - Fish lean into turns and their tail sweep follows their speed (`fishBrain.js`, `Fish.jsx`, `FishSchool.jsx`).
 - `StaticBatch.jsx` merges meshes that never move into one mesh per material (used for the corals).
 - In dev mode, `window.__ocean.gl.info.render` shows draw calls and triangles.
+
+## Observe mode, fish talk and the wild reef
+
+- **Settings → Fish talk** turns the fish's speech bubbles on or off.
+- **Settings → Observe mode 👀** is for just watching:
+  - hunger pauses, even while the app is closed;
+  - no fish begs for food;
+  - Asma and the shark stay away;
+  - the rail, name tags and bubbles tuck away;
+  - tapping the water makes nearby fish flinch instead of dropping food;
+  - the "Observing" pill at the bottom leaves the mode.
+- **Pet fish motion** (`sim/fishBrain.js`): fish swim in bursts and glides, hover with their fins sculling, keep to their species' layer of water, glance at things nearby, lead turns with the head, breathe, swim beside a friend now and then, and flinch from a splash.
+- **Wild reef fish** (`sim/wildFish.js`, `scene/WildFish.jsx`):
+  - six species: chromis, anthias, butterflyfish, Moorish idol, royal gramma and Banggai cardinalfish;
+  - each species is one instanced mesh, with the tail bend done in the shader;
+  - their number follows the visible width, about 43 at 1600×900 and fewer on phones;
+  - each has a card and a sticker in the "Reef fish" section.
+- **Shared current** (`sim/life.js`): one slowly turning current leans every swaying plant and drifts sea snow and bubbles. `createGlance`/`glance` give the turtle, crab, octopus and seahorse natural looks around.

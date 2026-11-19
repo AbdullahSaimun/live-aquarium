@@ -4,6 +4,7 @@ import { useFrame } from '@react-three/fiber';
 import { useCursor } from '@react-three/drei';
 import { world, queueEffect } from '../sim/world';
 import { showCreature, sfx } from '../state/store';
+import { createGlance, glance } from '../sim/life';
 
 const HOME = { x: 2.2, z: -2.45 }; // beside the short kelp in Plants.jsx
 const HOP_TIME = 1.1;
@@ -48,6 +49,7 @@ export default function Seahorse({ calm }) {
   useCursor(hovered);
   useEffect(() => () => Object.values(kit).forEach((x) => x.dispose()), [kit]);
 
+  const nod = useMemo(() => createGlance(0.14, [1.5, 4]), []);
   useFrame((_, rawDt) => {
     const dt = Math.min(rawDt, 0.1);
     const t = world.time;
@@ -62,7 +64,7 @@ export default function Seahorse({ calm }) {
     const spin = hop.current > 0 ? k * Math.PI * 2 : 0;
     turn.current += (look - turn.current) * (1 - Math.exp(-dt * 2));
     pose.current.rotation.y = turn.current + spin;
-    pose.current.rotation.z = Math.sin(t * 0.8) * 0.06;
+    pose.current.rotation.z = Math.sin(t * 0.8) * 0.06 + glance(nod, dt, 2);
     fin.current.rotation.y = Math.sin(t * 18) * 0.5;
   });
 

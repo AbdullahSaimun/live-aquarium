@@ -8,6 +8,7 @@ import { LangSwitch } from './Panels';
 const SECTIONS = [
   { kind: 'fish', en: 'Pet fish', bn: 'পোষা মাছ' },
   { kind: 'neighbour', en: 'Tank friends', bn: 'ট্যাংকের বন্ধুরা' },
+  { kind: 'reef', en: 'Reef fish', bn: 'প্রবালের মাছ' },
   { kind: 'night', en: 'Night friends', bn: 'রাতের বন্ধুরা' },
   { kind: 'visitor', en: 'Ocean visitors', bn: 'সমুদ্রের অতিথিরা' },
   { kind: 'rare', en: 'Rare visitors ✨', bn: 'বিরল অতিথি ✨' },

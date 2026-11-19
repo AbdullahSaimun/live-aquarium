@@ -4,6 +4,7 @@ import { useFrame } from '@react-three/fiber';
 import { useCursor } from '@react-three/drei';
 import { world, queueEffect, removePellet, findCrumb } from '../sim/world';
 import { showCreature, sfx } from '../state/store';
+import { createGlance, glance } from '../sim/life';
 
 const Y = world.floorY + 0.12;
 const SPEED = 0.9;
@@ -104,7 +105,8 @@ export default function Crab() {
     }
     // Mostly faces the viewer, with a slight lean into the walk.
     body.current.rotation.z = walking ? Math.sin(t * 14) * 0.06 : 0;
-    body.current.rotation.y = walking ? Math.sign(dx) * 0.25 : 0;
+    const peek = glance(c.look || (c.look = createGlance(0.4, [1.5, 4])), dt, 5);
+    body.current.rotation.y = walking ? Math.sign(dx) * 0.25 : peek;
 
     legs.current.forEach((leg, i) => {
       if (!leg) return;

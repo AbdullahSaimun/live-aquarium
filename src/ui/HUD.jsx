@@ -1,5 +1,5 @@
 import { Fragment, useLayoutEffect, useRef, useState } from 'react';
-import { useStore, feed, openPanel, selectFish, cycleTankTime, sfx } from '../state/store';
+import { useStore, feed, openPanel, selectFish, cycleTankTime, sfx, setSetting } from '../state/store';
 import { world } from '../sim/world';
 import { PHASE_ICON } from '../state/daylight';
 import { MOODS } from '../data/species';
@@ -60,7 +60,9 @@ function readTucked() {
 function Rail() {
   const panel = useStore((s) => s.panel);
   const flash = useStore((s) => s.stickerFlash);
-  const [tucked, setTucked] = useState(readTucked);
+  const [tuckedPref, setTucked] = useState(readTucked);
+  const observe = useStore((s) => s.settings.observeMode);
+  const tucked = tuckedPref || observe;
   const nav = useRef(null);
 
   useLayoutEffect(() => {
@@ -118,7 +120,12 @@ function Rail() {
           <span aria-hidden="true">‹</span>
         </button>
       </nav>
-      {tucked && (
+      {observe && (
+        <button className="observe-pill" onClick={() => setSetting('observeMode', false)} aria-label="Stop observing">
+          👀 <span>Observing</span> <small>tap to exit</small>
+        </button>
+      )}
+      {tucked && !observe && (
         <button className="rail-tab" onClick={() => tuck(false)} aria-label="Show the buttons">
           <span className="rail-tab-icon">🍤</span>
           <span aria-hidden="true">›</span>

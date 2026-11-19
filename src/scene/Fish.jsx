@@ -59,22 +59,40 @@ export default function Fish({ fish }) {
     }
     // A fainted fish rolls belly-up, wobbling a little, until it comes round.
     roll += rt.faint * (Math.PI * 0.85 + Math.sin(t * 2 + rt.tailPhase) * 0.15);
-    g.rotation.set(rt.pitch, rt.yaw, roll + rt.bank + Math.sin(t * 13 + rt.tailPhase) * 0.22 * rt.wiggle, 'YXZ');
+    // Glance: turn the head a little towards whatever caught its eye.
+    let glance = 0;
+    if (rt.lookTime > 0) {
+      const want = Math.atan2(rt.look.x - rt.pos.x, rt.look.z - rt.pos.z) - rt.yaw;
+      glance = THREE.MathUtils.clamp(Math.atan2(Math.sin(want), Math.cos(want)), -0.5, 0.5) * Math.min(1, rt.lookTime);
+    }
+    rt.glance += (glance - rt.glance) * Math.min(1, dt * 3);
+    // The head leads into a turn, the body follows.
+    const lead = THREE.MathUtils.clamp(rt.turnRate * 0.12, -0.25, 0.25);
+    g.rotation.set(rt.pitch, rt.yaw + lead + rt.glance, roll + rt.bank + Math.sin(t * 13 + rt.tailPhase) * 0.22 * rt.wiggle, 'YXZ');
     g.position.y = Math.abs(Math.sin(t * 7)) * 0.15 * rt.wiggle * (rt.happyTimer > 0 ? 1 : 0.3);
 
     const p = parts.current;
     if (p) {
       const sway = Math.sin(rt.tailPhase);
       // The faster it swims, the wider the tail sweeps; the body bends the other way in an S.
-      const drive = Math.min(1, rt.vel.length() / 1.2);
-      p.tail.current.rotation.y = sway * (0.26 + drive * 0.26 + rt.wiggle * 0.25);
-      p.body.current.rotation.y = -sway * (0.04 + drive * 0.07);
-      const flap = Math.sin(rt.tailPhase * 1.3) * 0.35;
+      const drive = Math.min(1, rt.thrust * 0.8 + rt.vel.length() / 3);
+      const flinch = rt.startle > 0 ? 0.45 : 0;
+      p.tail.current.rotation.y = sway * (0.1 + drive * 0.42 + rt.wiggle * 0.25 + flinch);
+      p.body.current.rotation.y = -sway * (0.03 + drive * 0.08 + flinch * 0.3);
+      // Pectoral fins scull quickly while hovering and tuck in during a fast burst.
+      const scull = rt.hover > 0 ? 1 : 1 - drive * 0.6;
+      const flap = Math.sin(t * (rt.hover > 0 ? 9 : 5) * rt.tempo + rt.tailPhase * 0.3) * 0.35 * scull;
       p.finL.current.rotation.set(0, 0.5 + flap * 0.5, flap);
       p.finR.current.rotation.set(0, -0.5 - flap * 0.5, -flap);
       // Pufferfish: blow up into a round, spiky ball.
       if (p.spikes.current) {
         p.body.current.scale.setScalar(1 + rt.puff * 0.6);
+      } else {
+        // Breathing: a slow, barely-there swell of the body.
+        const breath = 1 + Math.sin(t * rt.breathRate) * 0.012;
+        p.body.current.scale.set(breath, breath, 1);
+      }
+      if (p.spikes.current) {
         p.spikes.current.visible = rt.puff > 0.04;
         p.spikes.current.children.forEach((m) => m.scale.setScalar(Math.max(0.001, rt.puff)));
       }
