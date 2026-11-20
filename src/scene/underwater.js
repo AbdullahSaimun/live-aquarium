@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { world } from '../sim/world';
-import { reefTime, reefLight } from './reefLayout';
+import { reefTime, reefLight, reefSun, sheenStrength } from './reefLayout';
 
 // How strongly the moving light pattern shows (0 in calm mode, lower on phones).
 export const underwaterStrength = { value: 1 };
@@ -11,6 +11,7 @@ const PARS = /* glsl */ `
   uniform float uUwTime;
   uniform float uUwLight;
   uniform float uUwStrength;
+  uniform vec3 uUwSun;
   varying vec3 vUwPos;
   float uwCaustic(vec2 p, float t) {
     float a = sin(p.x * 1.7 + t * 0.9 + sin(p.y * 1.3 + t * 0.6) * 1.6);
@@ -24,8 +25,10 @@ const PARS = /* glsl */ `
 const BODY = /* glsl */ `
   float uwUp = max(inverseTransformDirection(normal, viewMatrix).y, 0.0);
   float uwLow = clamp(1.0 - (vUwPos.y - (${FLOOR})) / 3.6, 0.0, 1.0);
-  float uwC = uwCaustic(vUwPos.xz * 0.9, uUwTime) * 0.6 + uwCaustic(vUwPos.xz * 1.6 + 3.0, uUwTime * 1.3) * 0.35;
-  gl_FragColor.rgb += vec3(0.75, 0.95, 1.0) * uwC * uwUp * (0.3 + 0.7 * uwLow) * 0.4 * (0.2 + 0.8 * uUwLight) * uUwStrength;
+  vec2 uwXZ = vUwPos.xz - vec2(uUwSun.x, 0.0) * (vUwPos.y - (${FLOOR})) * 0.35; // light falls at a slant
+  float uwC = uwCaustic(uwXZ * 0.9, uUwTime) * 0.6 + uwCaustic(uwXZ * 1.6 + 3.0, uUwTime * 1.3) * 0.35;
+  vec3 uwTint = mix(vec3(0.75, 0.95, 1.0), vec3(1.0, 0.85, 0.6), uUwSun.z * 0.6);
+  gl_FragColor.rgb += uwTint * uwC * uwUp * (0.3 + 0.7 * uwLow) * 0.4 * (0.2 + 0.8 * uUwLight) * uUwStrength;
   float uwFar = clamp((length(vUwPos - cameraPosition) - 9.0) / 13.0, 0.0, 1.0);
   float uwGrey = dot(gl_FragColor.rgb, vec3(0.3, 0.59, 0.11));
   gl_FragColor.rgb = mix(gl_FragColor.rgb, uwGrey * vec3(0.68, 0.96, 1.1), uwFar * 0.6);
@@ -39,6 +42,7 @@ THREE.Material.prototype.onBeforeCompile = function (shader) {
   shader.uniforms.uUwTime = reefTime;
   shader.uniforms.uUwLight = reefLight;
   shader.uniforms.uUwStrength = underwaterStrength;
+  shader.uniforms.uUwSun = reefSun;
   shader.vertexShader = shader.vertexShader
     .replace('#include <common>', '#include <common>\nvarying vec3 vUwPos;')
     .replace(
@@ -54,3 +58,25 @@ THREE.Material.prototype.onBeforeCompile = function (shader) {
     .replace('#include <common>', `#include <common>\n${PARS}`)
     .replace('#include <tonemapping_fragment>', `${BODY}\n#include <tonemapping_fragment>`);
 };
+
+// Fish shimmer: a soft rainbow sheen where the body curves away from the eye, the way scales catch
+// light. Add to a fish material after the shared underwater light. `fin` makes thin fins glow at the edges.
+export const SHEEN = (amount, fin = false) => /* glsl */ `
+  {
+    float shFres = pow(1.0 - clamp(abs(dot(normal, normalize(-vViewPosition))), 0.0, 1.0), ${fin ? '1.5' : '2.6'});
+    vec3 shIri = 0.55 + 0.45 * cos(6.2831 * (shFres * 1.1 + vec3(0.0, 0.33, 0.67)));
+    gl_FragColor.rgb += ${fin ? 'vec3(0.9, 0.97, 1.0)' : 'shIri'} * shFres * ${amount.toFixed(3)} * uSheen * (0.35 + 0.65 * uUwLight);
+  }
+`;
+
+export function addSheen(material, amount, key, fin = false) {
+  material.onBeforeCompile = (shader) => {
+    THREE.Material.prototype.onBeforeCompile.call(material, shader);
+    shader.uniforms.uSheen = sheenStrength;
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>', '#include <common>\nuniform float uSheen;')
+      .replace('#include <tonemapping_fragment>', `${SHEEN(amount, fin)}\n#include <tonemapping_fragment>`);
+  };
+  material.customProgramCacheKey = () => key;
+  return material;
+}

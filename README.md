@@ -297,3 +297,39 @@ No license has been chosen yet. Add one before publishing if others should reuse
   - buttons switch the headlight, sound the horn, open its card, or send it home.
 - Fish make room for it; wild fish dart away when it speeds past, and the horn startles nearby fish.
 - The first drive earns the "Little submarine" sticker in the Ocean visitors section.
+
+## Light, weather, ocean life, sounds and keepsakes
+
+**Light and look**
+- The sun follows the real clock. Beams and caustics lean and warm in the morning and evening (`daylight.js` `sunFor`, `reefSun`).
+- A soft vignette frames the tank.
+- Fish scales shimmer (`addSheen` in `underwater.js`).
+- At night corals fluoresce in neon colours, and moving fish stir glowing plankton.
+
+**Weather** (`sim/weather.js`)
+- About one day in five has a rain shower: rings on the water surface, dimmer light and a soft patter.
+- After the rain, a rainbow appears in the light beams.
+- Settings → "🌧️ Make it rain" starts a shower straight away.
+
+**Ocean life**
+- **Night shift:** at night pet fish sleep tucked by the coral, and cardinalfish wake up.
+- **Parrotfish** (`scene/Parrotfish.jsx`): bites coral and leaves sand puffs, and sleeps in a mucus bubble at night.
+- **Coral spawning** (`scene/CoralSpawn.jsx`): happens on full-moon nights. Settings → "✨ Coral spawning" starts it straight away.
+- **Clownfish family** (`scene/ClownNest.jsx`, saved in `stats.clownNest`): eggs by the anemone with the dad fanning them, then babies that grow over a week of visits.
+
+**Sounds** (`audio/ambient.js`)
+- "Ocean sounds": a hum, bubbles and a distant whale.
+- "Music": a music-box melody that never repeats.
+- One volume slider covers both.
+- Both start after the first tap and pause when the tab is hidden.
+
+**Ocean calendar** (`data/oceanCalendar.js`)
+- The 🌊 chip shows "Today in the ocean": the moon phase, full-moon spawning, turtle hatchlings (Mar–Apr), a moon jelly bloom (Apr–May), whale season (Jul–Oct) and World Oceans Day (8 June).
+- In dev, `?date=2027-04-10` previews a date.
+
+**Growing reef** (`scene/CoralSprouts.jsx`)
+- Corals grow with `stats.visitDays`, and a new baby coral sprouts every 2–3 visit days, up to 12.
+- Day 7, 14 and 30 each give a milestone with pearls.
+
+**Postcard**
+- 📷 in the top bar makes a framed picture of the tank with the date and the fish names, ready to save or share. Nothing is uploaded.

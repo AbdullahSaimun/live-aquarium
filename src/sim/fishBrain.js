@@ -69,7 +69,12 @@ function pickWanderTarget(rt, fish, mood) {
   const b = world.bounds;
   const t = rt.target;
   rt.anemone = false;
-  if (mood === 'sleepy') {
+  if (mood === 'sleepy' && world.light < 0.4) {
+    // Night: tuck in beside the coral to sleep, like real reef fish.
+    const beds = CORAL_BEDS.filter(([x]) => x > b.minX + 0.4 && x < b.maxX - 0.4);
+    const [x, z] = beds.length ? beds[Math.floor(Math.random() * beds.length)] : [rand(b.minX, b.maxX) * 0.8, b.minZ];
+    t.set(x + rand(-0.4, 0.4), world.floorY + rand(0.75, 1.25), z + rand(0.5, 0.8));
+  } else if (mood === 'sleepy') {
     t.set(rand(b.minX, b.maxX) * 0.8, b.minY + rand(0.1, 0.6), rand(b.minZ, b.maxZ - 1));
   } else if (mood === 'hungry' || mood === 'weak') {
     // Come up to the "glass" and beg, near where the fish already is.
@@ -80,6 +85,12 @@ function pickWanderTarget(rt, fish, mood) {
     inspectSomething(rt, b);
   } else if (mood === 'curious') {
     t.set(rand(-2, 2) * Math.min(1, b.maxX / 4), rand(-0.3, 1), b.maxZ);
+  } else if (fish.species === 'clownfish' && world.nest && Math.random() < 0.5) {
+    // Dad clownfish guards the eggs and fans them with his fins.
+    t.set(world.nest.x + 0.15, world.nest.y + 0.3, world.nest.z + 0.4);
+    rt.anemone = true;
+    rt.look.copy(world.nest);
+    rt.lookTime = 6;
   } else if (fish.species === 'clownfish' && Math.random() < 0.35 && visitAnemone(rt, b)) {
     // Clownfish snuggle into their anemone home now and then.
   } else if (Math.random() < 0.28 && rt.hover <= 0) {
@@ -102,6 +113,18 @@ function pickWanderTarget(rt, fish, mood) {
   }
   rt.retarget = rand(4, 9) / rt.tempo;
 }
+
+// Coral heads (Coral.jsx) where fish tuck in for the night: [x, z].
+const CORAL_BEDS = [
+  [-6.2, -2.2],
+  [5.6, -2.8],
+  [-1.6, -2.6],
+  [2.2, -2.6],
+  [-5, -3.2],
+  [4.8, 0.2],
+  [0.6, -3.4],
+  [3.2, -1.2],
+];
 
 // Where in the water (0 = floor, 1 = top) each species likes to be, and how stately it swims.
 const ZONES = {
@@ -186,7 +209,7 @@ export function updateFish(fish, rt, dt, mates) {
     if (rt.nextSleep <= 0) {
       rt.nextSleep = rand(70, 140);
       if (fish.hunger < 0.6 && fish.health > 0.5 && !food) {
-        rt.sleeping = rand(10, 16) * (1 + (1 - world.light) * 0.8);
+        rt.sleeping = rand(10, 16) * (1 + (1 - world.light) * 3); // long sleeps at night
         rt.retarget = 0;
       }
     }
@@ -308,6 +331,7 @@ export function updateFish(fish, rt, dt, mates) {
     rt.anemone = false;
     rt.linger = rand(5, 8);
     rt.retarget = rt.linger;
+    rt.hover = rt.linger; // stay put, fins sculling
     world.partnerEvents.push('anemone');
   }
   if (rt.linger > 0) rt.linger -= dt;

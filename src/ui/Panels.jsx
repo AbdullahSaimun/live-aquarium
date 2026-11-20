@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useStore, openPanel, setSetting, resetAquarium, dismissHint, adoptFish, summonShark, callVisitor, callSubmarine, toast } from '../state/store';
+import { useStore, openPanel, setSetting, resetAquarium, dismissHint, adoptFish, summonShark, callVisitor, callSubmarine, makeRain, startSpawning, toast } from '../state/store';
 import { TANK_TIMES, PHASE_ICON } from '../state/daylight';
 import { SPECIES } from '../data/species';
 import { allFacts, UI_TEXT } from '../data/factsBn';
@@ -151,6 +151,33 @@ export function SettingsPanel() {
         onChange={(v) => setSetting('sound', v)}
       />
       <Toggle
+        label="Ocean sounds 🌊"
+        desc="A soft underwater hum, little bubbles and a far-away whale now and then"
+        checked={settings.oceanSounds}
+        onChange={(v) => setSetting('oceanSounds', v)}
+      />
+      <Toggle
+        label="Music 🎵"
+        desc="A gentle music-box tune that never repeats"
+        checked={settings.music}
+        onChange={(v) => setSetting('music', v)}
+      />
+      {(settings.oceanSounds || settings.music) && (
+        <label className="volume-row">
+          <span>🔈</span>
+          <input
+            type="range"
+            min="0"
+            max="1"
+            step="0.05"
+            value={settings.volume}
+            onChange={(e) => setSetting('volume', Number(e.target.value))}
+            aria-label="Ocean sounds and music volume"
+          />
+          <span>🔊</span>
+        </label>
+      )}
+      <Toggle
         label="Asma visits"
         desc="Asma dives in by herself now and then to play"
         checked={settings.asmaVisits}
@@ -192,6 +219,12 @@ export function SettingsPanel() {
             🚢 Call the submarine
           </button>
         )}
+        <button className="btn-small btn-soft" onClick={() => (makeRain(), openPanel(null))}>
+          🌧️ Make it rain
+        </button>
+        <button className="btn-small btn-soft" onClick={() => (startSpawning(), openPanel(null))}>
+          ✨ Coral spawning
+        </button>
       </div>
       <div className="stats">
         <div>

@@ -8,6 +8,10 @@ export const world = {
   bounds: { minX: -6.5, maxX: 6.5, minY: -2.4, maxY: 1.6, minZ: -3, maxZ: 2.6 },
   // Screen pixels covered by the left button rail. CameraRig frames the tank in the space beside it.
   viewInset: 0,
+  detail: 'high', // 'low' on phones, in calm mode and on slow devices (set by Aquarium)
+  weather: { rain: 0, rainTarget: 0, until: 0, rainbow: 0, sunnyUntil: 0 },
+  spawning: { until: 0 }, // coral spawning: world.time until which the corals release eggs
+  nest: null, // where the clownfish eggs are, while there are eggs to fan
   observe: false, // Observe mode: fish just live, nobody begs for food
   current: new THREE.Vector3(0.12, 0, 0), // the slow water current everything drifts in
   // The visiting submarine (sim/submarine.js). phase: idle | cruising | driving | leaving

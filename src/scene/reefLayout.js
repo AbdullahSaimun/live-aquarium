@@ -89,6 +89,9 @@ export const isClearOfHomes = (x, z, pad = 0) => HOME_SPOTS.every(([kx, kz, r]) 
 export const reefTime = { value: 0 };
 export const reefLight = { value: 1 };
 export const reefCurrent = { value: world.current }; // the shared water current
+// The sun for shaders: x = side (-1 morning .. 1 evening), y = height, z = warmth.
+export const reefSun = { value: new THREE.Vector3(-0.3, 0.85, 0.1) };
+export const sheenStrength = { value: 1 }; // fish shimmer; lower on phones
 
 /**
  * Makes a standard material sway gently in the current: vertices bend more the higher they are

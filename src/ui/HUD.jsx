@@ -5,6 +5,7 @@ import { PHASE_ICON } from '../state/daylight';
 import { MOODS } from '../data/species';
 import FishIcon from './FishIcon';
 import { AsmaButton } from './Asma';
+import OceanToday from './OceanToday';
 
 function Roster() {
   const fish = useStore((s) => s.fish);
@@ -167,6 +168,10 @@ export default function HUD() {
           <span className="brand-text">My Little Ocean</span>
         </div>
         <TimeBadge />
+        <OceanToday />
+        <button className="ocean-chip" onClick={() => openPanel('postcard')} aria-label="Take a postcard picture" title="Postcard">
+          📷
+        </button>
         <PearlChip />
         <Roster />
       </header>

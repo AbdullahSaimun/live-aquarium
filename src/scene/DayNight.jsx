@@ -2,6 +2,10 @@ import { useRef } from 'react';
 import * as THREE from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
 import { world } from '../sim/world';
+import { getState } from '../state/store';
+import { sunFor } from '../state/daylight';
+import { reefSun } from './reefLayout';
+import { easeWeather } from '../sim/weather';
 
 // Light settings for each look; the scene blends night→day by `world.light`, then towards sunset by `world.dusk`.
 const LOOKS = {
@@ -13,6 +17,10 @@ const C = Object.fromEntries(
   Object.entries(LOOKS).map(([k, v]) => [k, { sky: new THREE.Color(v.sky), ground: new THREE.Color(v.ground), sun: new THREE.Color(v.sun), fog: new THREE.Color(v.fog) }]),
 );
 const lerp = THREE.MathUtils.lerp;
+const GOLD = new THREE.Color('#ffbe7a');
+const RAIN_FOG = new THREE.Color('#4f7896');
+let sunCheck = 0;
+let sunGoal = sunFor('day');
 
 // Owns the tank's lights and fog, fading smoothly between day, sunset and night.
 export default function DayNight() {
@@ -38,6 +46,28 @@ export default function DayNight() {
     sun.current.intensity = num('sunI');
     amb.current.intensity = num('amb');
     if (scene.fog) blend('fog', scene.fog.color);
+
+    // The sun moves with the real clock: low and golden in the morning and evening, high at noon.
+    sunCheck -= dt;
+    if (sunCheck <= 0) {
+      sunCheck = 20;
+      sunGoal = sunFor(getState().settings.tankTime);
+    }
+    const s = reefSun.value;
+    const k = 1 - Math.exp(-dt * 0.5);
+    s.x += (sunGoal.side - s.x) * k;
+    s.y += (sunGoal.elev - s.y) * k;
+    s.z += (sunGoal.warm - s.z) * k;
+    sun.current.position.set(s.x * 8, 3 + s.y * 9, 6);
+    sun.current.color.lerp(GOLD, s.z * 0.5 * l);
+    hemi.current.color.lerp(GOLD, s.z * 0.15 * l);
+
+    // Rain dims the light and greys the water a little.
+    easeWeather(dt);
+    const rain = world.weather.rain;
+    hemi.current.intensity *= 1 - rain * 0.3;
+    sun.current.intensity *= 1 - rain * 0.5;
+    if (scene.fog) scene.fog.color.lerp(RAIN_FOG, rain * 0.35);
   });
 
   return (

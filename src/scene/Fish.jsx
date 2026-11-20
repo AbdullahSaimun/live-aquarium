@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { useCursor } from '@react-three/drei';
 import { SPECIES } from '../data/species';
-import { world, removePellet } from '../sim/world';
+import { world, removePellet, queueEffect } from '../sim/world';
 import { createRuntime, updateFish, fishScale } from '../sim/fishBrain';
 import { eatPellet, petFish, FLIP_TIME } from '../state/store';
 import { labelEls, bumpLabels } from '../state/labels';
@@ -48,6 +48,14 @@ export default function Fish({ fish }) {
     const s = curScale.current;
 
     root.current.position.copy(rt.pos);
+    // At night, a fish swimming briskly stirs up glowing plankton behind it.
+    if (world.light < 0.35 && world.detail !== 'low' && rt.vel.lengthSq() > 0.25) {
+      rt.glowTrail = (rt.glowTrail || 0) - dt;
+      if (rt.glowTrail <= 0) {
+        rt.glowTrail = 0.35 + Math.random() * 0.4;
+        queueEffect('sparkles', rt.pos, 1);
+      }
+    }
     const g = pose.current;
     g.scale.setScalar(s);
     // Barrel roll after a tap: eased full turn around the body axis.

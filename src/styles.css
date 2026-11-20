@@ -3864,3 +3864,101 @@ button:focus-visible,
   pointer-events: none;
   transition: transform 0.05s linear;
 }
+
+/* A soft darkening towards the edges, like looking into deep water. */
+.aquarium-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse 75% 70% at 52% 45%, transparent 55%, rgba(4, 40, 70, 0.32) 100%);
+  transition: background 2s;
+}
+.app[data-time='night'] .aquarium-vignette {
+  background: radial-gradient(ellipse 70% 65% at 52% 45%, transparent 45%, rgba(2, 10, 30, 0.55) 100%);
+}
+.app[data-time='sunset'] .aquarium-vignette {
+  background: radial-gradient(ellipse 75% 70% at 52% 45%, transparent 55%, rgba(60, 25, 40, 0.35) 100%);
+}
+
+/* Today in the ocean: a small chip by the time badge, with a note that opens below it. */
+.ocean-today {
+  position: relative;
+  pointer-events: auto;
+  flex-shrink: 0;
+}
+.ocean-chip {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 0;
+  background: var(--card);
+  box-shadow: var(--shadow);
+  font-size: 20px;
+  cursor: pointer;
+  transition: transform 0.2s var(--spring);
+}
+.ocean-chip:active {
+  transform: scale(0.9);
+}
+.ocean-chip.is-special {
+  animation: ocean-glow 2.6s ease-in-out infinite;
+}
+@keyframes ocean-glow {
+  50% {
+    box-shadow: var(--shadow), 0 0 0 6px rgba(255, 214, 102, 0.45);
+  }
+}
+.ocean-note {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  width: min(300px, 78vw);
+  padding: 12px 14px;
+  font-size: 14px;
+  line-height: 1.45;
+  z-index: 40;
+  animation: sub-in 0.3s ease-out;
+}
+.ocean-note p {
+  margin: 6px 0 0;
+}
+.volume-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: -4px 0 10px;
+  padding: 0 4px;
+}
+.volume-row input {
+  flex: 1;
+  accent-color: #3aa7d8;
+}
+
+/* Postcard panel */
+.postcard-img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: 14px;
+  margin: 4px 0 12px;
+  box-shadow: 0 6px 18px rgba(0, 40, 80, 0.18);
+  object-fit: cover;
+}
+.postcard-wait {
+  display: grid;
+  place-items: center;
+  font-size: 40px;
+  background: rgba(255, 255, 255, 0.4);
+  animation: ocean-glow 1.4s ease-in-out infinite;
+}
+.postcard-panel a.btn-small {
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+.postcard-panel .is-disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}

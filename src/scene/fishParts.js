@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { addSheen } from './underwater';
 
 // Shared, app-lifetime geometries and materials for every fish (built once, reused by all).
 
@@ -110,8 +111,8 @@ export const hitMat = new THREE.MeshBasicMaterial({ visible: false });
 
 export function createFishMaterials() {
   return {
-    body: new THREE.MeshStandardMaterial({ roughness: 0.45, metalness: 0.05 }),
-    fin: new THREE.MeshStandardMaterial({ roughness: 0.6, side: THREE.DoubleSide, transparent: true, opacity: 0.88 }),
+    body: addSheen(new THREE.MeshStandardMaterial({ roughness: 0.4, metalness: 0.08 }), 0.22, 'fish-body'),
+    fin: addSheen(new THREE.MeshStandardMaterial({ roughness: 0.6, side: THREE.DoubleSide, transparent: true, opacity: 0.82 }), 0.3, 'fish-fin', true),
     accent: new THREE.MeshStandardMaterial({ roughness: 0.5 }),
   };
 }

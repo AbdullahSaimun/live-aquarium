@@ -16,3 +16,16 @@ export const PHASE_LIGHT = {
   sunset: { light: 0.62, dusk: 1 },
   night: { light: 0, dusk: 0 },
 };
+
+// Where the sun is: `elev` 0 (horizon) to 1 (overhead), `side` -1 (morning, left) to 1 (evening,
+// right), `warm` 0 (white noon light) to 1 (golden). Pinned looks get fixed values.
+export function sunFor(setting, now = new Date()) {
+  if (setting === 'day') return { elev: 0.85, side: -0.3, warm: 0.1 };
+  if (setting === 'sunset') return { elev: 0.18, side: 0.85, warm: 1 };
+  if (setting === 'night') return { elev: 0.6, side: 0.25, warm: 0 };
+  const h = now.getHours() + now.getMinutes() / 60;
+  if (h < 6 || h >= 19.5) return { elev: 0.6, side: 0.25, warm: 0 }; // the moon
+  const k = Math.min(1, Math.max(0, (h - 6) / 13)); // 6:00 → 0, 19:00 → 1
+  const elev = Math.sin(Math.PI * k);
+  return { elev, side: -Math.cos(Math.PI * k), warm: Math.pow(1 - elev, 1.6) };
+}

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { world } from '../sim/world';
-import { ROCKS, SAND_DROP, SAND_Z, sandRelief, reefTime, reefLight } from './reefLayout';
+import { ROCKS, SAND_DROP, SAND_Z, sandRelief, reefTime, reefLight, reefSun } from './reefLayout';
 
 const sandVertex = /* glsl */ `
   attribute float aShade;
@@ -93,6 +93,9 @@ const rayFragment = /* glsl */ `
   uniform float uTime;
   uniform float uPhase;
   uniform float uLight;
+  uniform float uWarm;
+  uniform float uRainbow;
+  uniform float uRain;
   varying vec2 vUv;
   void main() {
     float edge = smoothstep(0.0, 0.5, vUv.x) * smoothstep(1.0, 0.5, vUv.x);
@@ -100,7 +103,11 @@ const rayFragment = /* glsl */ `
     float flicker = 0.65 + 0.35 * sin(uTime * 0.6 + uPhase);
     // Sunbeams by day, faint blue moonbeams at night.
     vec3 tint = mix(vec3(0.55, 0.7, 1.0), vec3(0.85, 0.97, 1.0), uLight);
-    gl_FragColor = vec4(tint, edge * fall * flicker * 0.22 * (0.3 + 0.7 * uLight));
+    tint = mix(tint, vec3(1.0, 0.8, 0.55), uWarm * 0.65 * uLight); // golden morning and evening beams
+    vec3 bow = 0.55 + 0.45 * cos(6.2831 * (vUv.x * 0.9 + vec3(0.0, 0.33, 0.67)));
+    tint = mix(tint, bow, uRainbow * 0.55); // after the rain
+    float strength = 0.22 * (1.0 + uRainbow * 0.6) * (1.0 - uRain * 0.7);
+    gl_FragColor = vec4(tint, edge * fall * flicker * strength * (0.3 + 0.7 * uLight));
   }
 `;
 
@@ -161,7 +168,7 @@ export default function Seabed() {
           new THREE.ShaderMaterial({
             vertexShader: rayVertex,
             fragmentShader: rayFragment,
-            uniforms: { uTime: { value: 0 }, uPhase: { value: i * 1.7 }, uLight: { value: 1 } },
+            uniforms: { uTime: { value: 0 }, uPhase: { value: i * 1.7 }, uLight: { value: 1 }, uWarm: { value: 0 }, uRainbow: { value: 0 }, uRain: { value: 0 } },
             transparent: true,
             depthWrite: false,
             blending: THREE.AdditiveBlending,
@@ -201,10 +208,13 @@ export default function Seabed() {
     rayMats.forEach((m) => {
       m.uniforms.uTime.value = world.time;
       m.uniforms.uLight.value = world.light;
+      m.uniforms.uWarm.value = reefSun.value.z;
+      m.uniforms.uRainbow.value = world.weather.rainbow;
+      m.uniforms.uRain.value = world.weather.rain;
     });
     // Light through moving waves: the beams lean slowly back and forth.
     rays.current.forEach((r, i) => {
-      if (r) r.rotation.z = RAYS[i][2] + Math.sin(world.time * 0.18 + i * 1.9) * 0.06;
+      if (r) r.rotation.z = RAYS[i][2] - reefSun.value.x * 0.38 * (1 - reefSun.value.y * 0.5) + Math.sin(world.time * 0.18 + i * 1.9) * 0.06;
     });
   });
 

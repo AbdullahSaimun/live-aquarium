@@ -130,7 +130,7 @@ function pickTarget(f, i, list, def, group, xMax) {
       break;
     case 'still':
       t.set(f.home.x + rand(-0.15, 0.15), f.home.y + rand(-0.08, 0.08), f.home.z + rand(-0.1, 0.1));
-      if (Math.random() < 0.85) f.hover = rand(3, 8);
+      if (Math.random() < 0.85 * (0.35 + 0.65 * world.light)) f.hover = rand(3, 8);
       f.retarget = rand(4, 9);
       break;
     default: // shoal: follows the group's point every frame
@@ -154,7 +154,8 @@ function nearPellet(pos) {
 
 /** One wild fish, one frame. `list` is its own species, for spacing and pairs. */
 export function updateWild(f, i, list, def, group, xMax, dt) {
-  const activity = 0.5 + 0.5 * world.light; // sleepier at night
+  // Most reef fish slow down at night; cardinalfish are night feeders and wake up instead.
+  const activity = def.style === 'still' ? 0.7 + 0.6 * (1 - world.light) : 0.5 + 0.5 * world.light;
   f.hover = Math.max(0, f.hover - dt);
   f.peck = Math.max(0, f.peck - dt);
   f.dart = Math.max(0, f.dart - dt);

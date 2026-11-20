@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useLayoutEffect, useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { world } from '../sim/world';
@@ -31,9 +31,25 @@ function makeGeometries() {
   };
 }
 
+// Night-time fluorescence colour for each coral material.
+const GLOW = [
+  ['pink', '#ff3fa0'],
+  ['coralOrange', '#ff7a1a'],
+  ['purple', '#9a5cff'],
+  ['brain', '#7dff6a'],
+  ['tube', '#ffe14d'],
+  ['tubeRim', '#ff7a1a'],
+  ['fan', '#d27bff'],
+  ['yellow', '#d6ff3a'],
+  ['blue', '#29e3ff'],
+  ['table', '#3dffb0'],
+  ['finger', '#ff5cc8'],
+  ['fingerOrange', '#ffa13d'],
+];
+
 function makeMaterials() {
   const std = (color, extra = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.75, ...extra });
-  return {
+  const m = {
     pink: std('#ff7eb6'),
     coralOrange: std('#ff9f5a'),
     purple: std('#a77bff'),
@@ -50,6 +66,11 @@ function makeMaterials() {
     finger: std('#ffb0d0', { roughness: 0.5 }),
     fingerOrange: std('#ffb36b', { roughness: 0.5 }),
   };
+  for (const [key, glow] of GLOW) {
+    m[key].emissive.set(glow);
+    m[key].emissiveIntensity = 0;
+  }
+  return m;
 }
 
 // Deterministic branching coral: each level splits into tilted, shorter branches.
@@ -188,7 +209,16 @@ function TubeCluster({ geos, mats, position }) {
   );
 }
 
-export default function Coral({ calm }) {
+export default function Coral({ calm, growth = 0 }) {
+  const root = useRef();
+  // Grow every coral around its own base: a little smaller in a new tank, full size after a month.
+  useLayoutEffect(() => {
+    const k = 0.86 + 0.22 * growth;
+    root.current.children.forEach((c) => {
+      if (!c.userData.baseScale) c.userData.baseScale = c.scale.clone();
+      c.scale.copy(c.userData.baseScale).multiplyScalar(k);
+    });
+  }, [growth]);
   const geos = useMemo(makeGeometries, []);
   const mats = useMemo(makeMaterials, []);
   useEffect(
@@ -203,10 +233,12 @@ export default function Coral({ calm }) {
     const night = 1 - world.light;
     mats.anemone.emissiveIntensity = 0.15 + night * 0.75;
     mats.bubble.emissiveIntensity = 0.12 + night * 0.65;
+    // Real corals fluoresce under the blue night light: each glows in its own neon colour.
+    for (const [key] of GLOW) mats[key].emissiveIntensity = night * night * 0.6;
   });
 
   return (
-    <group>
+    <group ref={root}>
       <group position={[-6.2, FLOOR - 0.1, -2.2]} scale={1.1}>
         <Branch geo={geos.branch} mat={mats.pink} depth={4} len={1.1} tilt={0} />
       </group>

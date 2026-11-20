@@ -10,6 +10,8 @@ import { CREATURES, CREATURE_IDS } from '../data/creatures';
 import { creatureInfo } from '../data/factsBn';
 import { startVisitor, visitorActive, RARE_KINDS } from '../sim/visitors';
 import { startSub, driveSub, sendSubHome, subActive } from '../sim/submarine';
+import { tickWeather, startRain } from '../sim/weather';
+import { isFullMoon, hasEvent, oceanDate } from '../data/oceanCalendar';
 import { phaseFor, PHASE_LIGHT } from './daylight';
 import { birthdayStatus, BIRTHDAY_LINES, bnNumber } from '../data/birthday';
 import { DECOR, decorText } from '../data/decor';
@@ -132,6 +134,9 @@ function initialState() {
       infoCards: true,
       fishTalk: true,
       observeMode: false,
+      oceanSounds: true,
+      music: false,
+      volume: 0.6,
     },
     asma: { visible: false, phase: 'idle', line: '', restUntil: 0, missUntil: 0 },
     shark: { visible: false, hitsLeft: 0 },
@@ -719,7 +724,7 @@ export function resetAquarium() {
   state.fish = starterFish(state.memorial);
   state.selectedId = null;
   state.panel = null;
-  state.stats = { ...freshStats(), stickers: state.stats.stickers, pearls: state.stats.pearls, decor: state.stats.decor };
+  state.stats = { ...freshStats(), stickers: state.stats.stickers, pearls: state.stats.pearls, decor: state.stats.decor, clownNest: state.stats.clownNest, visitDays: state.stats.visitDays, lastVisitDay: state.stats.lastVisitDay };
   emit();
   save();
   toast('A fresh new aquarium!', '🌊');
@@ -966,7 +971,10 @@ function pickVisitorKind() {
   const s = state.stats;
   if (!s.lastRare) s.lastRare = Date.now();
   const due = Date.now() - s.lastRare > RARE_PROMISE;
-  if (!due && Math.random() > RARE_CHANCE) return undefined;
+  if (!due && Math.random() > RARE_CHANCE) {
+    // Whale migration season: the big whale passes by more often.
+    return hasEvent('whales', oceanDate()) && Math.random() < 0.4 ? 'whale' : undefined;
+  }
   const unseen = RARE_KINDS.filter((k) => !s.stickers[k]);
   return pick(unseen.length ? unseen : RARE_KINDS);
 }
@@ -1060,6 +1068,150 @@ function tickSubmarine(dt) {
   if (nextSubIn <= 0) callSubmarine();
 }
 
+// ---------- weather ----------
+function rainToast(change) {
+  const bn = state.settings.factLang === 'bn';
+  if (change === 'start')
+    toast(bn ? 'বৃষ্টি পড়ছে! পানির ওপরে ফোঁটাগুলো দেখো 🌧️' : "It's raining! Look at the drops on the water 🌧️", '🌧️', 4000, bn ? 'bn' : '');
+  else if (change === 'stop')
+    toast(bn ? 'বৃষ্টি থেমেছে, রোদ উঠেছে! আলোয় রংধনু 🌈' : 'The rain stopped and the sun is back! A rainbow in the light 🌈', '🌈', 4000, bn ? 'bn' : '');
+}
+
+function tickRain() {
+  const change = tickWeather();
+  if (change) rainToast(change);
+  if (world.weather.rain > 0.3 && state.settings.sound) sfx('rain');
+}
+
+export function makeRain() {
+  startRain();
+  rainToast('start');
+}
+
+// ---------- coral spawning: on full-moon nights the corals release their eggs ----------
+const SPAWN_SECONDS = 70;
+let spawnWait = 25;
+let spawnedTonight = false;
+
+export function startSpawning() {
+  world.spawning.until = world.time + SPAWN_SECONDS;
+  spawnedTonight = true;
+  const bn = state.settings.factLang === 'bn';
+  toast(bn ? 'প্রবালেরা ডিম ছাড়ছে! গোলাপি তুষার দেখো ✨' : 'The corals are spawning! Watch the pink snow rise ✨', '✨', 4500, bn ? 'bn' : '');
+  noticeOnce(
+    'coral-spawning',
+    'Real corals all spawn on the same few nights after a full moon, so their eggs can meet in the water and become new baby corals.',
+    'আসল প্রবালেরা পূর্ণিমার পরের কয়েক রাতে একসাথে ডিম ছাড়ে, যাতে ডিমগুলো পানিতে মিলে নতুন ছোট্ট প্রবাল হতে পারে।',
+    '🪸',
+  );
+  sfx('chime');
+}
+
+function tickSpawning(dt) {
+  if (state.daylight !== 'night') {
+    spawnedTonight = false;
+    spawnWait = 25;
+    return;
+  }
+  if (spawnedTonight || !state.hintDismissed || !isFullMoon()) return;
+  spawnWait -= dt;
+  if (spawnWait <= 0) startSpawning();
+}
+
+// ---------- the clownfish family: eggs by the anemone, then babies that grow ----------
+const NEST_FACTS = {
+  laid: [
+    'The clownfish laid eggs on the rock by the anemone! The dad will guard them and fan them with his fins. 🥚',
+    'ক্লাউনফিশ অ্যানিমোনের পাশের পাথরে ডিম পেড়েছে! বাবা মাছ ডিম পাহারা দেবে আর পাখনা দিয়ে বাতাস করবে। 🥚',
+  ],
+  hatched: [
+    'The clownfish eggs hatched! Tiny babies are hiding by the anemone. Come back each day to watch them grow. 🐠',
+    'ক্লাউনফিশের ডিম ফুটেছে! ছোট্ট বাচ্চারা অ্যানিমোনের পাশে লুকিয়ে আছে। প্রতিদিন এসে ওদের বড় হওয়া দেখো। 🐠',
+  ],
+  grown: [
+    'The baby clownfish are all grown up and have swum off to find their own anemones. Goodbye, little ones! 👋',
+    'ক্লাউনফিশের বাচ্চারা বড় হয়ে নিজেদের অ্যানিমোন খুঁজতে চলে গেছে। বিদায়, ছোট্টরা! 👋',
+  ],
+};
+
+function nestToast(key) {
+  const bn = state.settings.factLang === 'bn';
+  toast(NEST_FACTS[key][bn ? 1 : 0], key === 'grown' ? '👋' : '🐠', 6000, bn ? 'bn' : '');
+}
+
+function tickNest() {
+  const s = state.stats;
+  const today = new Date().toDateString();
+  let n = s.clownNest;
+  if (!n) n = s.clownNest = { stage: null, days: 0, lastDay: today, restUntil: 0 };
+  let changed = false;
+  if (n.lastDay !== today) {
+    n.lastDay = today;
+    n.days++; // one more day the tank was visited
+    changed = true;
+  }
+  if (!n.stage) {
+    const parent = state.fish.find((f) => f.species === 'clownfish' && f.fullness > 0.5 && f.health > 0.8);
+    if (parent && state.hintDismissed && state.daylight === 'day' && n.days >= n.restUntil && Math.random() < 1 / 90) {
+      Object.assign(n, { stage: 'eggs', laidDay: n.days });
+      nestToast('laid');
+      changed = true;
+    }
+  } else if (n.stage === 'eggs' && n.days - n.laidDay >= 2) {
+    Object.assign(n, { stage: 'babies', hatchDay: n.days, babies: 3 + Math.floor(Math.random() * 2) });
+    nestToast('hatched');
+    sfx('giggle');
+    changed = true;
+  } else if (n.stage === 'babies' && n.days - n.hatchDay >= 9) {
+    Object.assign(n, { stage: null, restUntil: n.days + 3 });
+    nestToast('grown');
+    changed = true;
+  }
+  if (changed) {
+    s.clownNest = { ...n };
+    save();
+  }
+}
+
+// World Oceans Day (8 June): a sparkle and a note, once that day.
+let oceansDayDone = false;
+function tickOceansDay() {
+  if (oceansDayDone || !state.hintDismissed) return;
+  oceansDayDone = true;
+  const day = oceanDate();
+  if (!hasEvent('oceansDay', day)) return;
+  noticeOnce(
+    `oceans-day-${day.getFullYear()}`,
+    'Happy World Oceans Day! The ocean gives us half the air we breathe. Let us keep it clean! 🌍',
+    'শুভ বিশ্ব মহাসাগর দিবস! আমরা যে বাতাসে শ্বাস নিই তার অর্ধেকটা দেয় সাগর। চলো সাগরকে পরিষ্কার রাখি! 🌍',
+    '🌍',
+  );
+  for (const rt of world.runtime.values()) queueEffect('sparkles', rt.pos, 3);
+}
+
+// ---------- the growing reef: one more visit day, now and then a milestone ----------
+const REEF_MILESTONES = {
+  7: ['A week of visits! New baby corals are growing on the reef 🪸', 'এক সপ্তাহ ধরে আসছ! প্রবাল প্রাচীরে নতুন ছোট্ট প্রবাল গজাচ্ছে 🪸'],
+  14: ['Two weeks! Your reef is getting bigger and more colourful 🌈', 'দুই সপ্তাহ! তোমার প্রবাল প্রাচীর আরও বড় আর রঙিন হচ্ছে 🌈'],
+  30: ['A whole month! Your reef is fully grown and beautiful. Thank you for caring 💖', 'পুরো এক মাস! তোমার প্রবাল প্রাচীর পুরো বড় আর সুন্দর হয়েছে। যত্নের জন্য ধন্যবাদ 💖'],
+};
+
+function tickVisitDays() {
+  const s = state.stats;
+  const today = new Date().toDateString();
+  if (s.lastVisitDay === today) return;
+  s.lastVisitDay = today;
+  s.visitDays = (s.visitDays || 0) + 1;
+  const m = REEF_MILESTONES[s.visitDays];
+  if (m) {
+    const bn = state.settings.factLang === 'bn';
+    toast(m[bn ? 1 : 0], '🪸', 6000, bn ? 'bn' : '');
+    earnPearls(5, { capped: false, quiet: true });
+  }
+  state.stats = { ...s };
+  save();
+}
+
 function tickVisitors(dt) {
   if (!state.settings.visitors || !state.hintDismissed) return;
   if (visitorActive() || world.shark.phase !== 'idle') return;
@@ -1119,6 +1271,11 @@ export function tickStats(dt) {
   tickShark(dt);
   tickVisitors(dt);
   tickSubmarine(dt);
+  tickRain();
+  tickSpawning(dt);
+  tickNest();
+  tickOceansDay();
+  tickVisitDays();
   tickClamPearl(dt);
   tickHideAndSeek(dt);
   tickPartners();

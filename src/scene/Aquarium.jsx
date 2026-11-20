@@ -45,7 +45,13 @@ import HiddenFriends from './HiddenFriends';
 import StaticBatch from './StaticBatch';
 import WildFish from './WildFish';
 import Submarine from './Submarine';
+import Parrotfish from './Parrotfish';
+import CoralSpawn from './CoralSpawn';
+import ClownNest from './ClownNest';
+import OceanEvents from './OceanEvents';
+import CoralSprouts from './CoralSprouts';
 import { underwaterStrength } from './underwater';
+import { sheenStrength } from './reefLayout';
 
 const PIXEL_RATIO = window.devicePixelRatio || 1;
 const MAX_DPR = Math.min(1.5, PIXEL_RATIO);
@@ -103,12 +109,16 @@ export default function Aquarium() {
   const calm = useStore((s) => s.settings.calmMode);
   const party = useStore((s) => s.party);
   const night = useStore((s) => s.daylight === 'night');
+  // The reef grows a little with every day the tank is visited, fully grown after a month.
+  const growth = Math.min(1, (useStore((s) => s.stats.visitDays) || 0) / 30);
   const [dpr, setDpr] = useState(MAX_DPR);
   const [slow, setSlow] = useState(false);
   // Fewer seagrass blades, pebbles and school fish on phones, in calm mode and on slow devices.
   const detail = calm || slow || Math.min(window.innerWidth, window.innerHeight) < 600 ? 'low' : 'high';
 
   underwaterStrength.value = calm ? 0 : detail === 'low' ? 0.6 : 1;
+  sheenStrength.value = detail === 'low' ? 0.5 : 1;
+  world.detail = detail;
 
   return (
     <Canvas
@@ -118,6 +128,7 @@ export default function Aquarium() {
       gl={{ antialias: PIXEL_RATIO < 2, alpha: true, powerPreference: 'high-performance' }}
       onPointerMissed={() => selectFish(null)}
       onCreated={(s) => {
+        world.renderer = s; // the postcard camera renders a fresh frame from it
         if (import.meta.env.DEV) window.__ocean = s; // for measuring in the browser console
       }}
     >
@@ -152,7 +163,8 @@ export default function Aquarium() {
       {night && <NightLife />}
       <HiddenFriends />
       <StaticBatch>
-        <Coral calm={calm} />
+        <Coral calm={calm} growth={growth} />
+        <CoralSprouts />
       </StaticBatch>
       <TreasureChest />
       <Starfish />
@@ -166,6 +178,10 @@ export default function Aquarium() {
       <FishSchool detail={detail} calm={calm} />
       <WildFish detail={detail} />
       <Submarine />
+      <Parrotfish />
+      <CoralSpawn detail={detail} />
+      <ClownNest />
+      <OceanEvents />
       <Visitors />
       {party && <Balloons />}
       <Plants calm={calm} />

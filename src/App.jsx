@@ -8,6 +8,8 @@ import CreatureCard from './ui/CreatureCard';
 import StickerBook from './ui/StickerBook';
 import DecorPanel from './ui/DecorPanel';
 import SubControls from './ui/SubControls';
+import Postcard from './ui/Postcard';
+import { setAmbient, unlockAmbient } from './audio/ambient';
 import AnniversaryButton from './ui/Anniversary';
 import BirthdayButton, { HusbandCountdown } from './ui/Birthday';
 import { FactPanel, SettingsPanel, MemoriesPanel, EmptyTank, WelcomeHint, Toasts } from './ui/Panels';
@@ -61,8 +63,26 @@ function useIdle(ms) {
   return idle;
 }
 
+// The ocean soundscape follows the settings; browsers let it start only after the first tap.
+function useAmbient() {
+  const sounds = useStore((s) => s.settings.oceanSounds);
+  const music = useStore((s) => s.settings.music);
+  const volume = useStore((s) => s.settings.volume);
+  useEffect(() => setAmbient({ sounds, music, volume }), [sounds, music, volume]);
+  useEffect(() => {
+    const unlock = () => unlockAmbient();
+    window.addEventListener('pointerdown', unlock, { once: true });
+    window.addEventListener('keydown', unlock, { once: true });
+    return () => {
+      window.removeEventListener('pointerdown', unlock);
+      window.removeEventListener('keydown', unlock);
+    };
+  }, []);
+}
+
 export default function App() {
   useGameLoop();
+  useAmbient();
   const panel = useStore((s) => s.panel);
   const daylight = useStore((s) => s.daylight);
   const idle = useIdle(20000);
@@ -72,6 +92,7 @@ export default function App() {
       <div className="sky sky-sunset" aria-hidden="true" />
       <div className="sky sky-night" aria-hidden="true" />
       <Aquarium />
+      <div className="aquarium-vignette" aria-hidden="true" />
       <FishLabels />
       <HUD />
       <SubControls />
@@ -83,6 +104,7 @@ export default function App() {
       <CreatureCard />
       {panel === 'stickers' && <StickerBook />}
       {panel === 'decor' && <DecorPanel />}
+      {panel === 'postcard' && <Postcard />}
       {panel === 'facts' && <FactPanel />}
       {panel === 'settings' && <SettingsPanel />}
       {panel === 'memories' && <MemoriesPanel />}

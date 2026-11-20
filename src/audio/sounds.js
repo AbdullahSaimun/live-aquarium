@@ -1,7 +1,7 @@
 // Tiny synthesized sound effects (Web Audio), so the app needs no audio files.
 let ctx = null;
 
-function audio() {
+export function audio() {
   if (!ctx) {
     const Ctx = window.AudioContext || window.webkitAudioContext;
     if (!Ctx) return null;
@@ -81,6 +81,13 @@ const SOUNDS = {
     for (let i = 0; i < 5; i++) tone(ac, { from: 300 - i * 30, to: 90, start: i * 0.04, dur: 0.18, vol: 0.05 });
   },
   // A distant whale song: two slow, low sweeps.
+  // Soft rain on the surface above: a scatter of tiny high drips.
+  rain: (ac) => {
+    for (let i = 0; i < 5; i++) {
+      const f = 2200 + Math.random() * 1800;
+      tone(ac, { from: f, to: f * 0.6, start: Math.random() * 0.9, dur: 0.04, vol: 0.012 });
+    }
+  },
   // A friendly two-note submarine toot.
   horn: (ac) => {
     tone(ac, { type: 'triangle', from: 220, to: 210, dur: 0.32, vol: 0.09 });

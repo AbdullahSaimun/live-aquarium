@@ -5,15 +5,16 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { world } from '../sim/world';
 import { WILD, createWild, createGroup, updateGroup, updateWild, startleWild } from '../sim/wildFish';
 import { showCreature, sfx } from '../state/store';
-import { tmpObj } from './reefLayout';
+import { tmpObj, sheenStrength } from './reefLayout';
+import { SHEEN } from './underwater';
 
-const SPHERE = new THREE.SphereGeometry(1, 12, 8);
+export const SPHERE = new THREE.SphereGeometry(1, 12, 8);
 const CONE = new THREE.ConeGeometry(1, 1, 6); // points up (+y)
-const CONE_Z = CONE.clone().rotateX(Math.PI / 2); // points forward (+z): tails and snouts
+export const CONE_Z = CONE.clone().rotateX(Math.PI / 2); // points forward (+z): tails and snouts
 const color = new THREE.Color();
 
 // One coloured piece of a fish: scaled, turned, moved, and painted into its vertex colours.
-function part(base, hex, s, r = [0, 0, 0], p = [0, 0, 0]) {
+export function part(base, hex, s, r = [0, 0, 0], p = [0, 0, 0]) {
   const g = base.clone().toNonIndexed();
   g.scale(...s);
   g.rotateX(r[0]).rotateY(r[1]).rotateZ(r[2]);
@@ -25,7 +26,7 @@ function part(base, hex, s, r = [0, 0, 0], p = [0, 0, 0]) {
   g.setAttribute('color', new THREE.BufferAttribute(c, 3));
   return g;
 }
-const eyes = (x, y, z, s = 0.014) => [part(SPHERE, '#0e141c', [s, s, s], undefined, [x, y, z]), part(SPHERE, '#0e141c', [s, s, s], undefined, [-x, y, z])];
+export const eyes = (x, y, z, s = 0.014) => [part(SPHERE, '#0e141c', [s, s, s], undefined, [x, y, z]), part(SPHERE, '#0e141c', [s, s, s], undefined, [-x, y, z])];
 
 // Each species, facing +z. Small and simple, but with the colours and shapes that make them recognisable.
 const BUILD = {
@@ -90,6 +91,10 @@ function buildKit(id, def) {
   // The tail sweeps and the body bends a little, more towards the back: a fish, not a toy.
   mat.onBeforeCompile = (shader) => {
     THREE.Material.prototype.onBeforeCompile.call(mat, shader); // shared underwater light
+    shader.uniforms.uSheen = sheenStrength;
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>', '#include <common>\nuniform float uSheen;')
+      .replace('#include <tonemapping_fragment>', `${SHEEN(0.2)}\n#include <tonemapping_fragment>`);
     shader.vertexShader = shader.vertexShader.replace('#include <common>', '#include <common>\nattribute vec2 aSwim;').replace(
       '#include <begin_vertex>',
       `#include <begin_vertex>
