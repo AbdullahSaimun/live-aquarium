@@ -25,7 +25,24 @@ export const world = {
     drive: 0,
     speed: 0,
     light: true,
+    entering: false, // summoned: gliding in from the side before the captain takes over
   },
+  // The submarine's gear (sim/subGear.js): shots, blasts, debris, items, claw, sonar.
+  gear: {
+    shots: [],
+    blasts: [],
+    debris: [],
+    items: [],
+    claw: { state: 'idle', len: 0, holding: null },
+    sonar: { t: -100, origin: new THREE.Vector3() },
+    cool: { torpedo: 0, missile: 0, sonar: 0 },
+    events: [], // for the store: rewards and toasts
+    aimAt: null, // where the water was last tapped while driving (missile aim)
+    spawnTrash: 4,
+    spawnTarget: 15,
+    spawnTreasure: 0,
+  },
+  shake: 0, // camera shake from blasts, eases back to 0
   startle: { pos: new THREE.Vector3(), time: -Infinity }, // a tap in the water (Observe mode)
   clamPearl: false, // a pearl is shining inside the giant clam
   morayClean: 0, // world.time until which a cleaner shrimp is cleaning the moray

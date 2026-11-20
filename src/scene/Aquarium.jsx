@@ -45,6 +45,8 @@ import HiddenFriends from './HiddenFriends';
 import StaticBatch from './StaticBatch';
 import WildFish from './WildFish';
 import Submarine from './Submarine';
+import SubGear from './SubGear';
+import OceanTrash from './OceanTrash';
 import Parrotfish from './Parrotfish';
 import CoralSpawn from './CoralSpawn';
 import ClownNest from './ClownNest';
@@ -101,6 +103,10 @@ function CameraRig({ calm }) {
     camera.position.y += (0.4 + py - camera.position.y) * k;
     camera.position.z += (camZ * zoomOut.current - camera.position.z) * k;
     camera.lookAt(0, -0.2, 0);
+    if (world.shake > 0.002) {
+      camera.position.x += (Math.random() - 0.5) * world.shake * 0.5;
+      camera.position.y += (Math.random() - 0.5) * world.shake * 0.5;
+    }
   });
   return null;
 }
@@ -178,6 +184,8 @@ export default function Aquarium() {
       <FishSchool detail={detail} calm={calm} />
       <WildFish detail={detail} />
       <Submarine />
+      <SubGear />
+      <OceanTrash />
       <Parrotfish />
       <CoralSpawn detail={detail} />
       <ClownNest />

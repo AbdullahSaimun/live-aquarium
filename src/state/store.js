@@ -9,7 +9,7 @@ import { startShark, sendSharkAway, SHARK_HITS } from '../sim/sharkBrain';
 import { CREATURES, CREATURE_IDS } from '../data/creatures';
 import { creatureInfo } from '../data/factsBn';
 import { startVisitor, visitorActive, RARE_KINDS } from '../sim/visitors';
-import { startSub, driveSub, sendSubHome, subActive } from '../sim/submarine';
+import { startSub, driveSub, sendSubHome, subActive, summonSub } from '../sim/submarine';
 import { tickWeather, startRain } from '../sim/weather';
 import { isFullMoon, hasEvent, oceanDate } from '../data/oceanCalendar';
 import { phaseFor, PHASE_LIGHT } from './daylight';
@@ -558,6 +558,12 @@ export function tapWater(point) {
   }
   // At night the water lights up with glowing plankton wherever it is touched.
   if (state.daylight === 'night') queueEffect('sparkles', point, 16);
+  if (state.subDriving) {
+    // Driving the submarine: a tap in the water marks where the next missile flies.
+    world.gear.aimAt = point.clone();
+    queueEffect('bubbles', point, 3);
+    return;
+  }
   if (state.settings.observeMode) {
     // Just watching: a tap is a little splash that makes nearby fish flinch, not food.
     world.startle.pos.copy(point);
@@ -1057,11 +1063,115 @@ export function subHorn() {
   world.startle.time = world.time;
 }
 
-function tickSubmarine(dt) {
-  if (state.subDriving && world.sub.phase !== 'driving') {
-    state.subDriving = false; // time was up and it sailed home
-    toast('The submarine went home. Bye bye! 👋', '🚢', 3000);
+// The rail's 🚢 button: call the submarine (straight into the captain's seat), or send it home.
+export function toggleSubmarine() {
+  const s = world.sub;
+  if (s.phase === 'driving') return sendSubmarineHome();
+  if (s.phase === 'cruising') return tapSubmarine();
+  if (s.phase === 'leaving' || world.shark.phase !== 'idle') {
+    toast('Wait a moment, then call the submarine again!', '🚢');
+    return undefined;
   }
+  summonSub(world.bounds.maxX + 1.5);
+  s.light = true;
+  state.subLight = true;
+  state.subDriving = true;
+  state.selectedId = null;
+  state.creatureId = null;
+  state.panel = null;
+  collectSticker('submarine');
+  const bn = state.settings.factLang === 'bn';
+  toast(
+    bn ? 'সাবমেরিন হাজির, ক্যাপ্টেন! 💥 টর্পেডো, 🚀 মিসাইল, 🦾 হাতল দিয়ে সাগর পরিষ্কার করো' : 'Your submarine is here, captain! Clean the ocean with 💥 torpedoes, 🚀 missiles and the 🦾 grabber',
+    '🚢',
+    5000,
+    bn ? 'bn' : '',
+  );
+  sfx('horn');
+  emit();
+  return undefined;
+}
+
+// The camera on the submarine: a flash, then a postcard of what is in front of it.
+export function subPhoto() {
+  sfx('shutter');
+  state.postcardFocus = true;
+  state.panel = 'postcard';
+  state.photoFlash = (state.photoFlash || 0) + 1;
+  emit();
+}
+
+// ---------- rewards from the submarine's gear (sim/subGear.js) ----------
+const TRASH_FACTS = {
+  bottle: [
+    'A plastic bottle can stay in the sea for 450 years! Thank you for cleaning it up.',
+    'একটা প্লাস্টিকের বোতল সাগরে ৪৫০ বছর থেকে যেতে পারে! পরিষ্কার করার জন্য ধন্যবাদ।',
+  ],
+  bag: [
+    'Turtles think floating plastic bags are jellyfish and try to eat them. You just saved a turtle!',
+    'কচ্ছপেরা ভাসমান প্লাস্টিকের ব্যাগকে জেলিফিশ ভেবে খেতে চায়। তুমি একটা কচ্ছপকে বাঁচালে!',
+  ],
+  can: ['Metal cans rust slowly and can cut animals. Recycling one can saves energy too!', 'ধাতব ক্যান আস্তে আস্তে মরিচা ধরে আর প্রাণীদের কেটে দিতে পারে। একটা ক্যান রিসাইকেল করলে শক্তিও বাঁচে!'],
+  net: [
+    'Lost fishing nets are called ghost nets. They keep catching animals by mistake, so removing them is very important!',
+    'হারানো মাছ ধরার জালকে বলে "ভূতুড়ে জাল"। এগুলো ভুল করে প্রাণী ধরতেই থাকে, তাই সরানো খুব জরুরি!',
+  ],
+};
+const TREASURE_TEXT = {
+  conch: ['You found a conch shell! 🐚', 'তুমি একটা শঙ্খ পেয়েছ! 🐚'],
+  pearl: ['A real pearl! ✨', 'একটা আসল মুক্তা! ✨'],
+  coin: ['A gold coin from an old ship! 🪙', 'পুরনো জাহাজের একটা সোনার মুদ্রা! 🪙'],
+};
+const BOTTLE_NOTES = [
+  ['A message in a bottle: "Whoever finds this, you are a wonderful ocean helper!" 💌', 'বোতলের চিঠি: "যে এটা পাবে, তুমি সাগরের দারুণ বন্ধু!" 💌'],
+  ['A message in a bottle: "The fish say thank you for keeping their home clean!" 💌', 'বোতলের চিঠি: "পরিষ্কার রাখার জন্য মাছেরা তোমাকে ধন্যবাদ দিচ্ছে!" 💌'],
+  ['A message in a bottle: "Be kind to every creature, big and small." 💌', 'বোতলের চিঠি: "ছোট-বড় সব প্রাণীর প্রতি দয়ালু হও।" 💌'],
+  ['A message in a bottle: "A treasure map? No, just a smile for you! 😊" 💌', 'বোতলের চিঠি: "গুপ্তধনের মানচিত্র? না, তোমার জন্য একটা হাসি! 😊" 💌'],
+];
+const CLEAN_MILESTONES = { 10: 3, 50: 5, 100: 10 };
+
+function tickGear() {
+  const events = world.gear.events;
+  if (!events.length) return;
+  const s = state.stats;
+  const bn = state.settings.factLang === 'bn';
+  const say = (pair, emoji, ms = 3500) => toast(pair[bn ? 1 : 0], emoji, ms, bn ? 'bn' : '');
+  while (events.length) {
+    const e = events.shift();
+    if (e.type === 'trash') {
+      s.trashCleaned = (s.trashCleaned || 0) + 1;
+      const fact = TRASH_FACTS[e.item];
+      if (fact) noticeOnce(`trash-${e.item}`, fact[0], fact[1], '♻️');
+      if (s.trashCleaned % 5 === 0) earnPearls(1, { quiet: true });
+      const bonus = CLEAN_MILESTONES[s.trashCleaned];
+      if (bonus) {
+        say([`${s.trashCleaned} pieces of rubbish cleaned! The ocean is sparkling 🌊`, `${s.trashCleaned}টা ময়লা পরিষ্কার! সাগর ঝকঝক করছে 🌊`], '♻️', 5000);
+        earnPearls(bonus, { capped: false, quiet: true });
+      }
+    } else if (e.type === 'treasure') {
+      s.subTreasure = (s.subTreasure || 0) + 1;
+      if (e.item === 'message') say(BOTTLE_NOTES[Math.floor(Math.random() * BOTTLE_NOTES.length)], '💌', 6000);
+      else say(TREASURE_TEXT[e.item], '💎');
+      if (e.item === 'pearl') earnPearls(2, { capped: false, quiet: true });
+      else earnPearls(1, { quiet: true });
+      sfx('treasure');
+    } else if (e.type === 'bullseye') {
+      say(['🎯 Bullseye! Great shot, captain!', '🎯 একদম নিশানায়! দারুণ, ক্যাপ্টেন!'], '🎯', 2500);
+    } else if (e.type === 'sharkFright') {
+      if (world.shark.phase !== 'idle' && world.shark.phase !== 'leaving') {
+        sendSharkAway(true);
+        state.shark = { ...state.shark, hitsLeft: 0 };
+        say(['The shark got a fright and swam away! 🦈💨', 'হাঙর ভয় পেয়ে পালিয়ে গেছে! 🦈💨'], '🦈');
+      }
+    }
+  }
+  state.stats = { ...s };
+  save();
+}
+
+function tickSubmarine(dt) {
+  tickGear();
+  if (state.subDriving && world.sub.phase !== 'driving') state.subDriving = false;
   if (!state.settings.visitors || !state.hintDismissed) return;
   if (subActive() || world.shark.phase !== 'idle' || state.asma.phase !== 'idle') return;
   nextSubIn -= dt;

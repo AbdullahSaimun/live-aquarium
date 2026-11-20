@@ -3962,3 +3962,135 @@ button:focus-visible,
   opacity: 0.5;
   pointer-events: none;
 }
+
+/* Submarine console: tools row, status, big fire buttons beside the joystick. */
+.sub-buttons {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  max-width: min(420px, calc(100vw - 32px));
+}
+.sub-main {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+}
+.sub-fire {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.sub-big {
+  position: relative;
+  overflow: hidden;
+  width: 76px;
+  height: 56px;
+  border-radius: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.7);
+  background: linear-gradient(180deg, #ff8a4c, #e9502c);
+  color: #fff;
+  font: inherit;
+  font-weight: 800;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.05;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(120, 30, 0, 0.3);
+  touch-action: manipulation;
+}
+.sub-big + .sub-big {
+  background: linear-gradient(180deg, #6fb6ff, #2f6fe0);
+  box-shadow: 0 6px 16px rgba(10, 40, 120, 0.3);
+}
+.sub-big span {
+  font-size: 22px;
+}
+.sub-big small {
+  font-size: 11px;
+}
+.sub-big:active {
+  transform: scale(0.94);
+}
+/* Cooldown: a dark fill that drains away. */
+.sub-cool::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0 0;
+  height: var(--cool, 0%);
+  background: rgba(0, 20, 40, 0.45);
+  pointer-events: none;
+  transition: height 0.1s linear;
+}
+.sub-btn.sub-cool {
+  position: relative;
+  overflow: hidden;
+}
+.sub-count {
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.55);
+}
+@media (max-width: 520px) {
+  .sub-stick {
+    width: 108px;
+    height: 108px;
+  }
+  .sub-big {
+    width: 66px;
+    height: 50px;
+  }
+}
+.btn-sub.is-on {
+  background: linear-gradient(180deg, #ffe07a, #ffb627);
+}
+/* Sonar tags */
+.sonar-tags {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 8;
+}
+.sonar-tag {
+  position: absolute;
+  left: 0;
+  top: 0;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(10, 40, 30, 0.72);
+  color: #9dffcb;
+  border: 1px solid rgba(125, 255, 178, 0.7);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  animation: sub-in 0.25s ease-out;
+  transition: opacity 0.2s;
+}
+/* Camera flash */
+.photo-flash {
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  pointer-events: none;
+  z-index: 60;
+  animation: photo-flash 0.5s ease-out forwards;
+}
+@keyframes photo-flash {
+  from {
+    opacity: 0.9;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* Landscape phones: seven rail buttons must fit under the top bar, so make them a touch smaller. */
+@media (max-height: 420px) and (min-width: 601px) {
+  :root {
+    --btn: 33px;
+    --feed: 38px;
+    --rail-gap: 2px;
+    --rail-pad: 3px;
+  }
+}

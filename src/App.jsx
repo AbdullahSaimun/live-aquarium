@@ -9,6 +9,7 @@ import StickerBook from './ui/StickerBook';
 import DecorPanel from './ui/DecorPanel';
 import SubControls from './ui/SubControls';
 import Postcard from './ui/Postcard';
+import SonarTags from './ui/SonarTags';
 import { setAmbient, unlockAmbient } from './audio/ambient';
 import AnniversaryButton from './ui/Anniversary';
 import BirthdayButton, { HusbandCountdown } from './ui/Birthday';
@@ -63,6 +64,12 @@ function useIdle(ms) {
   return idle;
 }
 
+// A white camera flash over everything when the submarine takes a picture.
+function PhotoFlash() {
+  const n = useStore((s) => s.photoFlash || 0);
+  return n ? <div key={n} className="photo-flash" aria-hidden="true" /> : null;
+}
+
 // The ocean soundscape follows the settings; browsers let it start only after the first tap.
 function useAmbient() {
   const sounds = useStore((s) => s.settings.oceanSounds);
@@ -96,6 +103,8 @@ export default function App() {
       <FishLabels />
       <HUD />
       <SubControls />
+      <SonarTags />
+      <PhotoFlash />
       <AsmaCard />
       <AnniversaryButton />
       <BirthdayButton />

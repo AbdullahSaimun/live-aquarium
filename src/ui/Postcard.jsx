@@ -18,7 +18,7 @@ function roundRect(g, x, y, w, h, r) {
 }
 
 // Renders one fresh frame of the tank and turns it into a framed postcard (a PNG data URL).
-function makePostcard(lang) {
+function makePostcard(lang, focus = null) {
   return new Promise((resolve) => {
     const r = world.renderer;
     if (!r) return resolve(null);
@@ -38,9 +38,19 @@ function makePostcard(lang) {
       const py = 40;
       const pw = W - 80;
       const ph = H - 220;
-      const scale = Math.max(pw / src.width, ph / src.height);
+      const zoom = focus ? 1.8 : 1; // the submarine's camera sees a closer view
+      const scale = Math.max(pw / src.width, ph / src.height) * zoom;
       const sw = pw / scale;
       const sh = ph / scale;
+      let cx = src.width / 2;
+      let cy = src.height / 2;
+      if (focus) {
+        const p = focus.clone().project(r.camera);
+        cx = ((p.x + 1) / 2) * src.width + (world.sub.dir || 1) * sw * 0.25; // look ahead of the sub
+        cy = ((1 - p.y) / 2) * src.height;
+        cx = Math.min(src.width - sw / 2, Math.max(sw / 2, cx));
+        cy = Math.min(src.height - sh / 2, Math.max(sh / 2, cy));
+      }
       g.save();
       roundRect(g, px, py, pw, ph, 24);
       g.clip();
@@ -51,7 +61,7 @@ function makePostcard(lang) {
       water.addColorStop(1, night > 0.5 ? '#0b1d3f' : '#2a86c2');
       g.fillStyle = water;
       g.fillRect(px, py, pw, ph);
-      g.drawImage(src, (src.width - sw) / 2, (src.height - sh) / 2, sw, sh, px, py, pw, ph);
+      g.drawImage(src, cx - sw / 2, cy - sh / 2, sw, sh, px, py, pw, ph);
       g.restore();
       // Writing on the card.
       const s = getState();
@@ -78,12 +88,17 @@ function makePostcard(lang) {
 // The postcard panel: a fresh picture of the tank, ready to save or share. Nothing is uploaded.
 export default function Postcard() {
   const lang = useStore((s) => s.settings.factLang);
+  const focused = useStore((s) => s.postcardFocus);
   const [url, setUrl] = useState(null);
   const bn = lang === 'bn';
+  const take = () => makePostcard(lang, focused && world.sub.phase !== 'idle' ? world.sub.pos : null);
   useEffect(() => {
-    sfx('light');
-    makePostcard(lang).then(setUrl);
-  }, [lang]);
+    if (!focused) sfx('light');
+    take().then(setUrl);
+    return () => {
+      getState().postcardFocus = false;
+    };
+  }, [lang]); // eslint-disable-line react-hooks/exhaustive-deps
   const file = `my-little-ocean-${new Date().toISOString().slice(0, 10)}.png`;
   const canShare = typeof navigator !== 'undefined' && navigator.canShare;
   const share = async () => {
@@ -114,7 +129,7 @@ export default function Postcard() {
             📤 {bn ? 'শেয়ার করো' : 'Share'}
           </button>
         )}
-        <button className="btn-small btn-soft" onClick={() => (setUrl(null), makePostcard(lang).then(setUrl))}>
+        <button className="btn-small btn-soft" onClick={() => (setUrl(null), take().then(setUrl))}>
           🔄 {bn ? 'আবার তোলো' : 'Take again'}
         </button>
       </div>

@@ -333,3 +333,27 @@ No license has been chosen yet. Add one before publishing if others should reuse
 
 **Postcard**
 - 📷 in the top bar makes a framed picture of the tank with the date and the fish names, ready to save or share. Nothing is uploaded.
+
+## Captain mode: the submarine's gear
+
+- **Calling and steering:**
+  - 🚢 on the rail calls the submarine, already under your control, or sends it home.
+  - There is no time limit: it stays until 🏠 (or H) sends it home.
+  - Drive with the joystick or arrow keys/WASD.
+- **💥 Torpedo (Space):**
+  - homes in on rubbish or targets ahead;
+  - 1 s cooldown, at most 3 in the water.
+- **🚀 Missile (M):** rises from the tower, then arcs to the nearest rubbish or target, or to the spot you last tapped in the water. 3 s cooldown.
+- **Explosions** (`sim/subGear.js`, `scene/SubGear.jsx`):
+  - each has a flash, an underwater gas bubble that swells and collapses, a shock-wave ring, debris, bubbles, a camera shake and a boom;
+  - animals are never hit: fish flinch away, and a nearby shark is frightened off.
+- **Ocean clean-up** (`scene/OceanTrash.jsx`):
+  - while the sub is out, bottles, plastic bags, cans and ghost nets drift in and sink;
+  - blowing them up or grabbing them counts toward `stats.trashCleaned`, with a fact the first time for each kind and pearls every 5;
+  - milestones at 10, 50 and 100 give extra pearls;
+  - practice buoys 🎯 appear now and then.
+- **🦾 Grabber (G):**
+  - lowers a claw to the sand to pick up treasure (conch, pearl, gold coin, message in a bottle) or rubbish resting on the sand;
+  - treasure counts toward `stats.subTreasure` and earns pearls.
+- **📡 Sonar (R):** a ring sweeps out and tags fish, the crab, the octopus, treasure and rubbish by name (`ui/SonarTags.jsx`).
+- **📸 Camera (C):** a flash, then a postcard looking ahead of the submarine.

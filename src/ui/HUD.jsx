@@ -1,5 +1,5 @@
 import { Fragment, useLayoutEffect, useRef, useState } from 'react';
-import { useStore, feed, openPanel, selectFish, cycleTankTime, sfx, setSetting } from '../state/store';
+import { useStore, feed, openPanel, selectFish, cycleTankTime, sfx, setSetting, toggleSubmarine } from '../state/store';
 import { world } from '../sim/world';
 import { PHASE_ICON } from '../state/daylight';
 import { MOODS } from '../data/species';
@@ -61,6 +61,7 @@ function readTucked() {
 function Rail() {
   const panel = useStore((s) => s.panel);
   const flash = useStore((s) => s.stickerFlash);
+  const subOn = useStore((s) => s.subDriving);
   const [tuckedPref, setTucked] = useState(readTucked);
   const observe = useStore((s) => s.settings.observeMode);
   const tucked = tuckedPref || observe;
@@ -113,6 +114,16 @@ function Rail() {
           <span className="btn-label">Feed</span>
         </button>
         <AsmaButton />
+        <button
+          className={`btn btn-round btn-sub${subOn ? ' is-on' : ''}`}
+          onClick={toggleSubmarine}
+          aria-pressed={subOn}
+          aria-label={subOn ? 'Send the submarine home' : 'Call the submarine'}
+          title={subOn ? 'Send the submarine home' : 'Submarine'}
+        >
+          <span className="btn-emoji">🚢</span>
+          <span className="btn-label">Sub</span>
+        </button>
         {round('facts', '💡', 'Facts')}
         <Fragment key={flash || 0}>{round('stickers', '📖', 'Stickers', flash ? ' is-new' : '')}</Fragment>
         {round('memories', '🌈', 'Memories')}

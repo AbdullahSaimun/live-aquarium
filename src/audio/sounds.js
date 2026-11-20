@@ -88,6 +88,35 @@ const SOUNDS = {
       tone(ac, { from: f, to: f * 0.6, start: Math.random() * 0.9, dur: 0.04, vol: 0.012 });
     }
   },
+  // An underwater blast: a deep thump with a rumbling crackle.
+  boom: (ac) => {
+    tone(ac, { type: 'sine', from: 140, to: 35, dur: 0.7, vol: 0.22 });
+    tone(ac, { type: 'triangle', from: 90, to: 30, start: 0.02, dur: 0.9, vol: 0.12 });
+    for (let i = 0; i < 6; i++) {
+      const f = 200 + Math.random() * 300;
+      tone(ac, { type: 'sawtooth', from: f, to: 40, start: 0.03 + i * 0.05, dur: 0.25, vol: 0.025 });
+    }
+  },
+  // A whoosh as a torpedo or missile leaves.
+  launch: (ac) => {
+    tone(ac, { type: 'sawtooth', from: 180, to: 700, dur: 0.28, vol: 0.03 });
+    tone(ac, { type: 'sine', from: 600, to: 1500, start: 0.05, dur: 0.2, vol: 0.03 });
+  },
+  // Sonar: one long, clear ping.
+  ping: (ac) => {
+    tone(ac, { type: 'sine', from: 1320, to: 1300, dur: 1.1, vol: 0.07 });
+    tone(ac, { type: 'sine', from: 1320, to: 1300, start: 0.6, dur: 0.9, vol: 0.02 });
+  },
+  // The grabber's motor and clack.
+  claw: (ac) => {
+    tone(ac, { type: 'square', from: 140, to: 180, dur: 0.18, vol: 0.03 });
+    tone(ac, { type: 'square', from: 400, to: 300, start: 0.2, dur: 0.05, vol: 0.04 });
+  },
+  // A camera shutter.
+  shutter: (ac) => {
+    tone(ac, { type: 'square', from: 1800, to: 900, dur: 0.03, vol: 0.05 });
+    tone(ac, { type: 'square', from: 1500, to: 700, start: 0.07, dur: 0.03, vol: 0.05 });
+  },
   // A friendly two-note submarine toot.
   horn: (ac) => {
     tone(ac, { type: 'triangle', from: 220, to: 210, dur: 0.32, vol: 0.09 });

@@ -4,6 +4,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { useCursor } from '@react-three/drei';
 import { world, queueEffect } from '../sim/world';
 import { updateSub, SUB_Z } from '../sim/submarine';
+import { updateGear } from '../sim/subGear';
 import { tapSubmarine } from '../state/store';
 import { glowTexture } from './NightLife';
 
@@ -62,6 +63,7 @@ export default function Submarine() {
     const free = 1 - Math.min(world.viewInset || 0, size.width * 0.4) / size.width;
     const edge = Math.max(1.5, (camera.position.z - SUB_Z) * tanH * (size.width / size.height) * free);
     updateSub(dt, edge);
+    updateGear(dt, edge);
     const on = s.phase !== 'idle';
     root.current.visible = on;
     if (!on) return;
